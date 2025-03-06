@@ -12,8 +12,8 @@ Based on the original Garry's Mod by Facepunch
 ### Programming
 * Asphaltian - Base, Weapons, UI
 * TROLLFACEINREALLIFE - Tools
-* badandbest - Bug fixes & Improvements
-* trende - Entities
+* badandbest - Improvements, Bug fixes
+* trende - Explosive props
 
 ### Localization
 * DiskGG - 🇨🇿
@@ -21,7 +21,6 @@ Based on the original Garry's Mod by Facepunch
 * ibrs_4ever - 🇨🇳
 * Evilblue210 - 🇹🇼
 * ML5700 - 🇩🇪
-* arad - 🇮🇷
 * NovaDiablox - 🇹🇷
 * Lokiv - 🇸🇪
 * TrackZone1 - 🇫🇷
