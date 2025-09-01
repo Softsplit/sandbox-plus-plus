@@ -150,7 +150,6 @@ spawnmenu .tabs {
 
 .spawnpage {
     display: none;
-    position: relative;
 
     &.active {
         display: flex;
@@ -158,6 +157,7 @@ spawnmenu .tabs {
     }
 
     .canvas {
+        position: relative;
         overflow: scroll;
         width: 100%;
         flex-grow: 1;

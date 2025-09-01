@@ -3,26 +3,26 @@
     "__guid": "3c948bf4-5353-443a-bb65-8f28584fed1b",
     "__version": 1,
     "Flags": 0,
-    "Name": "pistol",
+    "Name": "mp5",
     "Position": "0,0,0",
     "Rotation": "0,0,0,1",
     "Scale": "1,1,1",
     "Tags": "",
     "Enabled": true,
-    "NetworkMode": 1,
+    "NetworkMode": 2,
     "NetworkInterpolation": true,
-    "NetworkOrphaned": 1,
+    "NetworkOrphaned": 0,
     "OwnerTransfer": 1,
     "Components": [
       {
-        "__type": "Pistol",
-        "__guid": "eec77653-ee7e-42ab-8ff6-54ac3c9159cb",
+        "__type": "MP5",
+        "__guid": "59f1e612-bea8-47ea-8f34-ad7cb6deada3",
         "__enabled": true,
-        "Damage": 9,
+        "Damage": 5,
         "DeployTime": 0,
-        "DisplayName": "Pistol",
-        "Handedness": "Right",
-        "HoldType": "Pistol",
+        "DisplayName": "MP5",
+        "Handedness": "Both",
+        "HoldType": "Rifle",
         "InventorySlot": 0,
         "OnComponentDestroy": null,
         "OnComponentDisabled": null,
@@ -31,17 +31,17 @@
         "OnComponentStart": null,
         "OnComponentUpdate": null,
         "ParentBone": "hold_r",
-        "PrimaryFireRate": 0.15,
-        "ReloadTime": 1.5,
-        "ShootSound": "sounds/weapons/rust_pistol/rust_pistol.shoot.sound",
+        "ReloadTime": 2.5,
+        "ShootSound": "sounds/weapons/rust_smg/rust_smg.shoot.sound",
+        "TimeBetweenShots": 0.15,
         "Value": 0,
         "ViewModelPrefab": {
           "_type": "gameobject",
-          "prefab": "prefabs/weapons/pistol/pistol_vm.prefab"
+          "prefab": "prefabs/weapons/mp5/mp5_vm.prefab"
         },
         "WorldModelPrefab": {
           "_type": "gameobject",
-          "prefab": "prefabs/weapons/pistol/pistol_wm.prefab"
+          "prefab": "prefabs/weapons/mp5/mp5_wm.prefab"
         }
       }
     ],

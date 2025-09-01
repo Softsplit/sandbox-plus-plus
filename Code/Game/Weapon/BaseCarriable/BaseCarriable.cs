@@ -28,7 +28,6 @@ public record struct TraceAttackInfo( GameObject Target, float Damage, TagSet Ta
 
 public partial class BaseCarriable : Component
 {
-	[Property, Feature( "Inventory" ), Range( 0, 9 )] public int InventorySlot { get; set; } = 0;
 	[Property, Feature( "Inventory" )] public string DisplayName { get; set; } = "My Weapon";
 
 	public GameObject ViewModel { get; protected set; }
@@ -117,6 +116,7 @@ public partial class BaseCarriable : Component
 		if ( controller is null ) return;
 
 		controller.Renderer.Set( "holdtype", (int)HoldType );
+		controller.Renderer.Set( "holdtype_handedness", (int)Handedness );
 
 		if ( player.IsLocalPlayer )
 		{

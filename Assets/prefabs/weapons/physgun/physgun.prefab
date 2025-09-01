@@ -15,7 +15,7 @@
     "OwnerTransfer": 1,
     "Components": [
       {
-        "__type": "Physgun",
+        "__type": "PhysGun",
         "__guid": "45dbfc9d-3b70-4986-994e-905d4f1670ba",
         "__enabled": true,
         "BeamHighlight": {
@@ -36,9 +36,9 @@
           "go": "38c1b57f-3b24-4d7b-b222-982dd9ed9ebf",
           "component_type": "LineRenderer"
         },
-        "DisplayName": "Physics Gun",
+        "DisplayName": "PhysGun",
+        "Handedness": "Both",
         "HoldType": "Pistol",
-        "InventorySlot": 0,
         "OnComponentDestroy": null,
         "OnComponentDisabled": null,
         "OnComponentEnabled": null,

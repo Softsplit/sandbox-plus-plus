@@ -1,7 +1,6 @@
 public partial class BaseBulletWeapon : BaseWeapon
 {
-	[Property]
-	public SoundEvent ShootSound { get; set; }
+	[Property] public SoundEvent ShootSound { get; set; }
 
 	protected TimeSince TimeSinceShoot = 0f;
 	private bool queuedShot = false;

@@ -9,7 +9,8 @@
   "PackageReferences": [],
   "EditorReferences": null,
   "Mounts": [
-    "quake"
+    "quake",
+    "ns2"
   ],
   "IsStandaloneOnly": false,
   "Metadata": {

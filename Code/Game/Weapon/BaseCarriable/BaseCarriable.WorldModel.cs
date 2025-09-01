@@ -10,6 +10,7 @@ public partial class BaseCarriable : Component
 
 	[Property, Feature( "WorldModel" )] public GameObject WorldModelPrefab { get; set; }
 	[Property, Feature( "WorldModel" )] public CitizenAnimationHelper.HoldTypes HoldType { get; set; } = CitizenAnimationHelper.HoldTypes.HoldItem;
+	[Property, Feature( "WorldModel" )] public CitizenAnimationHelper.Hand Handedness { get; set; } = CitizenAnimationHelper.Hand.Both;
 	[Property, Feature( "WorldModel" )] public string ParentBone { get; set; } = "hold_r";
 
 	protected void CreateWorldModel()

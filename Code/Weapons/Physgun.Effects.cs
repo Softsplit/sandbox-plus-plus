@@ -1,6 +1,6 @@
 using Sandbox.Utility;
 
-public partial class Physgun
+public partial class PhysGun
 {
 	[Property] public LineRenderer BeamRenderer { get; set; }
 	[Property] public LineRendererLight BeamLight { get; set; }

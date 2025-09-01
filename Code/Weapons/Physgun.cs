@@ -1,6 +1,6 @@
 using Sandbox.Physics;
 
-public partial class Physgun : BaseCarriable
+public partial class PhysGun : BaseCarriable
 {
 	[Property, RequireComponent] public HighlightOutline BeamHighlight { get; set; }
 

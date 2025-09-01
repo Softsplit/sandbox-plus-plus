@@ -29,7 +29,7 @@
         if (!inventory.IsValid())
             return;
 
-        if (inventory.ActiveWeapon is Physgun physgun && physgun.BeamRenderer.Enabled)
+        if (inventory.ActiveWeapon is PhysGun physgun && physgun.BeamRenderer.Enabled)
             return;
 
         // Update active states manually when weapon changes
@@ -73,13 +73,9 @@
     {
         if (inventory?.Weapons == null) return null;
 
-        // First, try to get a weapon that's explicitly assigned to this slot
-        var weaponInSlot = inventory.Weapons.Where(w => w.InventorySlot == slotIndex).FirstOrDefault();
-        if (weaponInSlot != null) return weaponInSlot;
-
         // If no weapon is explicitly assigned to this slot,
         // distribute available weapons across the 9 slots in order
-        var weapons = inventory.Weapons.OrderBy(w => w.InventorySlot).ToList();
+        var weapons = inventory.Weapons.ToList();
         if (slotIndex < weapons.Count)
         {
             return weapons[slotIndex];

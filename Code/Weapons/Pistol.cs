@@ -1,6 +1,6 @@
 public class Pistol : BaseBulletWeapon
 {
-	[Property] public float Damage { get; set; } = 12.0f;
+	[Property] public float Damage { get; set; } = 9.0f;
 	[Property] public float PrimaryFireRate { get; set; } = 0.15f;
 
 	public override void OnAdded( Player player )
