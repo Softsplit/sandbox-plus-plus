@@ -26,7 +26,7 @@
 	{
 		var sort = $"sort:{SortOrder}";
 		var local = LocalOnly ? "local:true" : "";
-		var str = $"{sort} {local} type:sent -npc";
+		var str = $"-npc {sort} {local} type:sent";
 
 		return str;
 	}

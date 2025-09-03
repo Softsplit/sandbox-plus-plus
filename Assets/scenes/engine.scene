@@ -456,35 +456,6 @@
             }
           ],
           "Children": []
-        },
-        {
-          "__guid": "254a62eb-26da-47a0-bb49-eb4380106d72",
-          "__version": 1,
-          "Flags": 0,
-          "Name": "Notice",
-          "Position": "0,0,0",
-          "Rotation": "0,0,0,1",
-          "Scale": "1,1,1",
-          "Tags": "",
-          "Enabled": true,
-          "NetworkMode": 2,
-          "NetworkInterpolation": true,
-          "NetworkOrphaned": 0,
-          "OwnerTransfer": 1,
-          "Components": [
-            {
-              "__type": "Notice",
-              "__guid": "e7736958-e285-4571-b30a-5507781503c1",
-              "__enabled": true,
-              "OnComponentDestroy": null,
-              "OnComponentDisabled": null,
-              "OnComponentEnabled": null,
-              "OnComponentFixedUpdate": null,
-              "OnComponentStart": null,
-              "OnComponentUpdate": null
-            }
-          ],
-          "Children": []
         }
       ]
     }

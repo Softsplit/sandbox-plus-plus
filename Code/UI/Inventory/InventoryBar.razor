@@ -73,8 +73,6 @@
     {
         if (inventory?.Weapons == null) return null;
 
-        // If no weapon is explicitly assigned to this slot,
-        // distribute available weapons across the 9 slots in order
         var weapons = inventory.Weapons.ToList();
         if (slotIndex < weapons.Count)
         {
@@ -86,7 +84,7 @@
 
     private bool IsActiveWeapon(BaseCarriable weapon)
     {
-        return inventory?.ActiveWeapon == weapon && weapon != null;
+        return inventory?.ActiveWeapon == weapon && weapon.IsValid();
     }
 
     private void SetActiveSlot(int slotIndex)
@@ -94,7 +92,6 @@
         if (!player.IsValid() || !inventory.IsValid())
             return;
 
-        // Find weapon for the specified slot using the same logic as GetWeaponForSlot
         var weaponInSlot = GetWeaponForSlot(slotIndex);
         if (!weaponInSlot.IsValid())
             return;
@@ -113,7 +110,6 @@
         var weapons = inventory.Weapons;
         if (weapons.Count == 0) return;
 
-        // Find current weapon index
         int currentIndex = -1;
         if (inventory.ActiveWeapon.IsValid())
         {
@@ -127,12 +123,10 @@
             }
         }
 
-        // Calculate next weapon index
         int nextIndex = currentIndex + delta;
         while (nextIndex < 0) nextIndex += weapons.Count;
         while (nextIndex >= weapons.Count) nextIndex -= weapons.Count;
 
-        // Switch to the weapon at the next index
         if (nextIndex >= 0 && nextIndex < weapons.Count)
         {
             inventory.SwitchWeapon(weapons[nextIndex]);
