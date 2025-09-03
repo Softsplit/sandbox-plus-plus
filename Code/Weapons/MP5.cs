@@ -1,7 +1,7 @@
 [Title( "MP5" )]
 public class MP5 : BaseBulletWeapon
 {
-	[Property] public float TimeBetweenShots { get; set; } = 0.15f;
+	[Property] public float TimeBetweenShots { get; set; } = 0.1f;
 	[Property] public float Damage { get; set; } = 5.0f;
 
 	bool _isShooting;

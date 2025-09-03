@@ -23,7 +23,6 @@
         "DisplayName": "MP5",
         "Handedness": "Both",
         "HoldType": "Rifle",
-        "InventorySlot": 0,
         "OnComponentDestroy": null,
         "OnComponentDisabled": null,
         "OnComponentEnabled": null,
@@ -33,7 +32,7 @@
         "ParentBone": "hold_r",
         "ReloadTime": 2.5,
         "ShootSound": "sounds/weapons/rust_smg/rust_smg.shoot.sound",
-        "TimeBetweenShots": 0.15,
+        "TimeBetweenShots": 0.1,
         "Value": 0,
         "ViewModelPrefab": {
           "_type": "gameobject",

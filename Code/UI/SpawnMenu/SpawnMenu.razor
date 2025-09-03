@@ -8,6 +8,8 @@
         <ButtonGroup class="tabs" @ref="leftTabs" />
         <div class="body">
             <ModelList @ref="modelList" />
+            <EntityList @ref="entityList" />
+            <NPCList @ref="npcList" />
             <SpawnList @ref="spawnList" />
         </div>
     </div>
@@ -32,7 +34,10 @@
     ButtonGroup leftTabs;
 
     private ModelList modelList;
+    private EntityList entityList;
+    private NPCList npcList;
     private SpawnList spawnList;
+
     private bool isSearching;
 
     protected override void OnTreeFirstBuilt()
@@ -40,8 +45,8 @@
         Instance = this;
 
         leftTabs.SelectedButton = leftTabs.AddButtonActive("#spawnmenu.modellist", b => modelList.SetClass("active", b));
-        // leftTabsPanel.AddButtonActive( "#spawnmenu.entities", ( b ) => ents.SetClass( "active", b ) );
-        // leftTabsPanel.AddButtonActive( "#spawnmenu.npclist", ( b ) => npclist.SetClass( "active", b ) );
+        leftTabs.AddButtonActive("#spawnmenu.entities", (b) => entityList.SetClass("active", b));
+        leftTabs.AddButtonActive("#spawnmenu.npclist", (b) => npcList.SetClass("active", b));
         leftTabs.AddButtonActive("#spawnmenu.props", b => spawnList.SetClass("active", b));
     }
 

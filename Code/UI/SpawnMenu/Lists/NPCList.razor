@@ -26,13 +26,13 @@
 	{
 		var sort = $"sort:{SortOrder}";
 		var local = LocalOnly ? "local:true" : "";
-		var str = $"+game:facepunch.sandbox +runtime +npc {sort} {local} type:addon";
+		var str = $"+npc {sort} {local} type:sent";
 
 		return str;
 	}
 
 	void SpawnPackage( Package package )
 	{
-		ConsoleSystem.Run("spawnpackage", package.FullIdent);
+		ConsoleSystem.Run("spawn", package.FullIdent);
 	}
 }
