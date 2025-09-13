@@ -1,8 +1,8 @@
 [Title( "MP5" )]
 public class MP5 : BaseBulletWeapon
 {
-	[Property] public float TimeBetweenShots { get; set; } = 0.1f;
 	[Property] public float Damage { get; set; } = 5.0f;
+	[Property] public float PrimaryFireRate { get; set; } = 0.067f;
 
 	bool _isShooting;
 
@@ -27,7 +27,7 @@ public class MP5 : BaseBulletWeapon
 		if ( !CanShoot() )
 			return;
 
-		AddShootDelay( TimeBetweenShots );
+		AddShootDelay( PrimaryFireRate );
 
 		var aimConeAmount = GetAimConeAmount();
 		var forward = player.EyeTransform.Rotation.Forward.WithAimCone( 0.5f + aimConeAmount * 4f, 0.25f + aimConeAmount * 4f );

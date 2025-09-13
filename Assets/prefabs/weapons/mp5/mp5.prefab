@@ -30,9 +30,9 @@
         "OnComponentStart": null,
         "OnComponentUpdate": null,
         "ParentBone": "hold_r",
+        "PrimaryFireRate": 0.067,
         "ReloadTime": 2.5,
         "ShootSound": "sounds/weapons/rust_smg/rust_smg.shoot.sound",
-        "TimeBetweenShots": 0.1,
         "Value": 0,
         "ViewModelPrefab": {
           "_type": "gameobject",
