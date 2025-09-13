@@ -3,19 +3,19 @@
 @inherits Panel
 
 <root class="inventory-icon">
-	<label class="item-name">@(TargetCarriable?.DisplayName ?? "empty")</label>
-	<label class="slot-number">@SlotNumber</label>
+    <label class="item-name">@(DisplayInfo.For(TargetCarriable).ClassName ?? "empty")</label>
+    <label class="slot-number">@SlotNumber</label>
 </root>
 
 @code
 {
-	[Property] public BaseCarriable TargetCarriable { get; set; }
-	[Property] public int SlotNumber { get; set; }
+    [Property] public BaseCarriable TargetCarriable { get; set; }
+    [Property] public int SlotNumber { get; set; }
 
-	public void Clear()
-	{
-		TargetCarriable = null;
-		SetClass("active", false);
-		StateHasChanged();
-	}
+    public void Clear()
+    {
+        TargetCarriable = null;
+        SetClass("active", false);
+        StateHasChanged();
+    }
 }

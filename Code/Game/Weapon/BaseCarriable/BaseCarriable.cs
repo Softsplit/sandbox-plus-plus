@@ -28,8 +28,6 @@ public record struct TraceAttackInfo( GameObject Target, float Damage, TagSet Ta
 
 public partial class BaseCarriable : Component
 {
-	[Property, Feature( "Inventory" )] public string DisplayName { get; set; } = "My Weapon";
-
 	public GameObject ViewModel { get; protected set; }
 	public GameObject WorldModel { get; protected set; }
 

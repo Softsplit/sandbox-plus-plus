@@ -216,7 +216,7 @@ public sealed partial class GameManager( Scene scene ) : GameObjectSystem<GameMa
 		if ( !Networking.IsHost )
 			return;
 
-		var player = Player.FindForConnection( Rpc.Caller );
+		var player = Player.FindForConnection( caller );
 		if ( player is null ) return;
 
 		// store off their eye transform
