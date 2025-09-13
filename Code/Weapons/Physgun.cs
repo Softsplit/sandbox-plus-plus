@@ -207,8 +207,16 @@ public partial class PhysGun : BaseCarriable
 				Unfreeze( _state.Body );
 			}
 		}
+		else if ( Input.Pressed( "reload" ) )
+		{
+			if ( _stateHovered.IsValid() )
+			{
+				UnfreezeAll( _stateHovered.Body );
+			}
+		}
 		else
 		{
+			_state = default;
 			_preventReselect = false;
 		}
 	}
@@ -326,5 +334,34 @@ public partial class PhysGun : BaseCarriable
 		if ( body.IsProxy ) return;
 
 		body.MotionEnabled = true;
+	}
+
+	[Rpc.Host]
+	void UnfreezeAll( Rigidbody body )
+	{
+		if ( !body.IsValid() ) return;
+		if ( body.IsProxy ) return;
+
+		var bodies = new HashSet<Rigidbody>();
+		GetConnectedBodies( body.GameObject, bodies );
+
+		foreach ( var rb in bodies )
+		{
+			Unfreeze( rb );
+		}
+	}
+
+	static void GetConnectedBodies( GameObject source, HashSet<Rigidbody> result )
+	{
+		foreach ( var rb in source.Root.Components.GetAll<Rigidbody>() )
+		{
+			if ( !result.Add( rb ) ) continue;
+
+			foreach ( var joint in rb.Joints )
+			{
+				if ( joint.Object1 != null ) GetConnectedBodies( joint.Object1, result );
+				if ( joint.Object2 != null ) GetConnectedBodies( joint.Object2, result );
+			}
+		}
 	}
 }

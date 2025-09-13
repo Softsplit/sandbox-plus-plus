@@ -38,7 +38,7 @@ public partial class PhysGun
 		middleSpring.Target = targetMiddle;
 		middleSpring.Update( Time.Delta );
 
-		BeamRenderer.VectorPoints[2] = Vector3.Lerp( (end + endNormal * 10), BeamRenderer.VectorPoints[1], 0.3f + MathF.Sin( Time.Now * 10.0f ) * 0.2f );
+		BeamRenderer.VectorPoints[2] = Vector3.Lerp( end + endNormal * 10, BeamRenderer.VectorPoints[1], 0.3f + MathF.Sin( Time.Now * 10.0f ) * 0.2f );
 		BeamRenderer.VectorPoints[3] = end;
 
 		if ( justEnabled )

@@ -42,7 +42,7 @@ public partial class BaseWeapon
 	{
 		try
 		{
-			IWeaponEvent.PostToGameObject( ViewModel, x => x.OnReloadStart() );
+			ViewModel?.RunEvent<ViewModel>( x => x.OnReloadStart() );
 
 			BroadcastReload();
 
@@ -52,7 +52,7 @@ public partial class BaseWeapon
 		{
 			isReloading = false;
 
-			IWeaponEvent.PostToGameObject( ViewModel, x => x.OnReloadFinish() );
+			ViewModel?.RunEvent<ViewModel>( x => x.OnReloadFinish() );
 		}
 	}
 }

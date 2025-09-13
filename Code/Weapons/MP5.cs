@@ -16,16 +16,7 @@ public class MP5 : BaseBulletWeapon
 		_isShooting = Input.Down( "attack1" );
 		if ( _isShooting )
 		{
-			if ( Input.Pressed( "Attack1" ) )
-			{
-				StartAttack();
-			}
-
 			ShootBullet( player );
-		}
-		else if ( Input.Released( "attack1" ) )
-		{
-			StopAttack();
 		}
 	}
 

@@ -252,15 +252,14 @@ public partial class BaseCarriable : Component
 		var damagable = attack.Target.GetComponentInParent<IDamageable>();
 		if ( damagable is not null )
 		{
-			var info = new DeathmatchDamageInfo( attack.Damage, Owner.GameObject, GameObject )
+			var info = new DamageInfo( attack.Damage, Owner.GameObject, GameObject )
 			{
-				InstigatorId = Owner.PlayerId,
 				Position = attack.Position,
 				Origin = attack.Origin,
 				Tags = attack.Tags
 			};
 
-			damagable.Damage( info );
+			damagable.OnDamage( info );
 		}
 
 		if ( attack.Target.GetComponentInChildren<Rigidbody>() is var rb && rb.IsValid() )

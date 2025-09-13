@@ -121,11 +121,11 @@ public sealed partial class Player : Component, Component.IDamageable, PlayerCon
 	/// Broadcasts death to other players
 	/// </summary>
 	[Rpc.Broadcast( NetFlags.HostOnly | NetFlags.Reliable )]
-	void NotifyDeath( Guid i, IPlayerEvent.DiedParams args )
+	void NotifyDeath( IPlayerEvent.DiedParams args )
 	{
 		IPlayerEvent.PostToGameObject( GameObject, x => x.OnDied( args ) );
 
-		if ( args.InstigatorId == PlayerId )
+		if ( args.Attacker == GameObject )
 		{
 			IPlayerEvent.PostToGameObject( GameObject, x => x.OnSuicide() );
 		}
@@ -139,17 +139,13 @@ public sealed partial class Player : Component, Component.IDamageable, PlayerCon
 	/// <summary>
 	/// Called on the host when a player dies
 	/// </summary>
-	void Kill( in DeathmatchDamageInfo d )
+	void Kill( in DamageInfo d )
 	{
 		//
 		// Let everyone know about the death
 		//
 
-		NotifyDeath( d.InstigatorId, new IPlayerEvent.DiedParams()
-		{
-			InstigatorId = d.InstigatorId,
-			Attacker = d.Attacker,
-		} );
+		NotifyDeath( new IPlayerEvent.DiedParams() { Attacker = d.Attacker } );
 
 		var inventory = GetComponent<PlayerInventory>();
 		if ( inventory.IsValid() )
@@ -191,22 +187,14 @@ public sealed partial class Player : Component, Component.IDamageable, PlayerCon
 		GetComponent<PlayerInventory>()?.OnControl();
 	}
 
-	public void OnDamage( in DamageInfo d )
+	public void OnDamage( in DamageInfo dmg )
 	{
 		if ( Health < 1 ) return;
 		if ( PlayerData.IsGodMode ) return;
 
-		// We don't care for damage that isn't of our type
-		if ( d is not DeathmatchDamageInfo dmg ) return;
-
 		var damage = dmg.Damage;
 		if ( dmg.Tags.Contains( DamageTags.Headshot ) )
 			damage *= 2;
-
-		if ( dmg.InstigatorId.Equals( PlayerId ) && !dmg.Tags.Contains( DamageTags.FullSelfDamage ) )
-		{
-			damage *= 1.5f;
-		}
 
 		Health -= damage;
 

@@ -1,6 +1,4 @@
-using static BaseWeapon;
-
-public sealed partial class ViewModel : WeaponModel, IWeaponEvent, ICameraSetup
+public sealed partial class ViewModel : WeaponModel, ICameraSetup
 {
 	/// <summary>
 	/// Turns on incremental reloading parameters.
@@ -37,11 +35,11 @@ public sealed partial class ViewModel : WeaponModel, IWeaponEvent, ICameraSetup
 	private float bobSpeed;
 	private bool activated = false;
 
-	bool IsAttacking;
-	TimeSince AttackDuration;
-
+	public bool IsAttacking { get; set; }
 	public float YawInertia { get; private set; }
 	public float PitchInertia { get; private set; }
+
+	TimeSince AttackDuration;
 
 	protected override void OnStart()
 	{
@@ -134,7 +132,7 @@ public sealed partial class ViewModel : WeaponModel, IWeaponEvent, ICameraSetup
 		var swingVelocity = new Vector3( 0, yawDelta, pitchDelta );
 
 		swingOffset -= swingOffset * ReturnSpeed * Time.Delta;
-		swingOffset += (swingVelocity * SwingInfluence);
+		swingOffset += swingVelocity * SwingInfluence;
 
 		if ( swingOffset.Length > MaxOffsetLength )
 		{
@@ -181,7 +179,7 @@ public sealed partial class ViewModel : WeaponModel, IWeaponEvent, ICameraSetup
 		Renderer.Set( "attack_hold", IsAttacking ? AttackDuration.Relative.Clamp( 0f, 1f ) : 0f );
 	}
 
-	void IWeaponEvent.OnAttack( IWeaponEvent.AttackEvent e )
+	public void OnAttack()
 	{
 		Renderer?.Set( "b_attack", true );
 
@@ -203,7 +201,7 @@ public sealed partial class ViewModel : WeaponModel, IWeaponEvent, ICameraSetup
 	/// <summary>
 	/// Called when starting to reload a weapon.
 	/// </summary>
-	void IWeaponEvent.OnReloadStart()
+	public void OnReloadStart()
 	{
 		Renderer?.Set( "speed_reload", AnimationSpeed );
 		Renderer?.Set( IsIncremental ? "b_reloading" : "b_reload", true );
@@ -212,13 +210,13 @@ public sealed partial class ViewModel : WeaponModel, IWeaponEvent, ICameraSetup
 	/// <summary>
 	/// Called when incrementally reloading a weapon.
 	/// </summary>
-	void IWeaponEvent.OnIncrementalReload()
+	public void OnIncrementalReload()
 	{
 		Renderer?.Set( "speed_reload", IncrementalAnimationSpeed );
 		Renderer?.Set( "b_reloading_shell", true );
 	}
 
-	void IWeaponEvent.OnReloadFinish()
+	public void OnReloadFinish()
 	{
 		if ( IsIncremental )
 		{

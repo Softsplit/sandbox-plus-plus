@@ -56,8 +56,6 @@ public sealed partial class GameManager( Scene scene ) : GameObjectSystem<GameMa
 		// Spawn this object and make the client the owner
 		var playerGo = GameObject.Clone( "/prefabs/engine/player.prefab", new CloneConfig { Name = playerData.DisplayName, StartEnabled = false, Transform = startLocation } );
 
-		Log.Info( playerGo );
-
 		var player = playerGo.Components.Get<Player>( true );
 		player.PlayerData = playerData;
 
@@ -145,44 +143,44 @@ public sealed partial class GameManager( Scene scene ) : GameObjectSystem<GameMa
 	/// <summary>
 	/// Called on the host when a played is killed
 	/// </summary>
-	public void OnDeath( Player player, DeathmatchDamageInfo dmg )
+	public void OnDeath( Player player, DamageInfo dmg )
 	{
 		Assert.True( Networking.IsHost );
 		Assert.True( player.IsValid(), "Player invalid" );
 		Assert.True( player.PlayerData.IsValid(), $"{player.GameObject.Name}'s PlayerData invalid" );
 
 		var weapon = dmg.Weapon;
-		var attackerData = PlayerData.For( dmg.InstigatorId );
-		bool isSuicide = attackerData == player.PlayerData;
+		var attacker = dmg.Attacker?.GetComponent<Player>();
+		bool isSuicide = attacker == player;
 
-		if ( attackerData.IsValid() && !isSuicide )
+		if ( attacker.IsValid() && !isSuicide )
 		{
-			Assert.True( weapon.IsValid(), $"Weapon invalid. (Attacker: {attackerData.DisplayName}, Victim: {player.DisplayName})" );
+			Assert.True( weapon.IsValid(), $"Weapon invalid. (Attacker: {attacker.DisplayName}, Victim: {player.DisplayName})" );
 
-			attackerData.Kills++;
-			attackerData.AddStat( $"kills" );
+			attacker.PlayerData.Kills++;
+			attacker.PlayerData.AddStat( $"kills" );
 
 			if ( weapon.IsValid() )
 			{
-				attackerData.AddStat( $"kills.{weapon.Name}" );
+				attacker.PlayerData.AddStat( $"kills.{weapon.Name}" );
 			}
 		}
 
 		player.PlayerData.Deaths++;
 
-		string attackerName = attackerData.IsValid() ? attackerData.DisplayName : dmg.Attacker?.Name ?? "";
+		string attackerName = attacker.IsValid() ? attacker.DisplayName : dmg.Attacker?.Name ?? "";
 		string weaponName = weapon.IsValid() ? weapon.Name : "";
-		long attackerSteamId = attackerData.IsValid() ? attackerData.SteamId : 0;
+		long attackerSteamId = attacker.IsValid() ? attacker.SteamId : 0;
 
 		if ( string.IsNullOrEmpty( attackerName ) )
 		{
 			// Player died without a clear attacker (environmental, etc.)
-			OnKilledMessage( 0, "", player.PlayerData.SteamId, player.DisplayName, "died" );
+			OnKilledMessage( 0, "", player.SteamId, player.DisplayName, "died" );
 		}
 		else
 		{
 			// Normal kill
-			OnKilledMessage( attackerSteamId, attackerName, player.PlayerData.SteamId, player.DisplayName, weaponName );
+			OnKilledMessage( attackerSteamId, attackerName, player.SteamId, player.DisplayName, weaponName );
 		}
 
 		// Log to console (only on host to avoid duplicates)
