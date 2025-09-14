@@ -1,4 +1,4 @@
-@using Sandbox.UI
+﻿@using Sandbox.UI
 @using Sandbox.Modals
 
 <root style="flex-direction: column;">
@@ -15,6 +15,7 @@
             <a class="button" onclick="@CreateNewGame">Create Game</a>
         }
         <a class="button" onclick="@OpenServerList">Find a Game</a>
+        <a class="button" onclick="@CopyToClipboard">Join the Discord 📋</a>
         <a class="button" onclick="@Game.Overlay.ShowBinds">Settings</a>
         <span style="height: 20px;"></span>
         <a class="button" @onclick=@Game.Close>Quit</a>
@@ -65,5 +66,10 @@
 
         Game.Overlay.ShowServerList(options);
         */
+    }
+
+    void CopyToClipboard()
+    {
+        Clipboard.SetText("https://discord.gg/rbCJdZjewf");
     }
 }
