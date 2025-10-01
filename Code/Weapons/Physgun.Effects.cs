@@ -5,7 +5,7 @@ public partial class PhysGun
 	[Property] public LineRenderer BeamRenderer { get; set; }
 	[Property] public LineRendererLight BeamLight { get; set; }
 
-	Vector3.SpringDamped middleSpring = new( 0, 0, 0.1f );
+	Vector3.SpringDamped middleSpring = new( 0, 0 );
 
 	void UpdateBeam( Transform source, Vector3 end, Vector3 endNormal )
 	{

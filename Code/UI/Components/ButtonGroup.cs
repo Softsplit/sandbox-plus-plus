@@ -55,7 +55,7 @@ public class ButtonGroup : Panel
 	/// <param name="action">Called <c>onclick</c>.</param>
 	public Button AddButton( string value, Action action )
 	{
-		var btn = Add.Button( value, action );
+		var btn = AddChild( new Button( value, action ) );
 		btn.AddClass( ButtonClass );
 		return btn;
 	}
@@ -67,7 +67,7 @@ public class ButtonGroup : Panel
 	/// <param name="action">Called on <c>startactive</c> with parameter of <see langword="true"/> and <c>stopactive</c> with parameter of <see langword="false"/>.</param>
 	public Button AddButtonActive( string value, Action<bool> action )
 	{
-		var btn = Add.Button( value );
+		var btn = AddChild( new Button( value ) );
 		btn.AddClass( ButtonClass );
 
 		btn.AddEventListener( "startactive", () => action( true ) );
