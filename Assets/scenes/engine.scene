@@ -22,6 +22,7 @@
           "__enabled": true,
           "BackgroundColor": "0,0,0,1",
           "ClearFlags": "All",
+          "EnablePostProcessing": true,
           "FieldOfView": 90,
           "FovAxis": "Horizontal",
           "IsMainCamera": true,
@@ -33,6 +34,7 @@
           "OnComponentUpdate": null,
           "Orthographic": false,
           "OrthographicHeight": 1204,
+          "PostProcessAnchor": null,
           "Priority": 1,
           "RenderExcludeTags": "",
           "RenderTags": "",
@@ -65,6 +67,7 @@
           "__guid": "de3290d5-77d9-453e-8e71-7495dbee42b9",
           "__enabled": true,
           "__version": 1,
+          "Filter": "Bilinear",
           "Gamma": 2.2,
           "Mode": "Additive",
           "OnComponentDestroy": null,
@@ -91,7 +94,6 @@
           "OnComponentFixedUpdate": null,
           "OnComponentStart": null,
           "OnComponentUpdate": null,
-          "Quality": "High",
           "Radius": 128,
           "ThinCompensation": 5
         },
@@ -105,8 +107,7 @@
           "OnComponentEnabled": null,
           "OnComponentFixedUpdate": null,
           "OnComponentStart": null,
-          "OnComponentUpdate": null,
-          "RoughnessCutoff": 100
+          "OnComponentUpdate": null
         },
         {
           "__type": "CameraSetup",

@@ -1630,7 +1630,7 @@
             "MaterialGroup": null,
             "MaterialOverride": null,
             "Materials": null,
-            "Model": "models/first_person/first_person_arms.vmdl",
+            "Model": "models/first_person/v_first_person_arms_human.vmdl",
             "Morphs": {},
             "OnComponentDestroy": null,
             "OnComponentDisabled": null,
@@ -1692,6 +1692,7 @@
   "DontBreakAsTemplate": false,
   "__references": [
     "facepunch.rifle_muzzleflash#76090",
+    "facepunch.v_first_person_arms_human#122024",
     "facepunch.v_mp5#88812"
   ],
   "__version": 2

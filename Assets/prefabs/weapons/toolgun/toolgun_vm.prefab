@@ -1383,7 +1383,7 @@
             "MaterialGroup": null,
             "MaterialOverride": null,
             "Materials": null,
-            "Model": "models/first_person/first_person_arms.vmdl",
+            "Model": "models/first_person/v_first_person_arms_human.vmdl",
             "Morphs": {},
             "OnComponentDestroy": null,
             "OnComponentDisabled": null,
@@ -1444,6 +1444,7 @@
   "MenuIcon": null,
   "DontBreakAsTemplate": false,
   "__references": [
+    "facepunch.v_first_person_arms_human#122024",
     "facepunch.v_toolgun#33704"
   ],
   "__version": 2

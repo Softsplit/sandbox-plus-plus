@@ -69,7 +69,7 @@
             "__type": "Sandbox.SkinnedModelRenderer",
             "__guid": "5238e2b5-8ff1-4edb-924e-2046d5fb1b76",
             "__enabled": true,
-            "AnimationGraph": "models/first_person/first_person_arms_punching.vanmgrph",
+            "AnimationGraph": null,
             "BodyGroups": 21,
             "BoneMergeTarget": null,
             "CreateAttachments": false,
@@ -78,7 +78,7 @@
             "MaterialGroup": null,
             "MaterialOverride": null,
             "Materials": null,
-            "Model": "models/first_person/first_person_arms.vmdl",
+            "Model": "models/first_person/v_first_person_arms_human.vmdl",
             "Morphs": {},
             "OnComponentDestroy": null,
             "OnComponentDisabled": null,
@@ -138,6 +138,8 @@
   "MenuPath": null,
   "MenuIcon": null,
   "DontBreakAsTemplate": false,
-  "__references": [],
+  "__references": [
+    "facepunch.v_first_person_arms_human#122024"
+  ],
   "__version": 2
 }
