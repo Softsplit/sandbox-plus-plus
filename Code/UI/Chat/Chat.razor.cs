@@ -1,3 +1,5 @@
+namespace SandboxClassic.UI;
+
 public partial class Chat
 {
 	[Rpc.Broadcast]

@@ -1,6 +1,10 @@
 @using Sandbox.UI
 @using Sandbox.UI.Navigation
 
+@namespace SandboxClassic.UI
+
+@inherits Panel
+
 @if (!GameManager.InGame())
 {
     <div>No game. Error. We shouldn't be here.</div>

@@ -1,6 +1,9 @@
+@using Sandbox.UI
 @using Sandbox.Razor
 
-@namespace Sandbox.UI
+@namespace SandboxClassic.UI
+
+@inherits Panel
 
 <root class="form-group">
     <div class="form-label">@Label</div>
@@ -9,6 +12,6 @@
 
 @code
 {
-    public RenderFragment Label { get; set; }
-    public RenderFragment Control { get; set; }
+    [Parameter] public RenderFragment Label { get; set; }
+    [Parameter] public RenderFragment Control { get; set; }
 }

@@ -1,6 +1,10 @@
 ﻿@using Sandbox.UI
 @using Sandbox.Modals
 
+@namespace SandboxClassic.UI
+
+@inherits Panel
+
 <root style="flex-direction: column;">
     <div class="game-title">Sandbox Classic</div>
     <div class="controls">
@@ -16,7 +20,7 @@
         }
         <a class="button" onclick="@OpenServerList">Find a Game</a>
         <a class="button" onclick="@CopyToClipboard">Join the Discord 📋</a>
-        <a class="button" onclick="@Game.Overlay.ShowSettingsModal">Settings</a>
+        <a class="button" onclick="@Game.Overlay.ShowBinds">Settings</a>
         <span style="height: 20px;"></span>
         <a class="button" @onclick=@Game.Close>Quit</a>
     </div>

@@ -1,5 +1,7 @@
 @using Sandbox.UI
 
+@namespace SandboxClassic.UI
+
 @inherits Panel
 
 <root>
@@ -34,11 +36,11 @@
 
 @code
 {
-    public string MapIdent { get; set; }
+    [Parameter] public string MapIdent { get; set; }
 
-    public Action OnClicked { get; set; }
+    [Parameter] public Action OnClicked { get; set; }
 
-    public Package MapPackage { get; set; }
+    [Parameter] public Package MapPackage { get; set; }
 
     public string BackgroundImage => MapPackage?.Thumb;
 

@@ -1,3 +1,5 @@
+using SandboxClassic.UI;
+
 public sealed partial class GameManager( Scene scene ) : GameObjectSystem<GameManager>( scene ), Component.INetworkListener, ISceneStartup
 {
 	void ISceneStartup.OnHostInitialize()

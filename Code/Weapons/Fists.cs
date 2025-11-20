@@ -137,7 +137,7 @@ public class Fists : BaseCarriable
 	{
 		base.OnAdded( player );
 
-		var viewModel = ViewModel.GetComponent<ViewModel>();
+		var viewModel = ViewModel?.GetComponent<ViewModel>();
 		if ( viewModel.IsValid() )
 		{
 			viewModel.Renderer?.Set( "b_twohanded", false );

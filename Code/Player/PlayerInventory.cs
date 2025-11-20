@@ -10,6 +10,7 @@ public sealed class PlayerInventory : Component, IPlayerEvent
 	{
 		Pickup( "prefabs/weapons/physgun/physgun.prefab" );
 		Pickup( "prefabs/weapons/gravgun/gravgun.prefab" );
+		Pickup( "prefabs/weapons/toolgun/toolgun.prefab" );
 		Pickup( "prefabs/weapons/pistol/pistol.prefab" );
 		Pickup( "prefabs/weapons/mp5/mp5.prefab" );
 		Pickup( "prefabs/weapons/flashlight/flashlight.prefab" );
