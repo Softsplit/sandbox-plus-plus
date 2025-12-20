@@ -1,5 +1,5 @@
 # ![Sandbox++](http://files.softsplit.org/sandboxplusplus_nobg.png)
-A heavily work-in-progress successor to the original Garry's Mod gamemode, Sandbox, built on S&box.
+A heavily work-in-progress successor to the original Garry's Mod gamemode, Sandbox, built on s&box.
 
 All contributions are welcome. For discussions, please join our [Discord](https://discord.gg/rbCJdZjewf) server.
 
