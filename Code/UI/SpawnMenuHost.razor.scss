@@ -1,0 +1,31 @@
+SpawnMenuHost
+{
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	color: #cdf;
+	justify-content: center;
+	font-family: Poppins;
+	font-size: 14px;
+	font-weight: 600;
+	z-index: 1000;
+}
+
+SpawnMenuHost
+{
+	opacity: 0;
+	pointer-events: none;
+	transition: opacity 0.1s linear;
+}
+
+SpawnMenuHost.open
+{
+	opacity: 1;
+	pointer-events: all;
+	transition: opacity 0.1s linear;
+}
+
+
+

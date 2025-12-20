@@ -1,15 +1,18 @@
-using static BaseWeapon;
-
-public sealed class WorldModel : WeaponModel, IWeaponEvent
+public sealed class WorldModel : WeaponModel
 {
-	void IWeaponEvent.OnAttack( IWeaponEvent.AttackEvent e )
+	public void OnAttack()
 	{
 		Renderer?.Set( "b_attack", true );
 
-		if ( e.IsFirstPerson )
-			return;
-
 		DoMuzzleEffect();
 		DoEjectBrass();
+	}
+
+	public void CreateRangedEffects( BaseWeapon weapon, Vector3 hitPoint, Vector3? origin )
+	{
+		if ( weapon.ViewModel.IsValid() )
+			return;
+
+		DoTracerEffect( hitPoint, origin );
 	}
 }

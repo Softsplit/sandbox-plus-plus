@@ -1,27 +1,40 @@
 {
-  "Title": "Sandbox Classic",
+  "Title": "Sandbox++",
   "Type": "game",
   "Org": "softsplit",
   "Ident": "sandbox",
   "Schema": 1,
   "IncludeSourceFiles": false,
-  "Resources": "*.vmdl_c.png\nentity/*.png\nmenu/*",
+  "Resources": "",
   "PackageReferences": [],
   "EditorReferences": null,
   "Mounts": [
-    "quake"
+    "quake",
+    "ns2"
   ],
   "IsStandaloneOnly": false,
   "Metadata": {
     "MaxPlayers": 32,
     "MinPlayers": 1,
+    "TickRate": 50,
+    "GameNetworkType": "Multiplayer",
+    "MapSelect": "Unrestricted",
+    "MapList": [
+      "facepunch.flatgrass"
+    ],
+    "RankType": "None",
+    "PerMapRanking": false,
+    "LeaderboardType": "None",
     "CsProjName": "",
-    "ControlModes": {},
-    "LaunchMode": "Normal",
     "StartupScene": "scenes/menu.scene",
-    "MapStartupScene": "scenes/game.scene",
-    "SystemScene": "scenes/engine.scene",
-    "ParentPackage": "",
-    "DedicatedServerStartupScene": "scenes/game.scene"
+    "ControlModes": {
+      "Keyboard": true,
+      "VR": false,
+      "Gamepad": true
+    },
+    "LaunchMode": "Normal",
+    "MapStartupScene": "scenes/sandbox.scene",
+    "DedicatedServerStartupScene": "scenes/sandbox.scene",
+    "SystemScene": "scenes/system.scene"
   }
 }

@@ -1,0 +1,11 @@
+"Layer0"
+{
+	"shader"	"weapons/toolgun/toolgun-screen.shader"
+	"g_bFogEnabled"	"1"
+	"g_flTintColor"	"[1.000000 1.000000 1.000000 0.000000]"
+	"TextureColor"	"[0.192157 0.192157 0.192157 0.000000]"
+	"TextureRoughness"	"[0.118000 0.118000 0.118000 0.000000]"
+	"Compiled Textures"
+	{
+	}
+}

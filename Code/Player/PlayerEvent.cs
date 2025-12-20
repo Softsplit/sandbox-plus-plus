@@ -8,7 +8,6 @@ public interface IPlayerEvent : ISceneEvent<IPlayerEvent>
 	public struct DamageParams
 	{
 		public float Damage { get; set; }
-		public Guid InstigatorId { get; set; }
 		public GameObject Attacker { get; set; }
 		public GameObject Weapon { get; set; }
 		public TagSet Tags { get; set; }
@@ -19,7 +18,6 @@ public interface IPlayerEvent : ISceneEvent<IPlayerEvent>
 
 	public struct DiedParams
 	{
-		public Guid InstigatorId { get; set; }
 		public GameObject Attacker { get; set; }
 	}
 	void OnDied( DiedParams args ) { }
@@ -27,7 +25,7 @@ public interface IPlayerEvent : ISceneEvent<IPlayerEvent>
 	void OnJump() { }
 	void OnLand( float distance, Vector3 velocity ) { }
 	void OnSuicide() { }
-	void OnPickup( BaseCarriable item ) { }
+	void OnPickup( BaseCarryable item ) { }
 	void OnCameraMove( ref Angles angles ) { }
 	void OnCameraSetup( CameraComponent camera ) { }
 	void OnCameraPostSetup( CameraComponent camera ) { }
@@ -40,5 +38,5 @@ public interface ILocalPlayerEvent : ISceneEvent<ILocalPlayerEvent>
 {
 	void OnJump() { }
 	void OnLand( float distance, Vector3 velocity ) { }
-	void OnPickup( BaseCarriable weapon ) { }
+	void OnPickup( BaseCarryable weapon ) { }
 }

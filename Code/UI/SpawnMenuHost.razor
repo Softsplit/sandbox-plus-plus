@@ -1,0 +1,127 @@
+@using Sandbox;
+@using Sandbox.UI;
+@inherits PanelComponent
+@namespace Sandbox
+
+<root @onmousedown=@OnMenuClicked>
+	
+    <PanelSwitcher @ref="PanelSwitcher"></PanelSwitcher>
+
+    <SpawnMenuModeBar></SpawnMenuModeBar>
+
+</root>
+
+@code
+{
+    bool stickOpen = false;
+    bool lastState;
+    string _lastMode = "SpawnMenu";
+
+    PanelSwitcher PanelSwitcher = default;
+
+    protected override void OnUpdate()
+    {
+        UpdateSpawnMenuState();
+        ScanForNewModes();
+
+        base.OnUpdate();
+    }
+
+    void UpdateSpawnMenuState()
+    {
+        var openSpawnMenu = Input.Down("spawnmenu");
+        var openInspectMenu = Input.Down("inspectmenu");
+        var openAnyMenu = openSpawnMenu || openInspectMenu;
+
+        stickOpen = stickOpen || (Sandbox.UI.InputFocus.Current?.Ancestors.Contains(Panel) ?? false);
+
+        if (stickOpen && Input.Pressed("spawnmenu")) stickOpen = false;
+
+        bool state = stickOpen || openAnyMenu;
+
+        SetClass("open", state);
+
+        if (lastState != state )
+        {
+            // closed
+            if (!state)
+            {
+                Popup.CloseAll();
+            }
+
+            // opened
+            if (state)
+            {
+                if (Input.Pressed("inspectmenu"))
+                {
+                    SwitchMode("ContextMenuHost", false);
+                    PanelSwitcher.SkipTransitions();
+                }
+
+                if (Input.Pressed("spawnmenu"))
+                {
+                    SwitchMode(_lastMode, false);
+                    PanelSwitcher.SkipTransitions();
+                }
+            }
+        }
+
+
+
+        lastState = state;
+    }
+
+    // When clicking anywhere in the spawn menu, blur any focused text inputs
+    // so we can close the menu by pressing the spawnmenu key.
+    void OnMenuClicked()
+    {
+        Sandbox.UI.InputFocus.Clear();
+    }
+
+    void ScanForNewModes()
+    {
+        if ( PanelSwitcher == null )
+            return;
+
+        // Make sure we've created all the modes, create SpawnMenu first so it's selected by default
+        foreach ( var type in Game.TypeLibrary.GetTypesWithAttribute<SpawnMenuMode>().OrderBy( x => x.Type.Name != "SpawnMenu" ) )
+        {
+            if (PanelSwitcher.Children.Any(x => x.GetType() == type.Type.TargetType)) continue;
+
+            var panel = type.Type.Create<Panel>();
+            if (panel == null) continue;
+
+            PanelSwitcher.AddChild(panel);
+        }
+
+    }
+
+    public static void SwitchMode( string modeName, bool remember = true )
+    {
+        var host = Game.ActiveScene.Get<SpawnMenuHost>();
+        if (host?.PanelSwitcher == null) return;
+
+        if (remember) host._lastMode = modeName;
+
+        foreach ( var child in host.PanelSwitcher.Children )
+        {
+            if ( child.GetType().Name == modeName )
+            {
+                host.PanelSwitcher.SwitchToPanel(child);
+                return;
+            }
+        }
+    }
+
+    public static Panel GetActiveMode()
+    {
+        var host = Game.ActiveScene.Get<SpawnMenuHost>();
+        if (host?.PanelSwitcher == null) return null;
+        return host.PanelSwitcher.ActivePanel;
+    }
+
+    public class SpawnMenuMode : System.Attribute
+    {
+    }
+
+}

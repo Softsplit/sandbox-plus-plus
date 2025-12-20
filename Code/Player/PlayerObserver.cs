@@ -32,7 +32,8 @@ public sealed class PlayerObserver : Component
 		if ( timeSinceStarted < 1 )
 			return;
 
-		if ( timeSinceStarted > 3f )
+		// If pressed a button, or has been too long
+		if ( Input.Pressed( "attack1" ) || Input.Pressed( "jump" ) || timeSinceStarted > 4f )
 		{
 			Respawn();
 			GameObject.Destroy();

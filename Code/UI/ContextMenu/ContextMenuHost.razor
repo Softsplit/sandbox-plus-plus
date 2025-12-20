@@ -1,0 +1,101 @@
+@using Sandbox;
+@using Sandbox.UI;
+@inherits Panel
+@namespace Sandbox
+@attribute [SpawnMenuHost.SpawnMenuMode]
+@attribute [Icon("🔍")]
+@attribute [Title("Inspect")]
+@attribute [Order( -50 )]
+
+<root>
+	
+    <div class="container">
+
+        <Inspector @ref=Inspector></Inspector>
+
+    </div>
+
+</root>
+
+@code
+{
+    Inspector Inspector = default;
+
+    public HighlightOutline SelectedOutline;
+    public HighlightOutline HoveredOutline;
+
+    protected override void OnAfterTreeRender(bool firstTime)
+    {
+        base.OnAfterTreeRender(firstTime);
+
+        //if (firstTime)
+        {
+            SelectedOutline ??= GameObject.AddComponent<HighlightOutline>();
+            HoveredOutline ??= GameObject.AddComponent<HighlightOutline>();
+
+            SelectedOutline.OverrideTargets = true;
+            HoveredOutline.OverrideTargets = true;
+        }
+    }
+
+    public override void Tick()
+    {
+        base.Tick();
+
+        UpdateCursor();
+        DrawHandles();
+    }
+
+    void UpdateCursor()
+    {
+        Style.Cursor = (Inspector?.Hovered.IsValid() ?? false) ? "pointer" : null;
+    }
+
+    protected override void OnMouseDown(MousePanelEvent e)
+    {
+        Sandbox.UI.InputFocus.Clear();
+
+        Inspector?.WorldMouseDown(e);
+    }
+
+    protected override void OnMouseUp(MousePanelEvent e)
+    {
+
+        Inspector?.WorldMouseUp(e);
+    }
+
+    Dictionary<Component, Panel> _handles = [];
+
+    void DrawHandles()
+    {
+        var objects = Scene.FindInPhysics(new Sphere( Scene.Camera.WorldPosition, 1000 ));
+        var rootObjects = objects.Select( x => x.Network?.RootGameObject ).Where( x => x.IsValid() ).Distinct();
+
+        foreach ( var o in rootObjects )
+        {
+            // find handles in this object
+            foreach (var component in o.GetComponentsInChildren<Component>())
+            {
+                if (!ShouldCreateHandle(component))
+                    continue;
+
+                if ( _handles.TryGetValue(component, out var existingHandle) )
+                {
+                    if (existingHandle.IsValid())
+                        continue;
+                }
+
+                var panel = new ComponentHandle( this, component, Inspector );
+                _handles[component] = panel;
+            }
+        }
+    }
+
+    bool ShouldCreateHandle(Component component)
+    {
+        // TODO - needs a handle
+
+        return false;
+    }
+
+}

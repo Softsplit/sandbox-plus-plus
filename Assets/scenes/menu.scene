@@ -1,63 +1,29 @@
 {
-  "__guid": "1045cdc2-6049-4bb3-9ab6-4186929828ab",
+  "__guid": "1637b51d-52bc-4f91-b9c8-b8f1c2fd2ac5",
   "GameObjects": [
     {
-      "__guid": "37943398-9ace-4dbc-bfd7-3c54630a1a84",
-      "__version": 1,
-      "Flags": 0,
-      "Name": "Scene Information",
-      "Position": "0,0,0",
-      "Rotation": "0,0,0,1",
-      "Scale": "1,1,1",
-      "Tags": "",
-      "Enabled": true,
-      "NetworkMode": 2,
-      "NetworkInterpolation": true,
-      "NetworkOrphaned": 0,
-      "OwnerTransfer": 1,
-      "Components": [
-        {
-          "__type": "Sandbox.SceneInformation",
-          "__guid": "0e528cfc-aec6-41d9-8557-07df09516c28",
-          "__enabled": true,
-          "Author": null,
-          "Changes": null,
-          "Description": null,
-          "Group": null,
-          "OnComponentDestroy": null,
-          "OnComponentDisabled": null,
-          "OnComponentEnabled": null,
-          "OnComponentFixedUpdate": null,
-          "OnComponentStart": null,
-          "OnComponentUpdate": null,
-          "SceneTags": "",
-          "Title": "menu",
-          "Version": null
-        }
-      ],
-      "Children": []
-    },
-    {
-      "__guid": "93c9640f-3386-4f6a-9728-bafed4a63ae0",
+      "__guid": "03b362fe-5908-4871-a6d1-056990711966",
       "__version": 1,
       "Flags": 0,
       "Name": "Camera",
       "Position": "0,0,0",
       "Rotation": "0,0,0,1",
       "Scale": "1,1,1",
-      "Tags": "",
+      "Tags": "maincamera",
       "Enabled": true,
       "NetworkMode": 2,
       "NetworkInterpolation": true,
       "NetworkOrphaned": 0,
+      "NetworkTransmit": true,
       "OwnerTransfer": 1,
       "Components": [
         {
           "__type": "Sandbox.CameraComponent",
-          "__guid": "1c398b2f-0a16-492c-812f-5aa00b790d54",
+          "__guid": "7001dd95-7440-4073-893d-19d9b01ccfd0",
           "__enabled": true,
-          "BackgroundColor": "0,0,0,1",
+          "BackgroundColor": "0.33333,0.46275,0.52157,1",
           "ClearFlags": "All",
+          "EnablePostProcessing": true,
           "FieldOfView": 90,
           "FovAxis": "Horizontal",
           "IsMainCamera": true,
@@ -69,22 +35,90 @@
           "OnComponentUpdate": null,
           "Orthographic": false,
           "OrthographicHeight": 1204,
-          "Priority": 1,
+          "PostProcessAnchor": null,
+          "Priority": 0,
           "RenderExcludeTags": "",
           "RenderTags": "",
+          "RenderTexture": null,
           "TargetEye": "None",
           "Viewport": "0,0,1,1",
-          "ZFar": 100000,
-          "ZNear": 1
+          "ZFar": 30000,
+          "ZNear": 5
+        },
+        {
+          "__type": "Sandbox.Tonemapping",
+          "__guid": "ac2db67e-6806-43d2-bead-ebce104c38be",
+          "__enabled": true,
+          "__version": 3,
+          "AutoExposureEnabled": true,
+          "ExposureCompensation": 0,
+          "ExposureMethod": "RGB",
+          "MaximumExposure": 3,
+          "MinimumExposure": 1,
+          "Mode": "HableFilmic",
+          "OnComponentDestroy": null,
+          "OnComponentDisabled": null,
+          "OnComponentEnabled": null,
+          "OnComponentFixedUpdate": null,
+          "OnComponentStart": null,
+          "OnComponentUpdate": null,
+          "Rate": 1
+        },
+        {
+          "__type": "Sandbox.Bloom",
+          "__guid": "d8975510-37a5-4a3f-81fa-bf507c6f3cf6",
+          "__enabled": true,
+          "__version": 1,
+          "Filter": "Bilinear",
+          "Gamma": 2.2,
+          "Mode": "Additive",
+          "OnComponentDestroy": null,
+          "OnComponentDisabled": null,
+          "OnComponentEnabled": null,
+          "OnComponentFixedUpdate": null,
+          "OnComponentStart": null,
+          "OnComponentUpdate": null,
+          "Strength": 1,
+          "Threshold": 1,
+          "Tint": "1,1,1,1"
+        },
+        {
+          "__type": "Sandbox.AmbientOcclusion",
+          "__guid": "d756fe3e-1409-4104-8862-807f3ddab588",
+          "__enabled": true,
+          "__version": 1,
+          "DenoiseMode": "Temporal",
+          "FalloffRange": 1,
+          "Intensity": 1,
+          "OnComponentDestroy": null,
+          "OnComponentDisabled": null,
+          "OnComponentEnabled": null,
+          "OnComponentFixedUpdate": null,
+          "OnComponentStart": null,
+          "OnComponentUpdate": null,
+          "Radius": 128,
+          "ThinCompensation": 5
+        },
+        {
+          "__type": "Sandbox.ScreenSpaceReflections",
+          "__guid": "ca2fbc58-fb5b-4609-9b6f-2362faa69a29",
+          "__enabled": true,
+          "Denoise": true,
+          "OnComponentDestroy": null,
+          "OnComponentDisabled": null,
+          "OnComponentEnabled": null,
+          "OnComponentFixedUpdate": null,
+          "OnComponentStart": null,
+          "OnComponentUpdate": null
         }
       ],
       "Children": []
     },
     {
-      "__guid": "b4d75a4a-6b4b-4b14-ad08-b5acfc807485",
+      "__guid": "4f3adc5f-792f-4979-9b4d-ca8a2a76f49d",
       "__version": 1,
       "Flags": 0,
-      "Name": "UI",
+      "Name": "Main Menu",
       "Position": "0,0,0",
       "Rotation": "0,0,0,1",
       "Scale": "1,1,1",
@@ -93,11 +127,12 @@
       "NetworkMode": 2,
       "NetworkInterpolation": true,
       "NetworkOrphaned": 0,
+      "NetworkTransmit": true,
       "OwnerTransfer": 1,
       "Components": [
         {
           "__type": "Sandbox.ScreenPanel",
-          "__guid": "f126e288-5097-4aba-bfe0-674ce44eea17",
+          "__guid": "1caee9e9-a1ba-448b-b4dd-f6a6e4200834",
           "__enabled": true,
           "AutoScreenScale": true,
           "OnComponentDestroy": null,
@@ -113,46 +148,14 @@
           "ZIndex": 100
         }
       ],
-      "Children": [
-        {
-          "__guid": "fa89b4bf-ca3d-4526-8504-b027e915cb42",
-          "__version": 1,
-          "Flags": 0,
-          "Name": "Menu",
-          "Position": "0,0,0",
-          "Rotation": "0,0,0,1",
-          "Scale": "1,1,1",
-          "Tags": "",
-          "Enabled": true,
-          "NetworkMode": 2,
-          "NetworkInterpolation": true,
-          "NetworkOrphaned": 0,
-          "OwnerTransfer": 1,
-          "Components": [
-            {
-              "__type": "GameMenuPanel",
-              "__guid": "92b73239-f6fd-4299-8653-e78567f856ac",
-              "__enabled": true,
-              "OnComponentDestroy": null,
-              "OnComponentDisabled": null,
-              "OnComponentEnabled": null,
-              "OnComponentFixedUpdate": null,
-              "OnComponentStart": null,
-              "OnComponentUpdate": null
-            }
-          ],
-          "Children": []
-        }
-      ]
+      "Children": []
     }
   ],
   "SceneProperties": {
     "NetworkInterpolation": true,
     "TimeScale": 1,
     "WantsSystemScene": false,
-    "Metadata": {
-      "Title": "menu"
-    },
+    "Metadata": {},
     "NavMesh": {
       "Enabled": false,
       "IncludeStaticBodies": true,
@@ -167,7 +170,7 @@
     }
   },
   "ResourceVersion": 3,
-  "Title": "menu",
+  "Title": null,
   "Description": null,
   "__references": [],
   "__version": 3

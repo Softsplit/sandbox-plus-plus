@@ -1,7 +1,8 @@
-using static BaseWeapon;
-
-public sealed partial class ViewModel : WeaponModel, IWeaponEvent, ICameraSetup
+public sealed partial class ViewModel : WeaponModel, ICameraSetup
 {
+	[ConVar( "sbdm.hideviewmodel", ConVarFlags.Cheat )]
+	private static bool HideViewModel { get; set; } = false;
+
 	/// <summary>
 	/// Turns on incremental reloading parameters.
 	/// </summary>
@@ -20,28 +21,19 @@ public sealed partial class ViewModel : WeaponModel, IWeaponEvent, ICameraSetup
 	[Property, Group( "Animation" )]
 	public float IncrementalAnimationSpeed { get; set; } = 3.0f;
 
-	// Entity system bobbing properties
-	[Property, Group( "Bobbing" )] public bool EnableSwingAndBob { get; set; } = true;
-	[Property, Group( "Bobbing" )] public float SwingInfluence { get; set; } = 0.05f;
-	[Property, Group( "Bobbing" )] public float ReturnSpeed { get; set; } = 5.0f;
-	[Property, Group( "Bobbing" )] public float MaxOffsetLength { get; set; } = 10.0f;
-	[Property, Group( "Bobbing" )] public float BobCycleTime { get; set; } = 7;
-	[Property, Group( "Bobbing" )] public Vector3 BobDirection { get; set; } = new Vector3( 0.0f, 1.0f, 0.5f );
-	[Property, Group( "Bobbing" )] public float InertiaDamping { get; set; } = 20.0f;
+	/// <summary>
+	/// How much inertia should this weapon have?
+	/// </summary>
+	[Property, Group( "Inertia" )]
+	Vector2 InertiaScale { get; set; } = new Vector2( 2, 2 );
 
-	// Entity system bobbing state
-	private Vector3 swingOffset;
-	private float lastPitch;
-	private float lastYaw;
-	private float bobAnim;
-	private float bobSpeed;
-	private bool activated = false;
+	public bool IsAttacking { get; set; }
 
-	bool IsAttacking;
 	TimeSince AttackDuration;
 
-	public float YawInertia { get; private set; }
-	public float PitchInertia { get; private set; }
+	Vector2 lastInertia;
+	Vector2 currentInertia;
+	bool isFirstUpdate = true;
 
 	protected override void OnStart()
 	{
@@ -57,108 +49,36 @@ public sealed partial class ViewModel : WeaponModel, IWeaponEvent, ICameraSetup
 		UpdateAnimation();
 	}
 
-	void ICameraSetup.Setup( CameraComponent camera )
+	void ApplyInertia()
 	{
-		var inPos = camera.WorldPosition;
-		var inRot = camera.WorldRotation;
+		var rot = Scene.Camera.WorldRotation.Angles();
 
-		if ( !activated )
+		// Need to fetch data from the camera for the first frame
+		if ( isFirstUpdate )
 		{
-			lastPitch = inRot.Pitch();
-			lastYaw = inRot.Yaw();
-			YawInertia = 0;
-			PitchInertia = 0;
-			activated = true;
+
+
+			lastInertia = new Vector2( rot.pitch, rot.yaw );
+			currentInertia = Vector2.Zero;
+			isFirstUpdate = false;
 		}
 
-		// Apply camera bone transform first
-		ApplyAnimationTransform( camera );
+		var newPitch = rot.pitch;
+		var newYaw = rot.yaw;
 
-		// Set base position and rotation
-		WorldPosition = inPos;
-		WorldRotation = inRot;
-
-		var newPitch = WorldRotation.Pitch();
-		var newYaw = WorldRotation.Yaw();
-
-		var pitchDelta = Angles.NormalizeAngle( newPitch - lastPitch );
-		var yawDelta = Angles.NormalizeAngle( lastYaw - newYaw );
-
-		PitchInertia += pitchDelta;
-		YawInertia += yawDelta;
-
-		if ( EnableSwingAndBob )
-		{
-			var player = GetComponentInParent<Player>();
-			var playerVelocity = Vector3.Zero;
-
-			if ( player.IsValid() && player.Controller.IsValid() )
-			{
-				playerVelocity = player.Controller.Velocity;
-
-				if ( player.Controller.Tags.Has( "noclip" ) )
-				{
-					playerVelocity = Vector3.Zero;
-				}
-			}
-
-			var verticalDelta = playerVelocity.z * Time.Delta;
-			var viewDown = Rotation.FromPitch( newPitch ).Up * -1.0f;
-			verticalDelta *= 1.0f - MathF.Abs( viewDown.Cross( Vector3.Down ).y );
-			pitchDelta -= verticalDelta * 1.0f;
-
-			var speed = playerVelocity.WithZ( 0 ).Length;
-			speed = speed > 10.0 ? speed : 0.0f;
-			bobSpeed = bobSpeed.LerpTo( speed, Time.Delta * InertiaDamping );
-
-			var offset = CalcSwingOffset( pitchDelta, yawDelta );
-			offset += CalcBobbingOffset( bobSpeed );
-
-			WorldPosition += WorldRotation * offset;
-		}
-		else
-		{
-			Renderer.Set( "aim_pitch_inertia", PitchInertia );
-			Renderer.Set( "aim_yaw_inertia", YawInertia );
-		}
-
-		lastPitch = newPitch;
-		lastYaw = newYaw;
-
-		YawInertia = YawInertia.LerpTo( 0, Time.Delta * InertiaDamping );
-		PitchInertia = PitchInertia.LerpTo( 0, Time.Delta * InertiaDamping );
+		currentInertia = new Vector2( Angles.NormalizeAngle( newPitch - lastInertia.x ), Angles.NormalizeAngle( lastInertia.y - newYaw ) );
+		lastInertia = new( newPitch, newYaw );
 	}
 
-	Vector3 CalcSwingOffset( float pitchDelta, float yawDelta )
+	void ICameraSetup.Setup( CameraComponent cc )
 	{
-		var swingVelocity = new Vector3( 0, yawDelta, pitchDelta );
+		Renderer.Enabled = !HideViewModel;
 
-		swingOffset -= swingOffset * ReturnSpeed * Time.Delta;
-		swingOffset += (swingVelocity * SwingInfluence);
+		WorldPosition = cc.WorldPosition;
+		WorldRotation = cc.WorldRotation;
 
-		if ( swingOffset.Length > MaxOffsetLength )
-		{
-			swingOffset = swingOffset.Normal * MaxOffsetLength;
-		}
-
-		return swingOffset;
-	}
-
-	Vector3 CalcBobbingOffset( float speed )
-	{
-		bobAnim += Time.Delta * BobCycleTime;
-
-		var twoPI = MathF.PI * 2.0f;
-
-		if ( bobAnim > twoPI )
-		{
-			bobAnim -= twoPI;
-		}
-
-		var offset = BobDirection * (speed * 0.005f) * MathF.Cos( bobAnim );
-		offset = offset.WithZ( -MathF.Abs( offset.z ) );
-
-		return offset;
+		ApplyInertia();
+		ApplyAnimationTransform( cc );
 	}
 
 	void ApplyAnimationTransform( CameraComponent cc )
@@ -167,8 +87,9 @@ public sealed partial class ViewModel : WeaponModel, IWeaponEvent, ICameraSetup
 
 		if ( Renderer.TryGetBoneTransformLocal( "camera", out var bone ) )
 		{
-			cc.LocalPosition += bone.Position;
-			cc.LocalRotation *= bone.Rotation;
+			var scale = 0.5f;
+			cc.LocalPosition += bone.Position * scale;
+			cc.LocalRotation *= bone.Rotation * scale;
 		}
 	}
 
@@ -177,11 +98,37 @@ public sealed partial class ViewModel : WeaponModel, IWeaponEvent, ICameraSetup
 		var playerController = GetComponentInParent<PlayerController>();
 		if ( !playerController.IsValid() ) return;
 
+		var rot = Scene.Camera.WorldRotation.Angles();
+
+		Renderer.Set( "b_twohanded", true );
 		Renderer.Set( "b_grounded", playerController.IsOnGround );
+		Renderer.Set( "move_bob", GamePreferences.ViewBobbing ? playerController.Velocity.Length.Remap( 0, playerController.RunSpeed * 2f ) : 0 );
+
+		Renderer.Set( "aim_pitch", rot.pitch );
+		Renderer.Set( "aim_pitch_inertia", currentInertia.x * InertiaScale.x );
+
+		Renderer.Set( "aim_yaw", rot.yaw );
+		Renderer.Set( "aim_yaw_inertia", currentInertia.y * InertiaScale.y );
+
 		Renderer.Set( "attack_hold", IsAttacking ? AttackDuration.Relative.Clamp( 0f, 1f ) : 0f );
+
+		var velocity = playerController.Velocity;
+
+		var dir = velocity;
+		var forward = Scene.Camera.WorldRotation.Forward.Dot( dir );
+		var sideward = Scene.Camera.WorldRotation.Right.Dot( dir );
+
+		var angle = MathF.Atan2( sideward, forward ).RadianToDegree().NormalizeDegrees();
+
+		Renderer.Set( "move_direction", angle );
+		Renderer.Set( "move_speed", velocity.Length );
+		Renderer.Set( "move_groundspeed", velocity.WithZ( 0 ).Length );
+		Renderer.Set( "move_y", sideward );
+		Renderer.Set( "move_x", forward );
+		Renderer.Set( "move_z", velocity.z );
 	}
 
-	void IWeaponEvent.OnAttack( IWeaponEvent.AttackEvent e )
+	public void OnAttack()
 	{
 		Renderer?.Set( "b_attack", true );
 
@@ -200,10 +147,15 @@ public sealed partial class ViewModel : WeaponModel, IWeaponEvent, ICameraSetup
 		}
 	}
 
+	public void CreateRangedEffects( BaseWeapon weapon, Vector3 hitPoint, Vector3? origin )
+	{
+		DoTracerEffect( hitPoint, origin );
+	}
+
 	/// <summary>
 	/// Called when starting to reload a weapon.
 	/// </summary>
-	void IWeaponEvent.OnReloadStart()
+	public void OnReloadStart()
 	{
 		Renderer?.Set( "speed_reload", AnimationSpeed );
 		Renderer?.Set( IsIncremental ? "b_reloading" : "b_reload", true );
@@ -212,13 +164,13 @@ public sealed partial class ViewModel : WeaponModel, IWeaponEvent, ICameraSetup
 	/// <summary>
 	/// Called when incrementally reloading a weapon.
 	/// </summary>
-	void IWeaponEvent.OnIncrementalReload()
+	public void OnIncrementalReload()
 	{
 		Renderer?.Set( "speed_reload", IncrementalAnimationSpeed );
 		Renderer?.Set( "b_reloading_shell", true );
 	}
 
-	void IWeaponEvent.OnReloadFinish()
+	public void OnReloadFinish()
 	{
 		if ( IsIncremental )
 		{

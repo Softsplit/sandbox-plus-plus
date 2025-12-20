@@ -20,13 +20,28 @@ public abstract class WeaponModel : Component
 		return WorldTransform;
 	}
 
+	public void DoTracerEffect( Vector3 hitPoint, Vector3? origin = null )
+	{
+		if ( !TracerEffect.IsValid() ) return;
+
+		var tracerOrigin = GetTracerOrigin().WithScale( 1 );
+		if ( origin.HasValue ) tracerOrigin = tracerOrigin.WithPosition( origin.Value );
+
+		var effect = TracerEffect.Clone( new CloneConfig { Transform = tracerOrigin, StartEnabled = true } );
+
+		if ( effect.GetComponentInChildren<Tracer>() is Tracer tracer )
+		{
+			tracer.EndPoint = hitPoint;
+		}
+	}
+
 	public void DoEjectBrass()
 	{
 		if ( !EjectBrass.IsValid() ) return;
 		if ( !EjectTransform.IsValid() ) return;
 
 		var effect = EjectBrass.Clone( new CloneConfig { Transform = EjectTransform.WorldTransform.WithScale( 1 ), StartEnabled = true } );
-		effect.WorldRotation *= new Angles( 90, 0, 0 );
+		effect.WorldRotation = effect.WorldRotation * new Angles( 90, 0, 0 );
 
 		var ejectDirection = (EjectTransform.WorldRotation.Forward * 250 + (EjectTransform.WorldRotation.Right + Vector3.Random * -0.35f) * 250);
 

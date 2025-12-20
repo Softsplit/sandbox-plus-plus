@@ -1,0 +1,42 @@
+
+GameObjectInspector
+{
+    flex-direction: column;
+    overflow: hidden;
+	width: 100%;
+}
+
+GameObjectInspector > .header
+{
+	flex-direction: column;
+	flex-shrink: 0;
+	padding-bottom: 0.25rem;
+	margin-bottom: 0.25rem;
+
+	h2
+	{
+		gap: 0.5rem;
+		align-items: center;
+	}
+}
+
+GameObjectInspector > .body
+{
+	flex-direction: column;
+	flex-grow: 1;
+	flex-shrink: 1;
+	overflow-y: scroll;
+	gap: 2px;
+
+	controlsheetrow
+	{
+		flex-direction: column;
+		max-height: auto;
+		width: 100%;
+
+		> .right, > .left
+		{
+			flex-shrink: 0;
+		}
+	}
+}

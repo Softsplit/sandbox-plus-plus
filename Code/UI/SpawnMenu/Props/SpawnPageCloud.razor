@@ -1,0 +1,78 @@
+@using Sandbox;
+@using Sandbox.UI;
+
+@inherits Panel
+@namespace Sandbox
+
+@if ( LastResult is null )
+{
+    // loading
+    return;
+}
+
+<SpawnMenuContent>
+
+    <Header>
+        <SpawnMenuToolbar>
+            <Left>
+                <TextEntry Placeholder="Search..." class="filter" Value:bind=@Filter />
+            </Left>
+
+            <Right>
+                <DropDown Value:bind=@SortOrder />
+            </Right>
+        </SpawnMenuToolbar>
+    </Header>
+
+    <Body>
+<VirtualGrid Items=@( LastResult.Packages ) ItemSize=@(120)>
+    <Item Context="item">
+        @if (item is Package entry)
+        {
+            <SpawnButton Package="@entry" Icon="@entry.Thumb" Action="@(() => Spawn(entry))"></SpawnButton>
+        }
+    </Item>
+</VirtualGrid>
+    </Body>
+
+</SpawnMenuContent>
+
+@code
+{
+    public string Category { get; set; } = "";
+
+    private string Filter
+    {
+        get;
+        set { field = value; Rebuild(); }
+    }
+
+    public PackageSortMode SortOrder
+    {
+        get;
+        set { field = value; Rebuild(); }
+    }
+
+    void Spawn( Package package )
+    {
+        GameManager.Spawn( package.FullIdent );
+    }
+
+    protected override void OnParametersSet()
+    {
+        SortOrder = PackageSortMode.Newest;
+        Rebuild();
+    }
+
+    Package.FindResult LastResult;
+
+    async void Rebuild()
+    {
+        var query = $"sort:{SortOrder.ToIdentifier()} type:model";
+        if ( !string.IsNullOrEmpty( Filter ) ) query += $" {Filter} ";
+        if ( !string.IsNullOrEmpty( Category ) ) query += $" category:{Category}";
+
+        LastResult = await Package.FindAsync( query );
+        StateHasChanged();
+    }
+}

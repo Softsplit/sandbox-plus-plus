@@ -24,7 +24,7 @@ public sealed partial class Player
 	[ConCmd( "kill", ConVarFlags.Server )]
 	public static void KillSelf( Connection source )
 	{
-		var player = FindForConnection( source );
+		var player = Player.FindForConnection( source );
 		if ( player is null ) return;
 
 		player.KillSelf();
@@ -35,7 +35,7 @@ public sealed partial class Player
 	{
 		if ( Rpc.Caller != Network.Owner ) return;
 
-		this.Damage( new DeathmatchDamageInfo( 5000 ) );
+		this.OnDamage( new DamageInfo( 5000, GameObject, null ) );
 	}
 
 	/// <summary>
@@ -50,7 +50,7 @@ public sealed partial class Player
 			return;
 		}
 
-		var player = FindForConnection( source );
+		var player = Player.FindForConnection( source );
 		if ( !player.IsValid() )
 			return;
 
@@ -58,7 +58,7 @@ public sealed partial class Player
 		if ( !inventory.IsValid() )
 			return;
 
-		// inventory.GiveAll();
+		//inventory.GiveAll();
 	}
 
 	[ConCmd( "god", ConVarFlags.Server, Help = "Toggle invulnerability" )]
@@ -83,5 +83,18 @@ public sealed partial class Player
 		LaunchArguments.Map = mapName;
 
 		Game.Load( Game.Ident, true );
+	}
+
+	/// <summary>
+	/// Switch to another map
+	/// </summary>
+	[ConCmd( "undo", ConVarFlags.Server )]
+	public static void RunUndo( Connection source )
+	{
+		var player = Player.FindForConnection( source );
+		if ( !player.IsValid() )
+			return;
+
+		player.Undo.Undo();
 	}
 }
