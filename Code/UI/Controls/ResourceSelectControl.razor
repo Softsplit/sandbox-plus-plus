@@ -1,0 +1,94 @@
+@using Sandbox;
+@using Sandbox.UI;
+@namespace Sandbox
+@inherits BaseControl
+@attribute [CustomEditor(typeof(string), WithAllAttributes = [typeof(ResourceSelectAttribute)])]
+
+
+
+<root>
+
+    @if (ResourceType == null )
+    {
+        <div class="title">Unknown Resource Type</div>
+    }
+    else if ( Title == null )
+    {
+        <div class="title">None Selected</div>
+    }
+    else
+    {
+        <div class="title">@Title</div>
+    }
+
+</root>
+
+@code
+{
+
+    string Title;
+    TypeDescription ResourceType;
+    AssetTypeAttribute ResourceAttribute;
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+    }
+
+    public override void Rebuild()
+    {
+        base.Rebuild();
+
+        if (Property.TryGetAttribute<ResourceSelectAttribute>(out var resTypeAttr))
+        {
+            ResourceType = AssetTypeAttribute.FindTypeByExtension(resTypeAttr.Extension);
+            ResourceAttribute = ResourceType?.GetAttribute<AssetTypeAttribute>();
+        }
+
+        OnValueChanged();
+    }
+
+    public void OnValueChanged()
+    {
+        var path = Property.As.String;
+
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            Title = null;
+            return;
+        }
+
+        var resource = ResourceLibrary.Get<GameResource>(path);
+        if ( resource == null )
+        {
+            Title = "Unknown Resource";
+            return;
+        }
+
+        Title = resource.ResourceName;
+
+        if (resource is IDefinitionResource defRes )
+        {
+            Title = defRes.Title;
+        }
+
+    }
+
+    void SelectFile( string filePath )
+    {
+        Property.As.String = filePath;
+        OnValueChanged();
+    }
+
+    protected override void OnClick(MousePanelEvent e)
+    {
+        base.OnClick(e);
+
+        var popup = new ResourceSelectPopup();
+        popup.Extension = ResourceAttribute?.Extension;
+        popup.CurrentValue = Property.As.String;
+        popup.Parent = FindPopupPanel();
+
+        popup.OnSelectedFile = SelectFile;
+    }
+}

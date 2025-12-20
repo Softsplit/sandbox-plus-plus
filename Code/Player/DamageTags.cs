@@ -1,3 +1,5 @@
+
+
 public static class DamageTags
 {
 	public const string Headshot = "head";

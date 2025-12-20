@@ -1,0 +1,65 @@
+@using Sandbox;
+@using Sandbox.UI;
+@inherits Panel
+@namespace Sandbox
+
+
+@if ( LastResult is null )
+{
+    // loading
+    return;
+}
+
+@if ( LastResult.Packages.Count() == 0 )
+{
+    <p>No entities found.</p>
+    return;
+}
+
+
+
+<SpawnMenuContent>
+
+    <Header>
+        <SpawnMenuToolbar></SpawnMenuToolbar>
+    </Header>
+
+    <Body>
+        <VirtualGrid Items=@( LastResult.Packages ) ItemSize=@(120)>
+            <Item Context="item">
+                @if (item is Package entry)
+                {
+                    <SpawnButton Package="@entry" Icon="@entry.Thumb" Action="@(() => Spawn(entry))"></SpawnButton>
+                }
+            </Item>
+        </VirtualGrid>
+    </Body>
+
+</SpawnMenuContent>
+
+@code
+{
+    public string Query { get; set; } = "";
+
+    void Spawn( Package package )
+    {
+        GameManager.Spawn( package.FullIdent );
+    }
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+
+        _ = Rebuild();
+    }
+
+
+    Package.FindResult LastResult;
+
+    async Task Rebuild()
+    {
+        LastResult = await Package.FindAsync($"type:sent {Query}");
+        StateHasChanged();
+    }
+    
+}

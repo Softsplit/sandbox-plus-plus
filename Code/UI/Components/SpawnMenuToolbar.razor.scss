@@ -1,0 +1,78 @@
+
+SpawnMenuToolbar
+{
+	width: 100%;
+	border-radius: 8px 8px 0 0;
+	z-index: 100;
+	padding: 1px 1px 8px 1px;
+	gap: 0.5rem;
+	font-size: 1.2rem;
+	font-family: Poppins;
+	font-weight: 600;
+}
+
+.iconsize
+{
+	font-size: 24px;
+	cursor: pointer;
+}
+
+.body, .left, .right
+{
+	gap: 0.5rem;
+	align-items: center;
+	justify-content: center;
+}
+
+TextEntry
+{
+	background-color: #0004;
+	border-radius: 5px;
+	min-width: 256px;
+}
+
+DropDown
+{
+	background-color: #0004;
+	border-radius: 5px;
+	padding: 10px;
+	gap: 16px;
+
+	align-items: center;
+	justify-content: center;
+
+	IconPanel
+	{
+		height: 16px;
+	}
+}
+
+.islandbg
+{
+	background-color: #0004;
+	border-radius: 4px;
+}
+
+.body
+{
+	flex-grow: 1;
+}
+
+Button
+{
+	font-size: 1.8rem;
+	cursor: pointer;
+
+	&.disabled
+	{
+		color: #aaa;
+		opacity: 0.3;
+		cursor: default;
+		pointer-events: none;
+	}
+
+	&:hover
+	{
+		color: white;
+	}
+}

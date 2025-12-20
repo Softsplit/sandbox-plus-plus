@@ -1,0 +1,11 @@
+@using Sandbox;
+@using Sandbox.UI;
+@using Sandbox.Mounting;
+@inherits Panel
+@namespace Sandbox
+
+<root>
+
+	<Button class="primary" Icon="💾" Text="Save Dupe" Disabled=@( !CanSaveDupe() ) @onclick=@MakeSave></Button>
+
+</root>

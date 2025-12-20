@@ -1,12 +1,20 @@
 using Sandbox.Movement;
 
-public sealed class NoclipMoveMode : MoveMode
+public sealed class NoclipMoveMode : Sandbox.Movement.MoveMode
 {
+	/// <summary>
+	/// If true, the player will still collide with the world and other players. This probably
+	/// means that the noclip mode is named wrong. But it's cool. It just becomes a fly around mode.
+	/// </summary>
 	[Property]
-	public float RunSpeed { get; set; } = 10000;
+	public bool EnableCollision { get; set; }
 
 	[Property]
-	public float WalkSpeed { get; set; } = 2000;
+	public float RunSpeed { get; set; } = 1200;
+
+	[Property]
+	public float WalkSpeed { get; set; } = 200;
+
 
 	protected override void OnUpdateAnimatorState( SkinnedModelRenderer renderer )
 	{
@@ -24,7 +32,7 @@ public sealed class NoclipMoveMode : MoveMode
 		body.LinearDamping = 5.0f;
 		body.AngularDamping = 1f;
 
-		body.Tags.Set( "noclip", true );
+		body.Tags.Set( "noclip", !EnableCollision );
 	}
 
 	public override void OnModeBegin()
@@ -36,6 +44,7 @@ public sealed class NoclipMoveMode : MoveMode
 	public override void OnModeEnd( MoveMode next )
 	{
 		Controller.IsClimbing = false;
+		Controller.Body.Velocity = Controller.Body.Velocity.ClampLength( Controller.RunSpeed );
 		Controller.Body.Tags.Set( "noclip", false );
 		Controller.Renderer.Set( "b_noclip", false );
 	}
@@ -48,17 +57,26 @@ public sealed class NoclipMoveMode : MoveMode
 		var direction = eyes * input;
 
 		// Run if we're holding down alt move button
-		bool run = Input.Down( "run" );
+		bool run = Input.Down( Controller.AltMoveButton );
+
+		// if Run is default, flip that logic
+		if ( Controller.RunByDefault ) run = !run;
 
 		// if we're running, use run speed, if not use walk speed
-		var velocity = run ? RunSpeed : WalkSpeed;
+		var velocity = run ? RunSpeed * 2.0f : RunSpeed;
 
-		if ( Input.Down( "duck" ) )
-			direction *= 0.2f;
+		if ( direction.IsNearlyZero( 0.1f ) )
+		{
+			direction = 0;
+		}
 
-		if ( Input.Down( "jump" ) )
-			direction += Vector3.Up;
+		// if we're hold down jump move upwards
+		if ( Input.Down( "jump" ) ) direction += Vector3.Up;
+
+		// if we're hold down duck move downwards
+		if ( Input.Down( "duck" ) ) direction += Vector3.Down;
 
 		return direction * velocity;
 	}
+
 }

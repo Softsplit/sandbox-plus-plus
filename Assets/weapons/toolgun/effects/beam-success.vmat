@@ -1,0 +1,27 @@
+"Layer0"
+{
+	"shader"	"shaders/complex.shader"
+	"g_bFogEnabled"	"1"
+	"g_nScaleTexCoordUByModelScaleAxis"	"0"
+	"g_nScaleTexCoordVByModelScaleAxis"	"0"
+	"g_flAmbientOcclusionDirectDiffuse"	"0"
+	"g_flAmbientOcclusionDirectSpecular"	"0"
+	"g_flModelTintAmount"	"1"
+	"g_flFadeExponent"	"1"
+	"g_flDirectionalLightmapMinZ"	"0.05"
+	"g_flDirectionalLightmapStrength"	"1"
+	"g_flMetalness"	"0"
+	"g_vColorTint"	"[1.000000 1.000000 1.000000 0.000000]"
+	"g_vTexCoordOffset"	"[0.000000 0.000000 0.000000 0.000000]"
+	"g_vTexCoordScale"	"[1.000000 1.000000 0.000000 0.000000]"
+	"g_vTexCoordScrollSpeed"	"[0.000000 0.000000 0.000000 0.000000]"
+	"TextureAmbientOcclusion"	"materials/default/default_ao.tga"
+	"TextureColor"	"materials/default/default_color.tga"
+	"TextureNormal"	"materials/default/default_normal.tga"
+	"Compiled Textures"
+	{
+		"g_tAmbientOcclusion"	"materials/default/default_ao_tga_7449568e.generated.vtex"
+		"g_tColor"	"materials/default/default_color_tga_380558b.generated.vtex"
+		"g_tNormal"	"materials/default/default_normal_tga_5c878876.generated.vtex"
+	}
+}

@@ -1,0 +1,34 @@
+@using Sandbox;
+@using Sandbox.UI;
+@using Sandbox.Mounting;
+@inherits Panel
+@namespace Sandbox
+
+<root>
+
+</root>
+
+@code
+{
+	public Storage.Entry Content;
+
+    protected override void OnParametersSet()
+    {
+		Style.SetBackgroundImage( Content.Thumbnail );
+    }
+
+	protected override void OnMouseDown( MousePanelEvent e )
+	{
+		if ( e.MouseButton == MouseButtons.Right )
+		{
+			var menu = MenuPanel.Open( this );
+			
+			menu.AddOption( "delete", "Delete", () => Content.Delete() );
+			menu.AddOption( "publish", "Publish", () => Content.Publish() );
+
+			return;
+		}
+
+		base.OnMouseDown( e );
+	}
+}

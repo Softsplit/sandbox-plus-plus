@@ -1,0 +1,38 @@
+@using Sandbox;
+@using Sandbox.UI;
+@inherits Panel
+@implements ISpawnMenuTab
+@namespace Sandbox
+
+<SpawnMenuPage>
+    <Left>
+		<div class="menuinner">
+
+			<VerticalMenu Value="@activeOption">
+				<Options>
+					@foreach (var p in options)
+					{
+						if ( p.Type == "header" )
+						{
+							<h1>@p.Name</h1>
+						}
+						else if ( p.Type == "grow" )
+						{
+							<div class="grow"></div>
+						}
+						else
+						{
+							<MenuOption Icon="@p.Icon" Value="@p" Text="@p.Name" onclick="@( () => SwitchOption( p ) )"></MenuOption>
+						}
+					}
+				</Options>
+			</VerticalMenu>
+
+			<div class="menu-footer" @ref=MenuFooter></div>
+		</div>
+    </Left>
+
+    <Body>
+        <PanelSwitcher @ref="Switcher"></PanelSwitcher>
+    </Body>
+</SpawnMenuPage>

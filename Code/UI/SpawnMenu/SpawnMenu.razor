@@ -1,143 +1,108 @@
-﻿@using Sandbox.UI
-@using Sandbox.UI.Construct
-
-@namespace SandboxClassic.UI
-
-@inherits PanelComponent
+@using Sandbox;
+@using Sandbox.UI;
+@namespace Sandbox
+@inherits Panel
+@attribute [SpawnMenuHost.SpawnMenuMode]
+@attribute [Icon( "📦" )]
+@attribute [Title( "Spawn" )]
+@attribute [Order( -100 )]
 
 <root>
-    <div class="left">
-        <ButtonGroup class="tabs" @ref="leftTabs" />
-        <div class="body">
-            <ModelList @ref="modelList" />
-            <EntityList @ref="entityList" />
-            <NPCList @ref="npcList" />
-            <SpawnList @ref="spawnList" />
-        </div>
-    </div>
-    <div class="right">
-        <div class="tabs">
-            <Button Active="@true">#spawnmenu.tools</Button>
-            <Button>#spawnmenu.utility</Button>
-        </div>
-        <div class="body">
-            <div class="toollist" @ref="toolList">
-                <!-- RebuildToolList(); -->
+
+    <div class="container">
+
+        <div class="spawnmenuleft">
+
+            <div class="tabs">
+
+                @foreach (var t in tabs)
+                {
+                    var type = Game.TypeLibrary.GetType(t.GetType());
+
+                    var c = activeTab == t ? "active" : "";
+
+                    <div class="@c" @onclick=@(() => SwitchTab(t))>
+                        <span>@type.Icon</span>
+                        <span>@type.Title</span>
+                    </div>
+                }
+
             </div>
-            <div class="inspector" />
+
+            <div class="body" @ref="TabContainer">
+            </div>
+
         </div>
+
+        <div class="spawnmenuright">
+
+            <div class="tabs">
+
+                <div class="active">Tools</div>
+                <div>Options</div>
+
+            </div>
+
+            <div class="body">
+
+                <ToolsList></ToolsList>
+
+            </div>
+
+
+        </div>
+
     </div>
+
 </root>
 
 @code
 {
-    public static SpawnMenu Instance;
-    Panel toolList;
-    ButtonGroup leftTabs;
+    Panel activeTab;
+    Panel TabContainer = default;
 
-    private ModelList modelList;
-    private EntityList entityList;
-    private NPCList npcList;
-    private SpawnList spawnList;
+    List<Panel> tabs = new List<Panel>();
 
-    private bool isSearching;
-
-    protected override void OnTreeFirstBuilt()
+    public void BuildTabs()
     {
-        Instance = this;
+        foreach (var p in Game.TypeLibrary.GetTypes<ISpawnMenuTab>().OrderBy(x => x.Order).ThenBy(x => x.Title))
+        {
+            if (p.IsAbstract) continue;
+            if (p.TargetType == typeof(BaseSpawnMenu)) continue;
 
-        leftTabs.SelectedButton = leftTabs.AddButtonActive("#spawnmenu.modellist", b => modelList.SetClass("active", b));
-        leftTabs.AddButtonActive("#spawnmenu.entities", (b) => entityList.SetClass("active", b));
-        leftTabs.AddButtonActive("#spawnmenu.npclist", (b) => npcList.SetClass("active", b));
-        leftTabs.AddButtonActive("#spawnmenu.props", b => spawnList.SetClass("active", b));
+            var panel = p.Create<Panel>();
+            TabContainer.AddChild(panel);
+
+            tabs.Add(panel);
+        }
+
+        SwitchTab(tabs.FirstOrDefault());
     }
 
-    /*
-    void RebuildToolList()
+    protected override void OnAfterTreeRender(bool firstTime)
     {
-        toollist.DeleteChildren( true );
-
-        foreach ( var entry in TypeLibrary.GetTypes<BaseTool>() )
+        if (firstTime && TabContainer.IsValid())
         {
-            if ( entry.Name == "BaseTool" )
-                continue;
-
-            var button = toollist.Add.Button( entry.Title );
-            button.SetClass( "active", entry.ClassName == ConsoleSystem.GetValue( "tool_current" ) );
-
-            button.AddEventListener( "onclick", () =>
-            {
-                SetActiveTool( entry.ClassName );
-
-                foreach ( var child in toollist.Children )
-                    child.SetClass( "active", child == button );
-                } );
-            }
-        }
-
-    void SetActiveTool( string className )
-    {
-        // setting a cvar
-        ConsoleSystem.Run( "tool_current", className );
-
-        // set the active weapon to the toolgun
-        if ( Game.LocalPawn is not Player player ) return;
-        if ( player.Inventory is null ) return;
-
-        // why isn't inventory just an ienumerable wtf
-        for ( int i = 0; i < player.Inventory.Count(); i++ )
-        {
-            var entity = player.Inventory.GetSlot( i );
-            if ( !entity.IsValid() ) continue;
-            if ( entity.ClassName != "weapon_tool" ) continue;
-
-            player.ActiveChildInput = entity;
+            BuildTabs();
         }
     }
-	*/
 
-    protected override void OnUpdate()
+    void SwitchTab(Panel tab)
     {
-        if (!modelList.IsValid())
-            return;
+        activeTab = tab;
+        StateHasChanged();
 
-        if (modelList.SearchInput.HasFocus)
+        foreach (var t in tabs)
         {
-            isSearching = true;
+            t.SetClass("active", t == tab);
+            t.SetClass("hidden", t != tab);
         }
-        else if (isSearching && Input.Pressed("menu"))
-        {
-            isSearching = false;
-        }
-
-        // UpdateActiveTool();
-
-        if (isSearching)
-            return;
-
-        Panel.FindRootPanel().SetClass("spawnmenuopen", Input.Down("menu"));
     }
 
-    /*
-	void UpdateActiveTool()
-	{
-		var toolCurrent = ConsoleSystem.GetValue( "tool_current" );
-		var tool = string.IsNullOrWhiteSpace( toolCurrent ) ? null : TypeLibrary.GetType<BaseTool>( toolCurrent );
-
-		foreach ( var child in toollist.Children )
-		{
-			if ( child is Button button )
-			{
-				child.SetClass( "active", tool != null && button.Text == tool.Title );
-			}
-		}
-	}
-
-	public override void OnHotloaded()
-	{
-		base.OnHotloaded();
-
-		RebuildToolList();
-	}
-	*/
+    // When clicking anywhere in the spawn menu, blur any focused text inputs
+    // so we can close the menu by pressing the spawnmenu key.
+    void OnMenuClicked()
+    {
+        Sandbox.UI.InputFocus.Clear();
+    }
 }

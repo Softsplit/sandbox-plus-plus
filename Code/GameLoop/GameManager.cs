@@ -1,12 +1,14 @@
-using SandboxClassic.UI;
-
-public sealed partial class GameManager( Scene scene ) : GameObjectSystem<GameManager>( scene ), Component.INetworkListener, ISceneStartup
+public sealed partial class GameManager : GameObjectSystem<GameManager>, Component.INetworkListener, ISceneStartup
 {
+	public GameManager( Scene scene ) : base( scene )
+	{
+	}
+
 	void ISceneStartup.OnHostInitialize()
 	{
-		if ( !Networking.IsActive && InGame() )
+		if ( !Networking.IsActive )
 		{
-			Networking.CreateLobby( new Sandbox.Network.LobbyConfig() { Privacy = Sandbox.Network.LobbyPrivacy.Public, MaxPlayers = 32, Name = "Sandbox Classic Server", DestroyWhenHostLeaves = true } );
+			Networking.CreateLobby( new Sandbox.Network.LobbyConfig() { Privacy = Sandbox.Network.LobbyPrivacy.Public, MaxPlayers = 32, Name = "Sandbox", DestroyWhenHostLeaves = true } );
 		}
 	}
 
@@ -24,7 +26,10 @@ public sealed partial class GameManager( Scene scene ) : GameObjectSystem<GameMa
 	void Component.INetworkListener.OnDisconnected( Connection channel )
 	{
 		var pd = PlayerData.For( channel );
-		pd?.GameObject.Destroy();
+		if ( pd is not null )
+		{
+			pd.GameObject.Destroy();
+		}
 	}
 
 	private PlayerData CreatePlayerInfo( Connection channel )
@@ -74,7 +79,8 @@ public sealed partial class GameManager( Scene scene ) : GameObjectSystem<GameMa
 		{
 			await Task.Delay( 4000 );
 			await GameTask.MainThread();
-			Current?.SpawnPlayer( playerData );
+			if ( Current is not null )
+				Current.SpawnPlayer( playerData );
 		} );
 	}
 
@@ -88,6 +94,7 @@ public sealed partial class GameManager( Scene scene ) : GameObjectSystem<GameMa
 	/// </summary>
 	Transform FindSpawnLocation()
 	{
+
 		//
 		// If we have any SpawnPoint components in the scene, then use those
 		//
@@ -142,18 +149,31 @@ public sealed partial class GameManager( Scene scene ) : GameObjectSystem<GameMa
 		return spawnPointFurthestAway.Transform.World;
 	}
 
+	[Rpc.Broadcast]
+	private static void SendMessage( string msg )
+	{
+		Log.Info( msg );
+	}
+
 	/// <summary>
 	/// Called on the host when a played is killed
 	/// </summary>
 	public void OnDeath( Player player, DamageInfo dmg )
 	{
 		Assert.True( Networking.IsHost );
+
 		Assert.True( player.IsValid(), "Player invalid" );
 		Assert.True( player.PlayerData.IsValid(), $"{player.GameObject.Name}'s PlayerData invalid" );
 
 		var weapon = dmg.Weapon;
 		var attacker = dmg.Attacker?.GetComponent<Player>();
-		bool isSuicide = attacker == player;
+
+		if ( !dmg.Attacker.IsValid() || !attacker.IsValid() )
+		{
+			return;
+		}
+
+		var isSuicide = attacker == player;
 
 		if ( attacker.IsValid() && !isSuicide )
 		{
@@ -170,55 +190,42 @@ public sealed partial class GameManager( Scene scene ) : GameObjectSystem<GameMa
 
 		player.PlayerData.Deaths++;
 
-		string attackerName = attacker.IsValid() ? attacker.DisplayName : dmg.Attacker?.Name ?? "";
-		string weaponName = weapon.IsValid() ? weapon.Name : "";
-		long attackerSteamId = attacker.IsValid() ? attacker.SteamId : 0;
+		var w = weapon.IsValid() ? weapon.GetComponentInChildren<IKillIcon>() : null;
+		Scene.RunEvent<Feed>( x => x.NotifyDeath( player.PlayerData, attacker.PlayerData, w?.DisplayIcon, dmg.Tags ) );
 
+		string attackerName = attacker.IsValid() ? attacker.DisplayName : dmg.Attacker?.Name;
 		if ( string.IsNullOrEmpty( attackerName ) )
-		{
-			// Player died without a clear attacker (environmental, etc.)
-			OnKilledMessage( 0, "", player.SteamId, player.DisplayName, "died" );
-		}
-		else
-		{
-			// Normal kill
-			OnKilledMessage( attackerSteamId, attackerName, player.SteamId, player.DisplayName, weaponName );
-		}
-
-		// Log to console (only on host to avoid duplicates)
-		if ( string.IsNullOrEmpty( attackerName ) )
-			Log.Info( $"{player.DisplayName} died (tags: {dmg.Tags})" );
+			SendMessage( $"{player.DisplayName} died (tags: {dmg.Tags})" );
 		else if ( weapon.IsValid() )
-			Log.Info( $"{attackerName} killed {(isSuicide ? "self" : player.DisplayName)} with {weapon.Name} (tags: {dmg.Tags})" );
+			SendMessage( $"{attackerName} killed {(isSuicide ? "self" : player.DisplayName)} with {weapon.Name} (tags: {dmg.Tags})" );
 		else
-			Log.Info( $"{attackerName} killed {(isSuicide ? "self" : player.DisplayName)} (tags: {dmg.Tags})" );
+			SendMessage( $"{attackerName} killed {(isSuicide ? "self" : player.DisplayName)} (tags: {dmg.Tags})" );
 	}
 
-	/// <summary>
-	/// Called clientside from OnDeath on the server to add kill messages to the killfeed.
-	/// </summary>
-	[Rpc.Broadcast]
-	public void OnKilledMessage( long leftid, string left, long rightid, string right, string method )
+	[ConCmd( "spawn" )]
+	private static void SpawnCommand( string path_or_ident )
 	{
-		KillFeed.Current?.AddEntry( leftid, left, rightid, right, method );
+		Spawn( path_or_ident );
 	}
 
-	[ConCmd( "spawn", ConVarFlags.Server )]
-	public static async void Spawn( Connection caller, string path_or_ident )
+	[Rpc.Broadcast]
+	public static async void Spawn( string path_or_ident )
 	{
 		// if we're the person calling this, then we don't do anything but add the spawn stat
-		if ( caller == Connection.Local )
+		if ( Rpc.Caller == Connection.Local )
 		{
 			var data = new Dictionary<string, object>();
 			data["ident"] = path_or_ident;
 			Sandbox.Services.Stats.Increment( "spawn", 1, data );
+
+			Sound.Play( "sounds/ui/ui.spawn.sound" );
 		}
 
 		// Only actually spawn it on the host
 		if ( !Networking.IsHost )
 			return;
 
-		var player = Player.FindForConnection( caller );
+		var player = Player.FindForConnection( Rpc.Caller );
 		if ( player is null ) return;
 
 		// store off their eye transform
@@ -229,49 +236,128 @@ public sealed partial class GameManager( Scene scene ) : GameObjectSystem<GameMa
 			.WithoutTags( "player" )
 			.Run();
 
+
 		var up = trace.Normal;
 		var backward = -eyes.Forward;
+
 		var right = Vector3.Cross( up, backward ).Normal;
 		var forward = Vector3.Cross( right, up ).Normal;
+
 		var facingAngle = Rotation.LookAt( forward, up );
+
 		var spawnTransform = new Transform( trace.EndPosition, facingAngle );
 
+
+
+		using var spawnInfo = new SpawnConfig();
+		spawnInfo.Location = new Transform( trace.EndPosition, facingAngle );
+		spawnInfo.Path = path_or_ident;
+
+		// TODO - can this user spawn this package?
+
 		// we're a model
-		if ( await FindModelPath( path_or_ident ) is Model model )
+		if ( await FindModelPath( spawnInfo ) is Model model )
 		{
 			SpawnModel( model, spawnTransform, player );
 			return;
 		}
 
 		// we're a model
-		if ( await FindEntityPath( path_or_ident ) is ScriptedEntity entity )
+		if ( await FindEntityPath( spawnInfo ) is ScriptedEntity entity )
 		{
-			Log.Info( $"Spawn Entity {entity}" );
 			SpawnEntity( entity, spawnTransform, player );
 			return;
 		}
 
 		Log.Warning( $"Couldn't resolve '{path_or_ident}'" );
+
 	}
 
-	static async Task<Model> FindModelPath( string ident_or_path )
+	class SpawnConfig : IDisposable
 	{
-		if ( ident_or_path.EndsWith( ".vmdl" ) )
+		public SpawningProgress Placeholder;
+		public Transform Location;
+		public string Path;
+
+		public void Dispose()
 		{
-			var se = await ResourceLibrary.LoadAsync<Model>( ident_or_path );
+			Placeholder?.GameObject?.Destroy();
+		}
+
+		public void CreatePlaceholder()
+		{
+			if ( Placeholder is not null )
+				return;
+
+			const string placeholderPath = "/prefabs/engine/spawn-progress.prefab";
+
+			var go = GameObject.Clone( placeholderPath );
+			go.WorldTransform = Location.WithScale( 1 );
+
+			go.NetworkSpawn( true, null );
+			Placeholder = go.GetComponent<SpawningProgress>();
+		}
+
+		internal void UpdatePlaceholder( Package package )
+		{
+			var mins = package.GetMeta<Vector3>( "RenderMins", -1 );
+			var maxs = package.GetMeta<Vector3>( "RenderMaxs", -1 );
+
+			Placeholder.SpawnBounds = new BBox( mins, maxs );
+		}
+	}
+
+	static async Task<Model> FindModelPath( SpawnConfig spawn )
+	{
+		if ( spawn.Path.EndsWith( ".vmdl" ) )
+		{
+			var se = await ResourceLibrary.LoadAsync<Model>( spawn.Path );
 			if ( se is not null ) return se;
 		}
 
-		return await Cloud.Load<Model>( ident_or_path );
+		Package package = default;
+
+		// Already downloaded, cool
+		if ( Package.TryGetCached( spawn.Path, out package, false ) )
+		{
+			return await Cloud.Load<Model>( spawn.Path );
+		}
+
+		spawn.CreatePlaceholder();
+
+		package = await Package.FetchAsync( spawn.Path, false );
+		if ( package is null || package.TypeName != "model" )
+			return null;
+
+		spawn.UpdatePlaceholder( package );
+
+		return await Cloud.Load<Model>( spawn.Path );
 	}
 
-	static async Task<ScriptedEntity> FindEntityPath( string ident_or_path )
+	static async Task<ScriptedEntity> FindEntityPath( SpawnConfig spawn )
 	{
-		var se = await ResourceLibrary.LoadAsync<ScriptedEntity>( ident_or_path );
+		var se = await ResourceLibrary.LoadAsync<ScriptedEntity>( spawn.Path );
 		if ( se is not null ) return se;
 
-		return await Cloud.Load<ScriptedEntity>( ident_or_path, true );
+		Package package = default;
+
+		// Already downloaded, cool
+		if ( Package.TryGetCached( spawn.Path, out package, false ) )
+		{
+			return await Cloud.Load<ScriptedEntity>( spawn.Path, true );
+		}
+
+		spawn.CreatePlaceholder();
+
+		package = await Package.FetchAsync( spawn.Path, false );
+		if ( package is null || package.TypeName != "sent" )
+			return null;
+
+		spawn.UpdatePlaceholder( package );
+
+		return await Cloud.Load<ScriptedEntity>( spawn.Path, true );
 	}
+
 
 	private static void SpawnModel( Model model, Transform spawnTransform, Player player )
 	{
@@ -296,10 +382,16 @@ public sealed partial class GameManager( Scene scene ) : GameObjectSystem<GameMa
 			collider.Scale = model.Bounds.Size;
 			collider.Center = model.Bounds.Center;
 
+
 			go.AddComponent<Rigidbody>();
 		}
 
 		go.NetworkSpawn( true, null );
+
+		var undo = player.Undo.Create();
+		undo.Name = "Spawn Model";
+		undo.Add( go );
+
 	}
 
 	private static void SpawnEntity( ScriptedEntity entity, Transform spawnTransform, Player player )
@@ -307,6 +399,7 @@ public sealed partial class GameManager( Scene scene ) : GameObjectSystem<GameMa
 		Log.Info( $"[{player}] Spawning Entity {entity.Title}" );
 
 		var prefabFile = entity.Prefab;
+		//var bounds = prefabFile.GetScene().GetLocalBounds();
 		var bounds = SceneUtility.GetPrefabScene( prefabFile ).GetLocalBounds();
 
 		var depth = -bounds.Mins.z;
@@ -317,20 +410,34 @@ public sealed partial class GameManager( Scene scene ) : GameObjectSystem<GameMa
 		go.WorldTransform = spawnTransform;
 
 		go.NetworkSpawn( true, null );
+
+		var undo = player.Undo.Create();
+		undo.Name = $"Spawn {entity.Title}";
+		undo.Add( go );
+
 	}
 
 	/// <summary>
-	/// Checks if the user is currently in the game scene.
+	/// Change a property, remotely
 	/// </summary>
-	/// <returns></returns>
-	public static bool InGame()
+	[Rpc.Host]
+	public static void ChangeProperty( Component c, string propertyName, object value )
 	{
-		var sceneInfo = Game.ActiveScene.GetComponentInChildren<SceneInformation>();
-		var title = sceneInfo.Title;
+		if ( c is null ) return;
 
-		if ( title != "game" )
-			return false;
+		var tl = TypeLibrary.GetType( c.GetType() );
+		if ( tl is null ) return;
 
-		return true;
+		var prop = tl.GetProperty( propertyName );
+		if ( prop is null ) return;
+
+		prop.SetValue( c, value );
+
+		// Broadcast the change to everyone
+
+		// BUG - this is optimal I think, but doesn't work??
+		// c.GameObject.Network.Refresh( c );
+
+		c.GameObject.Network.Refresh();
 	}
 }

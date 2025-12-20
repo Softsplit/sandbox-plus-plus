@@ -25,7 +25,7 @@ public interface IPlayerEvent : ISceneEvent<IPlayerEvent>
 	void OnJump() { }
 	void OnLand( float distance, Vector3 velocity ) { }
 	void OnSuicide() { }
-	void OnPickup( BaseCarriable item ) { }
+	void OnPickup( BaseCarryable item ) { }
 	void OnCameraMove( ref Angles angles ) { }
 	void OnCameraSetup( CameraComponent camera ) { }
 	void OnCameraPostSetup( CameraComponent camera ) { }
@@ -38,5 +38,5 @@ public interface ILocalPlayerEvent : ISceneEvent<ILocalPlayerEvent>
 {
 	void OnJump() { }
 	void OnLand( float distance, Vector3 velocity ) { }
-	void OnPickup( BaseCarriable weapon ) { }
+	void OnPickup( BaseCarryable weapon ) { }
 }

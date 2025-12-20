@@ -1,0 +1,27 @@
+
+SpawnMenuContent
+{
+	width: 100%;
+	height: 100%;
+	flex-direction: column;
+	position: relative;
+}
+
+SpawnMenuContent > .header
+{
+	flex-direction: column;
+	flex-shrink: 0;
+}
+
+SpawnMenuContent > .body
+{
+	position: relative;
+	flex-grow: 1;
+	padding: 8px;
+}
+
+SpawnMenuContent > .body .cell:hover
+{
+	color: white;
+	sound-in: ui.hover;
+}
