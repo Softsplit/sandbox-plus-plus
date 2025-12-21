@@ -1,0 +1,8 @@
+{
+    "spawnmenu.props" : "Локальные модели",
+    "spawnmenu.entities" : "Энтити",
+    "spawnmenu.modellist": "Модели",
+    "spawnmenu.tools": "Инструменты",
+    "spawnmenu.utility": "Утилиты",
+    "spawnmenu.npclist": "NPC"
+}

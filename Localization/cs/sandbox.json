@@ -1,0 +1,8 @@
+{
+    "spawnmenu.props" : "Lokální modely",
+    "spawnmenu.entities" : "Entity",
+    "spawnmenu.modellist": "Modely",
+    "spawnmenu.tools": "Nástroje",
+    "spawnmenu.utility": "Užitečnosti",
+    "spawnmenu.npclist": "NPC"
+}
