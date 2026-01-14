@@ -1,21 +1,29 @@
 NoticePanel
 {
 	position: absolute;
-	backdrop-filter: blur( 2px ) brightness( 0.6 );
-	padding: 0.5rem 1rem;
+	backdrop-filter: blur( 4px ) brightness( 0.4 );
+	padding: 0.5rem 1.5rem;
 	border-radius: 10px;
 	font-family: Poppins;
 	font-weight: 600;
+	font-size: 22px;
 	color: #fff;
-	gap: 0.5rem;
+	gap: 10px;
 	justify-content: center;
 	align-items: center;
 	text-shadow: 2px 2px 4px #000a;
-	text-stroke: 3px #333;
+	text-stroke: 4px #333;
 
 	.icon
 	{
-		font-size: 1.5rem;
+		font-size: 24px;
 		font-family: "Material Icons";
 	}
+}
+
+span.key
+{
+	font-weight: 500;
+	color: #fff;
+	background-color: #08f;
 }

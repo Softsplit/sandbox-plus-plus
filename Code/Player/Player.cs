@@ -5,7 +5,7 @@ using Sandbox.UI.Inventory;
 /// <summary>
 /// Holds player information like health
 /// </summary>
-public sealed partial class Player : Component, Component.IDamageable, PlayerController.IEvents, IActor
+public sealed partial class Player : Component, Component.IDamageable, PlayerController.IEvents
 {
 	public static Player FindLocalPlayer() => Game.ActiveScene.GetAllComponents<Player>().Where( x => x.IsLocalPlayer ).FirstOrDefault();
 	public static T FindLocalWeapon<T>() where T : BaseCarryable => FindLocalPlayer()?.GetComponentInChildren<T>( true );
@@ -64,8 +64,6 @@ public sealed partial class Player : Component, Component.IDamageable, PlayerCon
 
 	protected override void OnStart()
 	{
-		Undo = new UndoSystem( this );
-
 		var targets = Scene.GetAllComponents<DeathCameraTarget>()
 			.Where( x => x.Connection == Network.Owner );
 
