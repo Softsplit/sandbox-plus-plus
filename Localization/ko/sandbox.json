@@ -1,8 +1,0 @@
-{
-    "spawnmenu.props" : "로컬 모델",
-    "spawnmenu.entities" : "엔티티",
-    "spawnmenu.modellist": "모델",
-    "spawnmenu.tools": "도구",
-    "spawnmenu.utility": "유틸리티",
-    "spawnmenu.npclist": "NPC"
-}
