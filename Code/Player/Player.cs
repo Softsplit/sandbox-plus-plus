@@ -54,14 +54,6 @@ public sealed partial class Player : Component, Component.IDamageable, PlayerCon
 		}
 	}
 
-	protected override void OnFixedUpdate()
-	{
-		if ( !IsProxy )
-		{
-			ControlSpray();
-		}
-	}
-
 	protected override void OnStart()
 	{
 		var targets = Scene.GetAllComponents<DeathCameraTarget>()
@@ -189,7 +181,6 @@ public sealed partial class Player : Component, Component.IDamageable, PlayerCon
 		if ( inventory.IsValid() )
 		{
 			inventory.SwitchWeapon( null );
-			inventory.DropCoffin();
 		}
 
 		if ( d.Tags.HasAny( DamageTags.Crush, DamageTags.Explosion, DamageTags.GibAlways ) )

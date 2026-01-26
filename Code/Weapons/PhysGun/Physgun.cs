@@ -246,7 +246,6 @@ public partial class Physgun : BaseCarryable
 				{
 					Active = true,
 					Pulling = true,
-					LocalOffset = sh.Body.MassCenter,
 				};
 			}
 		}
@@ -355,9 +354,12 @@ public partial class Physgun : BaseCarryable
 
 		if ( _joint is null )
 		{
+			// Scale is built into physics, remove it.
+			var bodyTransform = _state.Body.WorldTransform.WithScale( 1.0f );
+
 			var body = _state.Body.PhysicsBody;
 			var point1 = new PhysicsPoint( _body );
-			var point2 = new PhysicsPoint( body, _state.LocalOffset );
+			var point2 = new PhysicsPoint( body, bodyTransform.PointToLocal( _state.EndPoint ) );
 			var maxForce = body.Mass * body.World.Gravity.LengthSquared;
 
 			_joint = PhysicsJoint.CreateControl( point1, point2 );
@@ -406,16 +408,19 @@ public partial class Physgun : BaseCarryable
 		var bodyTransform = tr.Body.Transform.WithScale( go.WorldScale );
 
 		state.GameObject = go;
-		state.LocalOffset = bodyTransform.PointToLocal( tr.HitPosition );
 		state.LocalNormal = bodyTransform.NormalToLocal( tr.Normal );
 
 		if ( isPulling )
 		{
+			// Scale is built into mass center, remove it.
+			var bodyScale = new Transform( Vector3.Zero, Rotation.Identity, bodyTransform.Scale );
+			state.LocalOffset = bodyScale.PointToLocal( tr.Body.LocalMassCenter );
 			state.GrabDistance = 0;
 			state.GrabOffset = aim.Rotation.Inverse * bodyTransform.Rotation;
 		}
 		else
 		{
+			state.LocalOffset = bodyTransform.PointToLocal( tr.HitPosition );
 			state.GrabDistance = Vector3.DistanceBetween( aim.Position, tr.HitPosition );
 			state.GrabDistance = ClampGrabDistance( state.Body, tr.HitPosition, aim, state.GrabDistance );
 			state.GrabOffset = Rotation.FromYaw( yaw ).Inverse * bodyTransform.Rotation;
