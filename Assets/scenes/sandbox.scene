@@ -3,7 +3,7 @@
 	"GameObjects": [
 		{
 			"__guid": "f7192e2f-1093-4cca-a93c-40cb86e20686",
-			"__version": 1,
+			"__version": 2,
 			"Flags": 0,
 			"Name": "MapLoader",
 			"Position": "0,0,0",
@@ -12,7 +12,7 @@
 			"Tags": "",
 			"Enabled": true,
 			"NetworkMode": 2,
-			"NetworkInterpolation": true,
+			"NetworkFlags": 0,
 			"NetworkOrphaned": 0,
 			"NetworkTransmit": true,
 			"OwnerTransfer": 1,
