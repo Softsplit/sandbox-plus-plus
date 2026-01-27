@@ -52,6 +52,8 @@
             // opened
             if (state)
             {
+                Sandbox.Services.Stats.Increment( "spawnmenus_opened", 1 );
+
                 if (Input.Pressed("inspectmenu"))
                 {
                     Hints.Current.Cancel("openinspectmenu");

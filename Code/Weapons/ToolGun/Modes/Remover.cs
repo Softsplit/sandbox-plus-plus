@@ -64,6 +64,20 @@ public class Remover : ToolMode
 		if ( go.IsProxy ) return;
 
 		go.Destroy();
+
+		var connection = Rpc.Caller;
+		if ( connection is not null )
+		{
+			using ( Rpc.FilterInclude( connection ) )
+			{
+				IncrementDestroyedStat();
+			}
+		}
 	}
 
+	[Rpc.Broadcast]
+	private static void IncrementDestroyedStat()
+	{
+		Sandbox.Services.Stats.Increment( "things_destroyed", 1 );
+	}
 }

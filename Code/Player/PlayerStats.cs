@@ -5,61 +5,91 @@ public sealed class PlayerStats : Component, IPlayerEvent
 {
 	[RequireComponent] public Player Player { get; set; }
 
-	float metersTravelled;
-	Vector3 lastPosition;
+	float secondsAccumulated;
+	TimeSince sessionStartTime;
+	bool halfMarathonUnlocked;
+	bool marathonUnlocked;
+
+	protected override void OnStart()
+	{
+		if ( IsProxy ) return;
+
+		sessionStartTime = 0;
+		TrackUniqueMapPlayed();
+	}
+
+	void TrackUniqueMapPlayed()
+	{
+		var currentMap = Game.ActiveScene?.Source?.ResourcePath ?? LaunchArguments.Map;
+		if ( string.IsNullOrEmpty( currentMap ) ) return;
+
+		var playedMapsKey = "played_maps";
+		var playedMaps = Game.Cookies.Get( playedMapsKey, "" );
+		var mapIdent = currentMap.ToLowerInvariant().Trim();
+
+		if ( !playedMaps.Contains( $"|{mapIdent}|" ) )
+		{
+			Game.Cookies.Set( playedMapsKey, playedMaps + $"|{mapIdent}|" );
+			Sandbox.Services.Stats.Increment( "maps_played", 1 );
+		}
+	}
 
 	protected override void OnFixedUpdate()
 	{
 		if ( IsProxy ) return;
 
-		var delta = WorldPosition - lastPosition;
-		lastPosition = WorldPosition;
-
-
-		if ( !Player.Controller.IsOnGround )
+		secondsAccumulated += Time.Delta;
+		if ( secondsAccumulated >= 60.0f )
 		{
-			return;
+			Sandbox.Services.Stats.Increment( "time_wasted", secondsAccumulated );
+			secondsAccumulated = 0;
 		}
 
-		var groundDelta = delta.WithZ( 0 ).Length.InchToMeter();
-		if ( groundDelta > 10 ) groundDelta = 0;
+		CheckMarathonAchievements();
+		CheckSocialAchievements();
+	}
 
-		metersTravelled += groundDelta;
-
-		if ( metersTravelled > 10 )
+	void CheckMarathonAchievements()
+	{
+		if ( !halfMarathonUnlocked && sessionStartTime >= 14400f )
 		{
-			Sandbox.Services.Stats.Increment( "meters_walked", metersTravelled );
-			metersTravelled = 0;
+			halfMarathonUnlocked = true;
+			Sandbox.Services.Achievements.Unlock( "half_marathon" );
 		}
 
+		if ( !marathonUnlocked && sessionStartTime >= 28800f )
+		{
+			marathonUnlocked = true;
+			Sandbox.Services.Achievements.Unlock( "marathon" );
+		}
 	}
 
-	void IPlayerEvent.OnJump()
+	void CheckSocialAchievements()
 	{
-		if ( IsProxy ) return;
+		if ( (int)(sessionStartTime * 10) % 50 != 0 ) return;
 
-		Sandbox.Services.Stats.Increment( "jump", 1 );
+		var connections = Connection.All.ToList();
+
+		if ( connections.Any( c => c.SteamId == 76561197960279927 ) )
+		{
+			Sandbox.Services.Achievements.Unlock( "play_with_garry" );
+		}
+
+		int friendCount = 0;
+		foreach ( var connection in connections )
+		{
+			if ( connection == Connection.Local ) continue;
+
+			var friend = new Friend( connection.SteamId );
+			if ( friend.IsFriend )
+			{
+				friendCount++;
+			}
+		}
+
+		if ( friendCount >= 10 )
+		{
+			Sandbox.Services.Achievements.Unlock( "friendly" );
+		}
 	}
-
-	void IPlayerEvent.OnDamage( IPlayerEvent.DamageParams args )
-	{
-		if ( IsProxy ) return;
-
-		Sandbox.Services.Stats.Increment( "damage_taken", args.Damage );
-	}
-
-	void IPlayerEvent.OnDied( IPlayerEvent.DiedParams args )
-	{
-		if ( IsProxy ) return;
-
-		Sandbox.Services.Stats.Increment( "deaths", 1 );
-	}
-
-	void IPlayerEvent.OnSuicide()
-	{
-		if ( IsProxy ) return;
-
-		Sandbox.Services.Stats.Increment( "suicides", 1 );
-	}
-
 }

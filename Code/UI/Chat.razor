@@ -61,6 +61,11 @@
         if (string.IsNullOrWhiteSpace(text))
             return;
 
+        if ( text.Contains( "birmingham", StringComparison.OrdinalIgnoreCase ) )
+        {
+            Sandbox.Services.Achievements.Unlock( "secret_phrase" );
+        }
+
         AddText( text );
     }
 
