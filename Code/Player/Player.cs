@@ -213,8 +213,6 @@ public sealed partial class Player : Component, Component.IDamageable, PlayerCon
 		OnControl();
 	}
 
-	RealTimeSince timeSinceJumpPressed;
-
 	void OnControl()
 	{
 		Scene.Get<Inventory>()?.HandleInputOpen();
@@ -225,17 +223,12 @@ public sealed partial class Player : Component, Component.IDamageable, PlayerCon
 			return;
 		}
 
-		if ( Input.Pressed( "jump" ) )
+		if ( Input.Pressed( "noclip" ) )
 		{
-			if ( timeSinceJumpPressed < 0.3f )
+			if ( GetComponent<NoclipMoveMode>( true ) is { } noclip )
 			{
-				if ( GetComponent<NoclipMoveMode>( true ) is { } noclip )
-				{
-					noclip.Enabled = !noclip.Enabled;
-				}
+				noclip.Enabled = !noclip.Enabled;
 			}
-
-			timeSinceJumpPressed = 0;
 		}
 
 		if ( Input.Pressed( "undo" ) )
