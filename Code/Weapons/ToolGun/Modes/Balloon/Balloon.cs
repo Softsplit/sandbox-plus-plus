@@ -114,8 +114,40 @@ public class Balloon : ToolMode
 			c.GravityScale = Force;
 		}
 
+		var prop = go.GetComponent<Prop>();
+		if ( prop.IsValid() )
+		{
+			Player lastAttacker = null;
+
+			prop.OnPropTakeDamage += ( damage ) =>
+			{
+				lastAttacker = damage.Attacker?.GetComponent<Player>();
+			};
+
+			prop.OnPropBreak += () =>
+			{
+				if ( lastAttacker.IsValid() )
+				{
+					var connection = lastAttacker.Network?.Owner;
+					if ( connection is not null )
+					{
+						using ( Rpc.FilterInclude( connection ) )
+						{
+							IncrementBalloonStat();
+						}
+					}
+				}
+			};
+		}
+
 		var undo = Player.Undo.Create();
 		undo.Name = "Balloon";
 		undo.Add( go );
+	}
+
+	[Rpc.Broadcast]
+	private static void IncrementBalloonStat()
+	{
+		Sandbox.Services.Stats.Increment( "balloons_burst", 1 );
 	}
 }

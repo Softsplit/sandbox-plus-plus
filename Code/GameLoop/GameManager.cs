@@ -394,6 +394,15 @@ public sealed partial class GameManager : GameObjectSystem<GameManager>, Compone
 		undo.Name = "Spawn Model";
 		undo.Add( go );
 
+		var modelName = model.Name?.ToLowerInvariant() ?? "";
+		if ( modelName.Contains( "ragdoll" ) )
+		{
+			Sandbox.Services.Stats.Increment( "ragdolls_spawned", 1 );
+		}
+		else
+		{
+			Sandbox.Services.Stats.Increment( "props_spawned", 1 );
+		}
 	}
 
 	private static void SpawnEntity( ScriptedEntity entity, Transform spawnTransform, Player player )
