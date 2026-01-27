@@ -30,6 +30,14 @@ public partial class BaseBulletWeapon : BaseWeapon
 
 		if ( hit && hitObject.IsValid() )
 		{
+			var impactSound = hitSurface.SoundCollection.Bullet;
+			if ( !impactSound.IsValid() ) impactSound = hitSurface.GetBaseSurface()?.SoundCollection.Bullet;
+
+			if ( impactSound.IsValid() )
+			{
+				Sound.Play( impactSound, hitpoint );
+			}
+
 			var prefab = hitSurface.PrefabCollection.BulletImpact;
 			if ( prefab is null ) prefab = hitSurface.GetBaseSurface()?.PrefabCollection.BulletImpact;
 
