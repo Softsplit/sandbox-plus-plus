@@ -59,6 +59,7 @@ public class Balloon : ToolMode
 		foreach ( var c in go.GetComponentsInChildren<Prop>( true ) )
 		{
 			c.Tint = Tint;
+			c.Health = 1;
 		}
 
 		if ( withRope )
