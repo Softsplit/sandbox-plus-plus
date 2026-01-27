@@ -22,18 +22,48 @@ public sealed partial class ViewModel : WeaponModel, ICameraSetup
 	public float IncrementalAnimationSpeed { get; set; } = 3.0f;
 
 	/// <summary>
-	/// How much inertia should this weapon have?
+	/// How much sway/lag the viewmodel has when looking around.
 	/// </summary>
-	[Property, Group( "Inertia" )]
-	Vector2 InertiaScale { get; set; } = new Vector2( 2, 2 );
+	[Property, Group( "Sway" )]
+	public float SwayScale { get; set; } = 1.0f;
+
+	/// <summary>
+	/// How fast the viewmodel catches up to your view rotation.
+	/// </summary>
+	[Property, Group( "Sway" )]
+	public float SwaySpeed { get; set; } = 10.0f;
+
+	/// <summary>
+	/// Maximum sway offset in degrees.
+	/// </summary>
+	[Property, Group( "Sway" )]
+	public float MaxSwayDegrees { get; set; } = 3.0f;
+
+	/// <summary>
+	/// Scale for the bob effect.
+	/// </summary>
+	[Property, Group( "Bob" )]
+	public float BobScale { get; set; } = 1.0f;
 
 	public bool IsAttacking { get; set; }
 
 	TimeSince AttackDuration;
 
-	Vector2 lastInertia;
-	Vector2 currentInertia;
+	// Sway tracking
+	Angles lastAngles;
+	Vector3 swayOffset;
+	Angles swayAngles;
 	bool isFirstUpdate = true;
+
+	// Bob state
+	float bobTime;
+	float lastBobTime;
+	float verticalBob;
+	float lateralBob;
+
+	// Bob constants
+	const float BOB_CYCLE_MAX = 0.45f;
+	const float BOB_UP = 0.5f;
 
 	protected override void OnStart()
 	{
@@ -49,25 +79,92 @@ public sealed partial class ViewModel : WeaponModel, ICameraSetup
 		UpdateAnimation();
 	}
 
-	void ApplyInertia()
+	void CalcBob( PlayerController controller )
 	{
-		var rot = Scene.Camera.WorldRotation.Angles();
+		if ( !GamePreferences.ViewBobbing )
+		{
+			verticalBob = 0;
+			lateralBob = 0;
+			return;
+		}
 
-		// Need to fetch data from the camera for the first frame
+		var speed = controller.Velocity.WithZ( 0 ).Length;
+		speed = Math.Clamp( speed, -320f, 320f );
+
+		var bobOffset = speed.Remap( 0, 320, 0f, 1f );
+		bobTime += (Time.Now - lastBobTime) * bobOffset;
+		lastBobTime = Time.Now;
+
+		var cycle = bobTime - MathF.Floor( bobTime / BOB_CYCLE_MAX ) * BOB_CYCLE_MAX;
+		cycle /= BOB_CYCLE_MAX;
+
+		if ( cycle < BOB_UP )
+		{
+			cycle = MathF.PI * cycle / BOB_UP;
+		}
+		else
+		{
+			cycle = MathF.PI + MathF.PI * (cycle - BOB_UP) / (1.0f - BOB_UP);
+		}
+
+		verticalBob = speed * 0.005f;
+		verticalBob = verticalBob * 0.3f + verticalBob * 0.7f * MathF.Sin( cycle );
+		verticalBob = Math.Clamp( verticalBob, -7.0f, 4.0f );
+
+		cycle = bobTime - MathF.Floor( bobTime / (BOB_CYCLE_MAX * 2) ) * BOB_CYCLE_MAX * 2;
+		cycle /= BOB_CYCLE_MAX * 2;
+
+		if ( cycle < BOB_UP )
+		{
+			cycle = MathF.PI * cycle / BOB_UP;
+		}
+		else
+		{
+			cycle = MathF.PI + MathF.PI * (cycle - BOB_UP) / (1.0f - BOB_UP);
+		}
+
+		lateralBob = speed * 0.005f;
+		lateralBob = lateralBob * 0.3f + lateralBob * 0.7f * MathF.Sin( cycle );
+		lateralBob = Math.Clamp( lateralBob, -7.0f, 4.0f );
+	}
+
+	void CalcSway( Rotation cameraRotation )
+	{
+		var currentAngles = cameraRotation.Angles();
+
 		if ( isFirstUpdate )
 		{
-
-
-			lastInertia = new Vector2( rot.pitch, rot.yaw );
-			currentInertia = Vector2.Zero;
+			lastAngles = currentAngles;
+			swayOffset = Vector3.Zero;
+			swayAngles = Angles.Zero;
 			isFirstUpdate = false;
 		}
 
-		var newPitch = rot.pitch;
-		var newYaw = rot.yaw;
+		var deltaYaw = Angles.NormalizeAngle( currentAngles.yaw - lastAngles.yaw );
+		var deltaPitch = Angles.NormalizeAngle( currentAngles.pitch - lastAngles.pitch );
 
-		currentInertia = new Vector2( Angles.NormalizeAngle( newPitch - lastInertia.x ), Angles.NormalizeAngle( lastInertia.y - newYaw ) );
-		lastInertia = new( newPitch, newYaw );
+		var targetSwayAngles = new Angles(
+			Math.Clamp( -deltaPitch * SwayScale * 2f, -MaxSwayDegrees, MaxSwayDegrees ),
+			Math.Clamp( -deltaYaw * SwayScale * 2f, -MaxSwayDegrees, MaxSwayDegrees ),
+			Math.Clamp( deltaYaw * SwayScale * 0.5f, -MaxSwayDegrees * 0.5f, MaxSwayDegrees * 0.5f ) // slight roll
+		);
+
+		swayAngles = Angles.Lerp( swayAngles, targetSwayAngles, Time.Delta * SwaySpeed );
+		swayAngles = new Angles(
+			MathX.Lerp( swayAngles.pitch, 0, Time.Delta * SwaySpeed * 0.5f ),
+			MathX.Lerp( swayAngles.yaw, 0, Time.Delta * SwaySpeed * 0.5f ),
+			MathX.Lerp( swayAngles.roll, 0, Time.Delta * SwaySpeed * 0.5f )
+		);
+
+		var right = cameraRotation.Right;
+		var up = cameraRotation.Up;
+
+		swayOffset = Vector3.Lerp( swayOffset, Vector3.Zero, Time.Delta * SwaySpeed );
+		swayOffset += right * -deltaYaw * 0.02f * SwayScale;
+		swayOffset += up * deltaPitch * 0.02f * SwayScale;
+		swayOffset = swayOffset.ClampLength( 1.0f );
+
+		lastAngles = currentAngles;
 	}
 
 	void ICameraSetup.Setup( CameraComponent cc )
@@ -77,7 +174,35 @@ public sealed partial class ViewModel : WeaponModel, ICameraSetup
 		WorldPosition = cc.WorldPosition;
 		WorldRotation = cc.WorldRotation;
 
-		ApplyInertia();
+		var playerController = GetComponentInParent<PlayerController>();
+		if ( playerController.IsValid() )
+		{
+			CalcBob( playerController );
+			CalcSway( cc.WorldRotation );
+
+			var forward = cc.WorldRotation.Forward;
+			var right = cc.WorldRotation.Right;
+			var up = cc.WorldRotation.Up;
+
+			var bobPosition = Vector3.Zero;
+			var bobAngles = Angles.Zero;
+
+			bobPosition += forward * verticalBob * 0.1f * BobScale;
+			bobPosition += up * verticalBob * 0.1f * BobScale;
+
+			bobPosition += right * lateralBob * 0.8f * BobScale;
+
+			bobAngles.roll = verticalBob * 0.5f * BobScale;
+			bobAngles.pitch = -verticalBob * 0.4f * BobScale;
+			bobAngles.yaw = -lateralBob * 0.3f * BobScale;
+
+			bobPosition += swayOffset;
+			bobAngles += swayAngles;
+
+			WorldPosition += bobPosition;
+			WorldRotation *= Rotation.From( bobAngles );
+		}
+
 		ApplyAnimationTransform( cc );
 	}
 
@@ -102,30 +227,11 @@ public sealed partial class ViewModel : WeaponModel, ICameraSetup
 
 		Renderer.Set( "b_twohanded", true );
 		Renderer.Set( "b_grounded", playerController.IsOnGround );
-		Renderer.Set( "move_bob", GamePreferences.ViewBobbing ? playerController.Velocity.Length.Remap( 0, playerController.RunSpeed * 2f ) : 0 );
 
 		Renderer.Set( "aim_pitch", rot.pitch );
-		Renderer.Set( "aim_pitch_inertia", currentInertia.x * InertiaScale.x );
-
 		Renderer.Set( "aim_yaw", rot.yaw );
-		Renderer.Set( "aim_yaw_inertia", currentInertia.y * InertiaScale.y );
 
 		Renderer.Set( "attack_hold", IsAttacking ? AttackDuration.Relative.Clamp( 0f, 1f ) : 0f );
-
-		var velocity = playerController.Velocity;
-
-		var dir = velocity;
-		var forward = Scene.Camera.WorldRotation.Forward.Dot( dir );
-		var sideward = Scene.Camera.WorldRotation.Right.Dot( dir );
-
-		var angle = MathF.Atan2( sideward, forward ).RadianToDegree().NormalizeDegrees();
-
-		Renderer.Set( "move_direction", angle );
-		Renderer.Set( "move_speed", velocity.Length );
-		Renderer.Set( "move_groundspeed", velocity.WithZ( 0 ).Length );
-		Renderer.Set( "move_y", sideward );
-		Renderer.Set( "move_x", forward );
-		Renderer.Set( "move_z", velocity.z );
 	}
 
 	public void OnAttack()

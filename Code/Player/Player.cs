@@ -213,8 +213,6 @@ public sealed partial class Player : Component, Component.IDamageable, PlayerCon
 		OnControl();
 	}
 
-	RealTimeSince timeSinceJumpPressed;
-
 	void OnControl()
 	{
 		Scene.Get<Inventory>()?.HandleInputOpen();
@@ -225,17 +223,12 @@ public sealed partial class Player : Component, Component.IDamageable, PlayerCon
 			return;
 		}
 
-		if ( Input.Pressed( "jump" ) )
+		if ( Input.Pressed( "noclip" ) )
 		{
-			if ( timeSinceJumpPressed < 0.3f )
+			if ( GetComponent<NoclipMoveMode>( true ) is { } noclip )
 			{
-				if ( GetComponent<NoclipMoveMode>( true ) is { } noclip )
-				{
-					noclip.Enabled = !noclip.Enabled;
-				}
+				noclip.Enabled = !noclip.Enabled;
 			}
-
-			timeSinceJumpPressed = 0;
 		}
 
 		if ( Input.Pressed( "undo" ) )
@@ -393,7 +386,7 @@ public sealed partial class Player : Component, Component.IDamageable, PlayerCon
 		var r = Controller.WishVelocity.Dot( EyeTransform.Left ) / -250.0f;
 		roll = MathX.Lerp( roll, r, Time.Delta * 10.0f, true );
 
-		camera.WorldRotation *= new Angles( 0, 0, roll );
+		// camera.WorldRotation *= new Angles( 0, 0, roll );
 	}
 
 	void PlayerController.IEvents.OnLanded( float distance, Vector3 impactVelocity )
@@ -405,7 +398,7 @@ public sealed partial class Player : Component, Component.IDamageable, PlayerCon
 
 		if ( Controller.ThirdPerson || !player.IsLocalPlayer ) return;
 
-		new Punch( new Vector3( 0.3f * distance, Random.Shared.Float( -1, 1 ), Random.Shared.Float( -1, 1 ) ), 1.0f, 1.5f, 0.7f );
+		new Punch( new Vector3( 0.3f * Math.Min( distance, 100f ), Random.Shared.Float( -1, 1 ), Random.Shared.Float( -1, 1 ) ), 1.0f, 1.5f, 0.7f );
 	}
 
 	bool noPickupNotices = false;
