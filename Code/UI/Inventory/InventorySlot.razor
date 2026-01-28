@@ -3,12 +3,29 @@
 @inherits Panel
 
 <root>
-    <div class="index">@(Index+1)</div>
+    @{
+        var weapons = GetWeapons().ToList();
+        var activeWeapon = weapons.FirstOrDefault(w => w == Active) ?? weapons.FirstOrDefault();
+        bool primaryIsActive = activeWeapon != null && activeWeapon == Hovered;
+    }
+    <div class="index @(primaryIsActive ? "primary-active" : "")">
+        <span class="number">@(Index+1)</span>
+        @{
+            if (activeWeapon != null && (Hovered?.InventorySlot == Index || Active?.InventorySlot == Index))
+            {
+                <InventoryWeapon class="primary" Weapon="@activeWeapon" CanSwitch=@activeWeapon.CanSwitch() IsHovered="@(activeWeapon == Hovered)" IsActive="@(activeWeapon == Active)"></InventoryWeapon>
+            }
+        }
+    </div>
 
     <div class="list">
-    @foreach ( var weapon in GetWeapons() )
-    {
-        <InventoryWeapon Weapon="@weapon" CanSwitch=@weapon.CanSwitch() IsHovered="@(weapon == Hovered)" IsActive="@(weapon == Active)"></InventoryWeapon>
+    @{
+        var allWeapons = GetWeapons().ToList();
+        var firstWeapon = allWeapons.FirstOrDefault(w => w == Active) ?? allWeapons.FirstOrDefault();
+        foreach ( var weapon in allWeapons.Where(w => w != firstWeapon) )
+        {
+            <InventoryWeapon Weapon="@weapon" CanSwitch=@weapon.CanSwitch() IsHovered="@(weapon == Hovered)" IsActive="@(weapon == Active)"></InventoryWeapon>
+        }
     }
     </div>
 

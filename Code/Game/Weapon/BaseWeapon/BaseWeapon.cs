@@ -88,7 +88,7 @@ public partial class BaseWeapon : BaseCarryable
 	public override void DrawHud( HudPainter painter, Vector2 crosshair )
 	{
 		DrawCrosshair( painter, crosshair );
-		DrawAmmo( painter, Screen.Size * 0.9f );
+		DrawAmmo( painter, new Vector2( Screen.Size.x - 32f * Hud.Scale, Screen.Size.y - 32f * Hud.Scale ) );
 	}
 
 	public override void OnPlayerUpdate( Player player )
@@ -196,12 +196,9 @@ public partial class BaseWeapon : BaseCarryable
 
 	public virtual void DrawCrosshair( HudPainter hud, Vector2 center )
 	{
-		Color color = Color.Red;
-
-		hud.DrawLine( center + Vector2.Left * 32, center + Vector2.Left * 15, 3, color );
-		hud.DrawLine( center - Vector2.Left * 32, center - Vector2.Left * 15, 3, color );
-		hud.DrawLine( center + Vector2.Up * 32, center + Vector2.Up * 15, 3, color );
-		hud.DrawLine( center - Vector2.Up * 32, center - Vector2.Up * 15, 3, color );
+		hud.SetBlendMode( BlendMode.Normal );
+		hud.DrawCircle( center, 8, Color.Black.WithAlpha( 0.5f ) );
+		hud.DrawCircle( center, 4, Color.White );
 	}
 
 	Texture ammoIcon = Texture.Load( $"ui/ammo_icon.png" );
@@ -211,17 +208,13 @@ public partial class BaseWeapon : BaseCarryable
 		if ( AmmoResource is null )
 			return;
 
-		var color = Color.Red;
-
 		var owner = Owner;
 		if ( owner is null ) return;
 
-		var str = $"{ClipContents} / {owner.GetAmmoCount( AmmoResource )}";
-		if ( !UsesClips ) str = $"{owner.GetAmmoCount( AmmoResource )}";
+		var clipAmmo = ClipContents;
+		var reserveAmmo = owner.GetAmmoCount( AmmoResource );
 
-		hud.DrawHudElement( str, bottomright, ammoIcon, 32f, TextFlag.RightCenter );
+		hud.DrawAmmo( clipAmmo, reserveAmmo, bottomright, UsesClips );
 	}
 
-	protected Color CrosshairCanShoot => Color.White;
-	protected Color CrosshairNoShoot => Color.Red;
 }

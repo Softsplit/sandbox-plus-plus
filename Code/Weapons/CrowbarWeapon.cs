@@ -77,21 +77,4 @@ public class CrowbarWeapon : BaseCarryable
 		}
 	}
 
-	public override void DrawHud( HudPainter painter, Vector2 crosshair )
-	{
-		DrawCrosshair( painter, crosshair );
-	}
-
-	protected Color CrosshairCanShoot => Color.Yellow;
-	protected Color CrosshairNoShoot => Color.Red;
-
-	public void DrawCrosshair( HudPainter hud, Vector2 center )
-	{
-		var len = 6;
-
-		Color color = !CanAttack() ? CrosshairNoShoot : CrosshairCanShoot;
-
-		hud.SetBlendMode( BlendMode.Lighten );
-		hud.DrawCircle( center, len, color );
-	}
 }

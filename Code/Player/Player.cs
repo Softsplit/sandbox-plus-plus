@@ -246,7 +246,7 @@ public sealed partial class Player : Component, Component.IDamageable, PlayerCon
 		if ( !WantsHideHud )
 		{
 			var hud = Scene.Camera.Hud;
-			DrawVitals( hud, Screen.Size * new Vector2( 0.1f, 0.9f ) );
+			DrawVitals( hud, new Vector2( 32f * Hud.Scale, Screen.Size.y - 32f * Hud.Scale ) );
 		}
 	}
 
@@ -436,12 +436,7 @@ public sealed partial class Player : Component, Component.IDamageable, PlayerCon
 
 	public void DrawVitals( HudPainter hud, Vector2 bottomleft )
 	{
-		hud.DrawHudElement( $"{Health.CeilToInt()}", bottomleft, HealthIcon, 30f );
-
-		if ( Armour > 0f )
-		{
-			hud.DrawHudElement( $"{Armour.CeilToInt()}", bottomleft - new Vector2( 0, 64f * Hud.Scale ), ArmourIcon, 30f );
-		}
+		hud.DrawHealth( Health.CeilToInt(), bottomleft );
 	}
 
 	public T GetWeapon<T>() where T : BaseCarryable

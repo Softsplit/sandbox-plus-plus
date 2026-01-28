@@ -4,19 +4,8 @@ public partial class Physgun : BaseCarryable
 {
 	public override void DrawHud( HudPainter painter, Vector2 crosshair )
 	{
-		if ( _state.IsValid() )
-			return;
-
-		if ( _stateHovered.IsValid() )
-		{
-			painter.DrawCircle( crosshair, 3, Color.Cyan );
-		}
-		else
-		{
-			painter.DrawCircle( crosshair, 5, Color.Cyan.WithAlpha( 0.2f ) );
-		}
-
-
+		painter.SetBlendMode( BlendMode.Normal );
+		painter.DrawCircle( crosshair, 8, Color.Black.WithAlpha( 0.5f ) );
+		painter.DrawCircle( crosshair, 4, Color.White );
 	}
-
 }
