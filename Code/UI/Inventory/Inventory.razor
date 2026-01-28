@@ -22,6 +22,12 @@
 
     protected override int BuildHash() => HashCode.Combine(inventory, hovered, active);
 
+    protected override void OnEnabled()
+    {
+        base.OnEnabled();
+        Panel.SetClass("hidden", true);
+    }
+
     void ILocalPlayerEvent.OnPickup(BaseCarryable weapon)
     {
         StateHasChanged();
