@@ -1,39 +1,186 @@
 InventorySlot
 {
     flex-direction: column;
-    gap: 8px;
-    width: 64px;
-    transition: all 0.1s ease;
+    gap: 20px;
+    width: 100px;
 }
 
 InventorySlot .index
 {
-    background-color: #a501;
-    backdrop-filter: blur( 10px ) contrast( 0.8 ) brightness( 0.7 );
-    aspect-ratio: 1;
-    height: 48px;
-    width: 48px;
+    position: relative;
+    background-color: rgba(0, 0, 0, 0.2);
+    height: 100px;
+    width: 100px;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
-    font-weight: 650;
+    font-weight: 700;
     font-family: Poppins;
-    border-radius: 4px;
-    color: #feaa;
+    border-radius: 8px;
+    color: rgba(255, 220, 0, 0.8);
+    font-size: 28px;
+
+    .number
+    {
+        position: absolute;
+        top: 6px;
+        left: 10px;
+        z-index: 10;
+        color: rgba(255, 220, 0, 0.8);
+    }
+
+    InventoryWeapon.primary
+    {
+        background-color: transparent;
+        height: 100%;
+        width: 100%;
+        padding: 0;
+        padding-top: 20px;
+        justify-content: center;
+        align-items: center;
+
+        .icon
+        {
+            opacity: 0;
+            height: 0px;
+        }
+
+        label
+        {
+            height: 20px;
+            color: rgba(255, 220, 0, 0.8);
+            margin-right: 16px;
+        }
+    }
+
+    InventoryWeapon.primary.active
+    {
+        label
+        {
+            color: #ffdc00;
+            margin-right: 0;
+        }
+
+        .icon
+        {
+            opacity: 1;
+            height: 70px;
+            width: auto;
+            aspect-ratio: 2;
+            background-tint: #ffdc00;
+            margin-bottom: 8px;
+        }
+    }
 }
 
 InventorySlot.active
 {
-    width: 180px;
+    width: 300px;
 
     > .index
     {
-        background-color: #f702;
-        color: #fea;
+        background-color: rgba(0, 0, 0, 0.2);
+        color: rgba(255, 220, 0, 0.8);
+        width: 300px;
+        height: auto;
+        min-height: 40px;
+
+        .number
+        {
+            color: rgba(255, 220, 0, 0.8);
+        }
+
+        InventoryWeapon.primary
+        {
+            height: auto;
+            min-height: 32px;
+            padding: 4px 8px;
+            padding-top: 28px;
+            padding-left: 28px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        InventoryWeapon.primary.active
+        {
+            height: auto;
+            padding: 10px;
+            margin-top: 0;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+
+            .icon
+            {
+                height: 110px;
+            }
+        }
+    }
+
+    > .index.primary-active
+    {
+        color: #ffdc00;
+
+        .number
+        {
+            color: #ffdc00;
+        }
     }
 }
 
 InventorySlot > .list
 {
     flex-direction: column;
+    gap: 20px;
+}
+
+InventorySlot > .list InventoryWeapon
+{
+    height: 0px;
+    background-color: transparent;
+
+    .icon
+    {
+        opacity: 0;
+        height: 0px;
+    }
+
+    label
+    {
+        display: none;
+    }
+}
+
+InventorySlot.active > .list InventoryWeapon
+{
+    height: 40px;
+    background-color: rgba(0, 0, 0, 0.2);
+
+    .icon
+    {
+        opacity: 0;
+        height: 0px;
+    }
+
+    label
+    {
+        display: flex;
+        color: rgba(255, 220, 0, 0.8);
+    }
+}
+
+InventorySlot.active > .list InventoryWeapon.active
+{
+    height: auto;
     gap: 4px;
+    padding: 10px;
+
+    .icon
+    {
+        opacity: 1;
+        height: 110px;
+        width: auto;
+        aspect-ratio: 2;
+        background-tint: #ffdc00;
+    }
 }

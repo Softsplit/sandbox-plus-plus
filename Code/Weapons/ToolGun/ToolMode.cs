@@ -28,18 +28,8 @@ public abstract partial class ToolMode : Component
 
 	public virtual void DrawHud( HudPainter painter, Vector2 crosshair )
 	{
-		if ( IsValidState )
-		{
-			painter.SetBlendMode( BlendMode.Normal );
-			painter.DrawCircle( crosshair, 5, Color.Black );
-			painter.DrawCircle( crosshair, 3, Color.White );
-		}
-		else
-		{
-			Color redColor = "#e53";
-			painter.SetBlendMode( BlendMode.Normal );
-			painter.DrawCircle( crosshair, 5, redColor.Darken( 0.3f ) );
-			painter.DrawCircle( crosshair, 3, redColor );
-		}
+		painter.SetBlendMode( BlendMode.Normal );
+		painter.DrawCircle( crosshair, 8, Color.Black.WithAlpha( 0.5f ) );
+		painter.DrawCircle( crosshair, 4, Color.White );
 	}
 }

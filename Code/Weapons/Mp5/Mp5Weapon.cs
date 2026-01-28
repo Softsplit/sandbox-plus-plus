@@ -68,24 +68,8 @@ public class Mp5Weapon : BaseBulletWeapon
 		}
 	}
 
-	// returns 0 for no aim spread, 1 for full aim cone
 	float GetAimConeAmount()
 	{
 		return TimeSinceShoot.Relative.Remap( 0, 0.2f, 1, 0 );
-	}
-
-	public override void DrawCrosshair( HudPainter hud, Vector2 center )
-	{
-		var gap = 16 + GetAimConeAmount() * 32;
-		var len = 12;
-		var w = 2f;
-
-		var color = !HasAmmo() || IsReloading() || TimeUntilNextShotAllowed > 0 ? CrosshairNoShoot : CrosshairCanShoot;
-
-		hud.SetBlendMode( BlendMode.Lighten );
-		hud.DrawLine( center + Vector2.Left * (len + gap), center + Vector2.Left * gap, w, color );
-		hud.DrawLine( center - Vector2.Left * (len + gap), center - Vector2.Left * gap, w, color );
-		hud.DrawLine( center + Vector2.Up * (len + gap), center + Vector2.Up * gap, w, color );
-		hud.DrawLine( center - Vector2.Up * (len + gap), center - Vector2.Up * gap, w, color );
 	}
 }

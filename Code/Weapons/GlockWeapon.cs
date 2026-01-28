@@ -76,13 +76,4 @@ public class GlockWeapon : BaseBulletWeapon
 	{
 		return TimeSinceShoot.Relative.Remap( 0, 0.5f, 1, 0 );
 	}
-
-	public override void DrawCrosshair( HudPainter hud, Vector2 center )
-	{
-		Color color = !HasAmmo() || IsReloading() || TimeUntilNextShotAllowed > 0 ? CrosshairNoShoot : CrosshairCanShoot;
-
-		hud.SetBlendMode( BlendMode.Normal );
-		hud.DrawCircle( center, 5, Color.Black );
-		hud.DrawCircle( center, 3, color );
-	}
 }
