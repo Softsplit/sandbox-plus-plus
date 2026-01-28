@@ -1,0 +1,8 @@
+{
+	"Prefab": "entities/sents/chairs/car-seat.prefab",
+	"Title": "Car Seat",
+	"Description": "",
+	"IncludeCode": false,
+	"__references": [],
+	"__version": 0
+}
