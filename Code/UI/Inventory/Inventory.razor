@@ -36,6 +36,14 @@
     protected override void OnUpdate()
     {
         inventory = Game.ActiveScene.GetAllComponents<PlayerInventory>().Where(x => x.Network.IsOwner).FirstOrDefault();
+
+        var player = Player.FindLocalPlayer();
+        if (player is null || player.Health < 1)
+        {
+            hovered = null;
+            active = null;
+            Panel.SetClass("hidden", true);
+        }
     }
 
     RealTimeSince timeSinceInteraction;

@@ -4,33 +4,102 @@
 @implements Component.INetworkListener
 
 <root>
+    <div class="chat_wrapper">
+        <div class="container">
+            <div class="filters_button" onclick="@ToggleFilters">Filters</div>
 
-    <div class="output">
-        @foreach (var entry in Entries)
-        {
-            <div class="chat_entry">
-                @if (entry.steamid > 0)
+            <div class="output" @ref="OutputPanel">
+                @foreach (var entry in Entries)
                 {
-                    <div class="avatar" style="background-image: url( avatar:@entry.steamid )"></div>
+                    var opacity = isOpen ? 1.0f : GetMessageOpacity(entry.timeSinceAdded);
+                    <div class="chat_entry" style="opacity: @opacity">
+                        @if (!string.IsNullOrEmpty(entry.author))
+                        {
+                            <span class="author" style="color: @entry.color">@entry.author:</span> <span class="message">@entry.message</span>
+                        }
+                        else
+                        {
+                            <span class="message" style="color: @entry.color">@entry.message</span>
+                        }
+                    </div>
                 }
-                <div class="author">@entry.author</div>
-                <div class="message">@entry.message</div>
             </div>
-        }
-    </div>
 
-    <div class="input">
-        <TextEntry @ref="InputBox" onsubmit="@ChatFinished"></TextEntry>
-    </div>
+            <div class="input">
+                <span class="prefix">Say :</span>
+                <TextEntry @ref="InputBox" onsubmit="@ChatFinished" MaxLength="@(128)"></TextEntry>
+            </div>
+        </div>
 
+        <div class="filters_panel" @ref="FiltersPanel">
+            <div class="filter_row" onclick="@(() => ToggleFilter(ChatFilter.JoinLeave))"><div class="checkbox" @ref="CheckboxJoinLeave">check</div><div class="filter_label">Joins/Leaves</div></div>
+            <div class="filter_row" onclick="@(() => ToggleFilter(ChatFilter.NameChange))"><div class="checkbox" @ref="CheckboxNameChange">check</div><div class="filter_label">Name Changes</div></div>
+            <div class="filter_row" onclick="@(() => ToggleFilter(ChatFilter.PublicChat))"><div class="checkbox" @ref="CheckboxPublicChat">check</div><div class="filter_label">Public Chat</div></div>
+            <div class="filter_row" onclick="@(() => ToggleFilter(ChatFilter.ServerMessage))"><div class="checkbox" @ref="CheckboxServerMessage">check</div><div class="filter_label">Server Messages</div></div>
+            <div class="filter_row" onclick="@(() => ToggleFilter(ChatFilter.TeamChange))"><div class="checkbox" @ref="CheckboxTeamChange">check</div><div class="filter_label">Team Changes</div></div>
+            <div class="filter_row" onclick="@(() => ToggleFilter(ChatFilter.Achievement))"><div class="checkbox" @ref="CheckboxAchievement">check</div><div class="filter_label">Achievement Announce</div></div>
+        </div>
+    </div>
 </root>
 
 @code
 {
-    TextEntry InputBox = default;
+    [Flags]
+    public enum ChatFilter
+    {
+        None          = 0,
+        JoinLeave     = 0x01,
+        NameChange    = 0x02,
+        PublicChat    = 0x04,
+        ServerMessage = 0x08,
+        TeamChange    = 0x10,
+        Achievement   = 0x20,
+        All           = 0x3F
+    }
 
-    public record Entry( ulong steamid, string author, string message, RealTimeSince timeSinceAdded );
+    TextEntry InputBox;
+    Panel OutputPanel;
+    Panel FiltersPanel;
+    Panel CheckboxJoinLeave;
+    Panel CheckboxNameChange;
+    Panel CheckboxPublicChat;
+    Panel CheckboxServerMessage;
+    Panel CheckboxTeamChange;
+    Panel CheckboxAchievement;
+
+    bool isOpen;
+    bool filtersOpen;
+    int scrollDelayFrames;
+    const int ScrollDelayFrameCount = 2;
+
+    ChatFilter FilterFlags = ChatFilter.All;
+
+    public record Entry(ulong SteamId, string author, string message, string color, RealTimeSince timeSinceAdded, ChatFilter filter);
     List<Entry> Entries = new();
+
+    void ToggleFilters()
+    {
+        filtersOpen = !filtersOpen;
+        FiltersPanel?.SetClass("visible", filtersOpen);
+    }
+
+    void ToggleFilter(ChatFilter flag)
+    {
+        FilterFlags ^= flag;
+        UpdateCheckboxStates();
+    }
+
+    bool HasFilter(ChatFilter flag) => (FilterFlags & flag) != 0;
+
+    void UpdateCheckboxStates()
+    {
+        CheckboxJoinLeave?.SetClass("checked", HasFilter(ChatFilter.JoinLeave));
+        CheckboxNameChange?.SetClass("checked", HasFilter(ChatFilter.NameChange));
+        CheckboxPublicChat?.SetClass("checked", HasFilter(ChatFilter.PublicChat));
+        CheckboxServerMessage?.SetClass("checked", HasFilter(ChatFilter.ServerMessage));
+        CheckboxTeamChange?.SetClass("checked", HasFilter(ChatFilter.TeamChange));
+        CheckboxAchievement?.SetClass("checked", HasFilter(ChatFilter.Achievement));
+    }
 
     protected override void OnUpdate()
     {
@@ -38,19 +107,51 @@
             return;
 
         Panel.AcceptsFocus = false;
+        UpdateCheckboxStates();
 
-        if ( Input.Pressed( "chat" ) )
+        if (Input.Pressed("chat") && !isOpen)
         {
+            isOpen = true;
             InputBox.Focus();
         }
 
-        if ( Entries.RemoveAll( x => x.timeSinceAdded > 20.0f ) > 0 )
+        if (Input.Pressed("menu") && isOpen)
         {
-            StateHasChanged();
+            CloseChat();
+
+            Input.Suppressed = false;
         }
 
-        SetClass( "open", InputBox.HasFocus );
-        SetClass( "hide", Player.FindLocalPlayer()?.WantsHideHud ?? false );
+        if (isOpen)
+        {
+            if (!InputBox.HasFocus)
+            {
+                InputBox.Focus();
+            }
+
+            Input.Suppressed = true;
+        }
+
+        SetClass("open", isOpen);
+
+        if (scrollDelayFrames > 0)
+        {
+            scrollDelayFrames--;
+            if (scrollDelayFrames == 0 && OutputPanel is not null)
+            {
+                OutputPanel.ScrollOffset = new Vector2(0, OutputPanel.ScrollSize.y);
+            }
+        }
+
+        StateHasChanged();
+    }
+
+    void CloseChat()
+    {
+        isOpen = false;
+        filtersOpen = false;
+        FiltersPanel?.SetClass("visible", false);
+        InputBox?.Blur();
     }
 
     void ChatFinished()
@@ -58,73 +159,94 @@
         var text = InputBox.Text;
         InputBox.Text = "";
 
-        if (string.IsNullOrWhiteSpace(text))
-            return;
-
-        if ( text.Contains( "birmingham", StringComparison.OrdinalIgnoreCase ) )
+        if (!string.IsNullOrWhiteSpace(text))
         {
-            Sandbox.Services.Achievements.Unlock( "secret_phrase" );
+            if (text.Contains("birmingham", StringComparison.OrdinalIgnoreCase))
+            {
+                Sandbox.Services.Achievements.Unlock("secret_phrase");
+            }
+
+            AddText(text);
         }
 
-        AddText( text );
+        CloseChat();
     }
 
-    [ConCmd( "say" )]
-    private static void Say( string msg )
+    [ConCmd("say")]
+    private static void Say(string msg)
     {
-       var chat = Game.ActiveScene.GetAll<Chat>()
-                                .FirstOrDefault();
+        var chat = Game.ActiveScene.GetAll<Chat>().FirstOrDefault();
 
-       if ( Application.IsDedicatedServer )
-       {
-           chat.AddSystemText( msg );
-       }
-       else
-       {
-           chat.AddText( msg );
-       }
+        if (Application.IsDedicatedServer)
+        {
+            chat?.AddSystemMessage(msg);
+        }
+        else
+        {
+            chat?.AddText(msg);
+        }
     }
 
-	[Rpc.Broadcast]
-    public void AddText( string message )
+    [Rpc.Broadcast]
+    public void AddText(string message)
     {
-        message = message.Truncate( 300 );
+        message = message.Truncate(128);
 
         if (string.IsNullOrWhiteSpace(message))
+            return;
+
+        if (!HasFilter(ChatFilter.PublicChat))
             return;
 
         var author = Rpc.Caller.DisplayName;
         var steamid = Rpc.Caller.SteamId;
 
-		Log.Info($"{author}: {message}");
+        Log.Info($"{author}: {message}");
 
-        Entries.Add(new Entry(steamid, author, message, 0.0f));
-		StateHasChanged();
-	}
+        Entries.Add(new Entry(steamid, author, message, "#ffff64", 0f, ChatFilter.PublicChat));
+        scrollDelayFrames = ScrollDelayFrameCount;
+        StateHasChanged();
+    }
 
-	[Rpc.Broadcast] // todo: only from host/owner
-    public void AddSystemText(string message)
+    [Rpc.Broadcast]
+    public void AddSystemMessage(string message, ChatFilter filter = ChatFilter.ServerMessage)
     {
-        message = message.Truncate(300);
+        message = message.Truncate(128);
 
         if (string.IsNullOrWhiteSpace(message))
             return;
 
-        Entries.Add(new Entry(0, "ℹ️", message, 0.0f));
+        if (!HasFilter(filter))
+            return;
+
+        Entries.Add(new Entry(0, "", message, "#99ccff", 0f, filter));
+        scrollDelayFrames = ScrollDelayFrameCount;
         StateHasChanged();
     }
 
-	void Component.INetworkListener.OnConnected( Connection channel )
-	{
-		if ( IsProxy ) return;
+    float GetMessageOpacity(float timeSinceAdded)
+    {
+        const float displayTime = 12f;
+        const float fadeTime = 2f;
 
-		AddSystemText( $"{channel.DisplayName} has joined the game" );
-	}
+        if (timeSinceAdded < displayTime)
+            return 1f;
 
-	void Component.INetworkListener.OnDisconnected( Connection channel )
-	{
-		if ( IsProxy ) return;
+        if (timeSinceAdded < displayTime + fadeTime)
+            return 1f - (timeSinceAdded - displayTime) / fadeTime;
 
-		AddSystemText( $"{channel.DisplayName} has left the game" );
-	}
+        return 0f;
+    }
+
+    void Component.INetworkListener.OnConnected(Connection channel)
+    {
+        if (IsProxy) return;
+        AddSystemMessage($"{channel.DisplayName} has joined the game", ChatFilter.JoinLeave);
+    }
+
+    void Component.INetworkListener.OnDisconnected(Connection channel)
+    {
+        if (IsProxy) return;
+        AddSystemMessage($"{channel.DisplayName} has left the game", ChatFilter.JoinLeave);
+    }
 }

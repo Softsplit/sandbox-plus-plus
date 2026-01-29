@@ -43,6 +43,8 @@ public class Notices : PanelComponent
 	{
 		base.OnUpdate();
 
+		SetClass( "hide", Player.FindLocalPlayer()?.WantsHideHud ?? false );
+
 		var innerBox = Panel.Box.RectInner;
 		float y = 0;
 		float gap = 5;

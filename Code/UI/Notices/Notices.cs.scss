@@ -7,4 +7,9 @@ Notices
 	bottom: 0px;
 	padding-right: 100px;
 	padding-bottom: 200px;
+
+	&.hide
+	{
+		opacity: 0;
+	}
 }
