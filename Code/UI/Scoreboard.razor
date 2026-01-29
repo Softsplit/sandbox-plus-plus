@@ -3,58 +3,188 @@
 @inherits PanelComponent
 
 <root>
-    <div class="table">
-        <div class="title">
-            <label>@Networking.ServerName</label>
-            <label class="small">@(Connection.All.Count) / @Networking.MaxPlayers</label>
-        </div>
+    <div class="header">
+        <label class="title">@Networking.ServerName</label>
+    </div>
 
-        <div class="col">
-            <div class="header row">
-                <div class="name"></div>
-                <div class="stat">Kills</div>
-                <div class="stat">Deaths</div>
-                <div class="stat">Ping</div>
-            </div>
+    <div class="scores">
+        @foreach (var entry in GetSortedPlayers())
+        {
+            var rowClass = GetRowClass(entry);
+            var muteIcon = GetMuteIcon(entry);
+            var muteClass = IsMuted(entry) ? "mute muted" : "mute";
+            var volume = GetPlayerVolume(entry.SteamId);
+            var showPopup = ShouldShowVolumePopup(entry.SteamId);
 
-            @foreach ( var entry in Scene.GetAll<PlayerData>().OrderByDescending( x => x.Kills ).ThenBy( x => x.DisplayName ) )
-            {
-                string specialClass = "";
-                if ( entry.IsMe ) specialClass = "me";
-
-                <div class="row player @specialClass">
-                    <img class="avatar" src="avatar:@entry.Connection.SteamId" />
-                    <div class="name">@entry.DisplayName</div>
-                    <div class="stat">@entry.Kills</div>
-                    <div class="stat">@entry.Deaths</div>
-                    <div class="stat">@(entry.Ping.CeilToInt())</div>
+            <div class="player_row @rowClass">
+                <div class="avatar_button" onclick="@(() => ShowProfile(entry))">
+                    <img class="avatar" src="avatar:@entry.SteamId" />
                 </div>
-            }
-        </div>
+                <label class="name">@entry.DisplayName</label>
+                <label class="stat">@entry.Kills</label>
+                <label class="stat">@entry.Deaths</label>
+                <label class="stat">@(entry.Ping.CeilToInt())</label>
+                <div class="@muteClass" onclick="@(() => ToggleMute(entry))" onmouseover="@(() => OnMuteHover(entry))" onmouseout="@(() => OnMuteLeave(entry))">
+                    @muteIcon
+                    <div class="volume_popup">
+                        <Image class="wheel_icon" Texture="@Input.Keyboard.GetGlyph( "mouse3", InputGlyphSize.Small )" />
+                        <div class="volume_text">@volume%</div>
+                    </div>
+                </div>
+            </div>
+        }
     </div>
 </root>
 
 @code
 {
-    bool IsVisible => HasClass( "visible" );
+    static HashSet<long> MutedPlayers = new();
 
-	string GetTime( Connection c )
-	{
-		TimeSpan time = DateTime.UtcNow - c.ConnectionTime;
+    static Dictionary<long, int> PlayerVolumes = new();
 
-		if ( time.TotalMinutes < 60 )
-			return time.ToString( "mm\\m\\ s\\s" );
+    static Dictionary<long, RealTimeSince> VolumePopupTimes = new();
 
-		return time.ToString( "hh\\h\\ \\m\\m" );
-	}
+    static HashSet<long> HoveredPlayers = new();
 
-	protected override void OnUpdate()
-	{
-		SetClass( "visible", Input.Down( "score" ) );
-	}
+    bool IsVisible => HasClass("visible");
 
-    /// <summary>
-    /// update every second
-    /// </summary>
+    IEnumerable<PlayerData> GetSortedPlayers()
+    {
+        return Scene.GetAll<PlayerData>()
+        .OrderByDescending(x => x.Kills)
+        .ThenBy(x => x.Deaths)
+        .ThenBy(x => x.DisplayName);
+    }
+
+    string GetRowClass(PlayerData entry)
+    {
+        var player = GetPlayer(entry);
+        if (player == null)
+            return "dead";
+        
+        if (entry.Connection?.IsHost == true)
+            return "admin";
+
+        return "";
+    }
+
+    Player GetPlayer(PlayerData data)
+    {
+        return Scene.GetAllComponents<Player>()
+        .FirstOrDefault(p => p.Network.Owner?.Id == data.PlayerId);
+    }
+
+    bool IsMuted(PlayerData entry)
+    {
+        return MutedPlayers.Contains(entry.SteamId);
+    }
+
+    string GetMuteIcon(PlayerData entry)
+    {
+        if (MutedPlayers.Contains(entry.SteamId)) return "volume_off";
+        return "volume_up";
+    }
+
+    int GetPlayerVolume(long steamId)
+    {
+        return PlayerVolumes.TryGetValue(steamId, out var vol) ? vol : 100;
+    }
+
+    void SetPlayerVolume(long steamId, int volume)
+    {
+        volume = Math.Clamp(volume, 0, 100);
+        PlayerVolumes[steamId] = volume;
+
+        if (volume > 0)
+            MutedPlayers.Remove(steamId);
+    }
+
+    void ToggleMute(PlayerData entry)
+    {
+        if (MutedPlayers.Contains(entry.SteamId))
+            MutedPlayers.Remove(entry.SteamId);
+        else
+            MutedPlayers.Add(entry.SteamId);
+    }
+
+    long? HoveredMuteSteamId = null;
+
+    void OnMuteHover(PlayerData entry)
+    {
+        HoveredPlayers.Add(entry.SteamId);
+        HoveredMuteSteamId = entry.SteamId;
+        VolumePopupTimes[entry.SteamId] = 0;
+    }
+
+    void OnMuteLeave(PlayerData entry)
+    {
+        HoveredPlayers.Remove(entry.SteamId);
+        if (HoveredMuteSteamId == entry.SteamId)
+            HoveredMuteSteamId = null;
+    }
+
+    protected override void OnMouseWheel(Vector2 value)
+    {
+        if (HoveredMuteSteamId is long steamId)
+        {
+            var delta = value.y;
+            if (delta == 0) return;
+
+            var currentVolume = GetPlayerVolume(steamId);
+            var change = delta > 0 ? -5 : 5;
+            var newVolume = currentVolume + change;
+
+            SetPlayerVolume(steamId, newVolume);
+            VolumePopupTimes[steamId] = 0;
+            StateHasChanged();
+            return;
+        }
+
+        base.OnMouseWheel(value);
+    }
+
+    bool ShouldShowVolumePopup(long steamId)
+    {
+        if (HoveredPlayers.Contains(steamId)) return true;
+        if (!VolumePopupTimes.TryGetValue(steamId, out var time)) return false;
+        return time < 0.75f;
+    }
+
+    float GetPopupOpacity(long steamId)
+    {
+        if (HoveredPlayers.Contains(steamId)) return 1f;
+        if (!VolumePopupTimes.TryGetValue(steamId, out var time)) return 0f;
+
+        var fade = Math.Clamp(time / 0.75f, 0f, 1f);
+        return 1f - fade;
+    }
+
+    void ShowProfile(PlayerData entry)
+    {
+        Game.Overlay.ShowPlayer(entry.SteamId);
+    }
+
+    public static bool IsPlayerMuted(long steamId)
+    {
+        return MutedPlayers.Contains(steamId);
+    }
+
+    public static float GetPlayerVolumeScale(long steamId)
+    {
+        if (MutedPlayers.Contains(steamId)) return 0f;
+        return PlayerVolumes.TryGetValue(steamId, out var vol) ? vol / 100f : 1f;
+    }
+
+    protected override void OnUpdate()
+    {
+        SetClass("visible", Input.Down("score"));
+
+        foreach ( var voice in Scene.GetAllComponents<Voice>() )
+        {
+            if ( voice.Network.Owner is null ) continue;
+            voice.Volume = GetPlayerVolumeScale( voice.Network.Owner.SteamId );
+        }
+    }
+
     protected override int BuildHash() => System.HashCode.Combine( RealTime.Now.CeilToInt() );
 }

@@ -1,141 +1,190 @@
 Scoreboard
 {
 	position: absolute;
-	justify-content: center;
+	justify-content: flex-start;
 	align-items: center;
+	flex-direction: column;
 	font-family: Poppins;
-	font-size: 18px;
-	color: #fff;
+	font-size: 22px;
+	font-weight: 700;
 	opacity: 0;
-	transform: scale( 0.8 );
-	transition: all 0.1s ease-in;
-	margin: auto;
 	width: 100%;
 	height: 100%;
-	margin: auto;
-	gap: 16px;
-
-	.voting
-	{
-		width: 20%;
-	}
-
-	.title
-	{
-		width: 100%;
-		height: 48px;
-		background-color: rgba( black, 0.25 );
-		justify-content: space-between;
-		align-items: center;
-		flex-direction: row;
-		padding: 0px 16px;
-
-		label
-		{
-			font-weight: 600;
-			opacity: 0.5;
-		}
-
-		> .small
-		{
-			font-size: 16px;
-		}
-	}
-
-	.avatar
-	{
-		margin-left: 4px;
-		width: 24px;
-		border-radius: 10px;
-		height: 24px;
-		box-shadow: 1px 1px 10px rgba( black, 0.5 );
-	}
-
-	.table
-	{
-		overflow: hidden;
-		flex-direction: column;
-		width: 600px;
-		background-color: #0c202faa;
-		color: #cdf;
-		border-radius: 2px;
-		min-height: 600px;
-		min-width: 800px;
-		backdrop-filter: blur( 3px );
-		box-shadow: 1px 1px 10px rgba( black, 0.5 );
-		border-radius: 10px;
-
-		.center label
-		{
-			flex-grow: 1;
-			text-align: center;
-		}
-
-		.col
-		{
-			flex-direction: column;
-			padding: 8px;
-			gap: 4px;
-		}
-
-		.row
-		{
-			width: 100%;
-			white-space: nowrap;
-			align-items: center;
-			cursor: pointer;
-			border-radius: 8px;
-			padding: 4px 8px;
-			gap: 8px;
-
-			> .name
-			{
-				flex-grow: 1;
-			}
-
-			> .stat
-			{
-				width: 100px;
-				justify-content: flex-end;
-				text-transform: lowercase;
-			}
-		}
-
-		.header
-		{
-			align-items: flex-end;
-			justify-content: flex-end;
-
-			> .stat
-			{
-				font-size: 16px;
-				font-weight: 600;
-				opacity: 0.2;
-			}
-		}
-
-		.player
-		{
-			background-color: #1a34483e;
-			height: 40px;
-
-			&:nth-child( even )
-			{
-				background-color: #2447603e;
-			}
-		}
-
-		.me
-		{
-			color: #fff;
-			cursor: default;
-		}
-	}
+	padding-top: 100px;
+	pointer-events: none;
 
 	&.visible
 	{
 		opacity: 1.0;
-		transform: scale( 1 );
-		transition: all 0.1s ease-out;
+		pointer-events: all;
+	}
+
+	.header
+	{
+		width: 700px;
+		height: 100px;
+		justify-content: center;
+		align-items: center;
+
+		.title
+		{
+			font-size: 32px;
+			font-weight: 800;
+			color: rgb(230, 230, 230);
+			text-shadow: 2px 2px 0px rgba(0, 0, 0, 0.78);
+		}
+	}
+
+	.scores
+	{
+		width: 700px;
+		flex-direction: column;
+		gap: 2px;
+		max-height: calc(100% - 200px);
+		overflow: visible;
+	}
+
+	.player_row
+	{
+		flex-direction: row;
+		align-items: center;
+		height: 38px;
+		padding: 3px;
+		margin: 0px 2px 2px 2px;
+		background-color: rgb(230, 230, 230);
+		border-radius: 4px;
+		overflow: visible;
+
+		&.dead
+		{
+			background-color: rgb(230, 200, 200);
+		}
+
+		&.admin
+		{
+			background-color: rgb(230, 255, 230);
+		}
+
+		&.connecting
+		{
+			background-color: rgb(200, 200, 200);
+		}
+	}
+
+	.avatar_button
+	{
+		width: 32px;
+		height: 32px;
+		cursor: pointer;
+	}
+
+	.avatar
+	{
+		width: 32px;
+		height: 32px;
+	}
+
+	.name
+	{
+		flex-grow: 1;
+		color: rgb(93, 93, 93);
+		margin-left: 8px;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.stat
+	{
+		width: 50px;
+		color: rgb(93, 93, 93);
+		text-align: center;
+		justify-content: center;
+	}
+
+	.mute
+	{
+		width: 32px;
+		height: 32px;
+		font-family: Material Icons;
+		font-size: 24px;
+		color: rgb(93, 93, 93);
+		justify-content: center;
+		align-items: center;
+		cursor: pointer;
+		position: relative;
+		overflow: visible;
+
+		> *
+		{
+			pointer-events: none;
+		}
+
+		&:hover
+		{
+			color: rgb(50, 50, 50);
+
+			.volume_popup
+			{
+				opacity: 1;
+			}
+		}
+
+		&.disabled
+		{
+			opacity: 0.3;
+			cursor: default;
+			pointer-events: none;
+		}
+
+		.volume_popup
+		{
+			position: absolute;
+			left: 40px;
+			top: 0px;
+			height: 32px;
+			width: 70px;
+			padding: 0px 8px;
+			background-color: #222;
+			border-radius: 4px;
+			flex-direction: row;
+			align-items: center;
+			gap: 4px;
+			pointer-events: none;
+			opacity: 0;
+
+			.wheel_icon
+			{
+				width: 20px;
+				height: 20px;
+			}
+
+			.volume_text
+			{
+				font-family: Roboto;
+				font-size: 14px;
+				font-weight: 400;
+				color: white;
+				white-space: nowrap;
+				flex-grow: 1;
+				text-align: center;
+				justify-content: center;
+			}
+		}
+	}
+
+	.muted
+	{
+		color: rgb(180, 50, 50);
+
+		&:hover
+		{
+			color: rgb(200, 70, 70);
+
+			.volume_popup
+			{
+				opacity: 1;
+			}
+		}
 	}
 }
