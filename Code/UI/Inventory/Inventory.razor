@@ -112,7 +112,7 @@
         if ( delta == 0 )
             return;
 
-        var weapons = inventory.Weapons.Where( x => x.CanSwitch() ).ToList();
+        var weapons = inventory.Weapons.ToList();
 
         if ( weapons.Count == 0 )
             return;
@@ -144,12 +144,11 @@
 
 	public void IterateSlot( int slot )
 	{
-		var slotWeapons = inventory.Weapons.Where( x => x.InventorySlot == slot ).Where( x => x.CanSwitch() ).OrderBy( x => x.InventoryOrder ).ToList();
+		var slotWeapons = inventory.Weapons.Where( x => x.InventorySlot == slot ).OrderBy( x => x.InventoryOrder ).ToList();
 		if ( slotWeapons.Count == 0 )
 			return;
 
 		var currentHover = hovered ?? active;
-		var activeWeapon = inventory.ActiveWeapon;
 
 		int currentIndex = -1;
 
@@ -157,9 +156,9 @@
 		{
 			currentIndex = slotWeapons.IndexOf( currentHover );
 		}
-		else if ( activeWeapon != null && activeWeapon.InventorySlot == slot )
+		else if ( inventory.ActiveWeapon != null && inventory.ActiveWeapon.InventorySlot == slot )
 		{
-			currentIndex = slotWeapons.IndexOf( activeWeapon );
+			currentIndex = slotWeapons.IndexOf( inventory.ActiveWeapon );
 		}
 
 		currentIndex += 1;

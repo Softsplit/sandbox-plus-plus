@@ -76,22 +76,3 @@ InventoryWeapon.selected
 {
     display: none;
 }
-
-InventoryWeapon
-{
-    &:not( .switchable )
-    {
-        opacity: 0.25;
-        background-color: #bababa;
-
-        .icon
-        {
-            background-tint: #bababa;
-        }
-
-        label
-        {
-            color: #bababa;
-        }
-    }
-}
