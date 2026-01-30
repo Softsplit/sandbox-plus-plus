@@ -100,6 +100,9 @@ public partial class Physgun : BaseCarryable
 		if ( Scene.TimeScale == 0 )
 			return;
 
+		if ( player.TimeSincePickupDropped < 0.2f )
+			return;
+
 		if ( Input.Pressed( "use" ) && _state.IsValid() )
 		{
 			ViewModel?.PlaySound( ButtonInSound );

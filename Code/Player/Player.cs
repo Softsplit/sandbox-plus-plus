@@ -46,6 +46,9 @@ public sealed partial class Player : Component, Component.IDamageable, PlayerCon
 	{
 		get
 		{
+			if ( CarriedObject.IsValid() && WeaponBeforePickup.IsValid() && WeaponBeforePickup.WantsHideHud )
+				return true;
+
 			var weapon = GetComponent<PlayerInventory>()?.ActiveWeapon;
 			if ( weapon.IsValid() && weapon.WantsHideHud )
 				return true;
@@ -215,13 +218,10 @@ public sealed partial class Player : Component, Component.IDamageable, PlayerCon
 
 	void OnControl()
 	{
-		Scene.Get<Inventory>()?.HandleInputOpen();
+		if ( !CarriedObject.IsValid() )
+			Scene.Get<Inventory>()?.HandleInputOpen();
 
-		if ( Input.Pressed( "die" ) )
-		{
-			KillSelf();
-			return;
-		}
+		UpdateCarriedObject(); 
 
 		if ( Input.Pressed( "noclip" ) )
 		{
@@ -238,7 +238,8 @@ public sealed partial class Player : Component, Component.IDamageable, PlayerCon
 
 		GetComponent<PlayerInventory>()?.OnControl();
 
-		Scene.Get<Inventory>()?.HandleInput();
+		if ( !CarriedObject.IsValid() )
+			Scene.Get<Inventory>()?.HandleInput();
 
 		if ( Scene.Camera.RenderExcludeTags.Contains( "ui" ) )
 			return;

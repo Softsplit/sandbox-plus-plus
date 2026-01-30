@@ -36,6 +36,9 @@ public partial class Toolgun : BaseCarryable
 	float _coilSpin = 0;
 	public override void OnControl( Player player )
 	{
+		if ( player.TimeSincePickupDropped < 0.2f )
+			return;
+
 		var currentMode = GetCurrentMode();
 		if ( currentMode == null )
 			return;
