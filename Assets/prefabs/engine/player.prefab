@@ -21,43 +21,11 @@
 				"__enabled": true,
 				"Flags": 0,
 				"Armour": 0,
-				"ArmourIcon": {
-					"$compiler": "texture",
-					"$source": "svgsource",
-					"data": {
-						"Size": "256,256",
-						"Source": "\n<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<svg width=\"1200pt\" height=\"1200pt\" version=\"1.1\" viewBox=\"0 0 1200 1200\" xmlns=\"http://www.w3.org/2000/svg\">\n <path d=\"m928.69 228.61-323.9-60.141c-3.2344-0.60938-6.375-0.60938-9.6094 0l-323.86 60.141c-12.469 2.2969-21.469 13.078-21.469 25.781v322.55c0 196.78 133.78 374.76 340.78 453.37 3 1.0781 6.1406 1.6875 9.375 1.6875 3.2344 0 6.375-0.60938 9.375-1.6875 207-78.609 340.78-256.55 340.78-453.37v-322.55c0-12.703-9-23.531-21.469-25.781z\"/>\n</svg>\n",
-						"Colorize": true,
-						"TargetColor": "1,1,1,1",
-						"Scale": 1.2976744,
-						"Offset": "0,0",
-						"Rotate": 0,
-						"FlipVertical": false,
-						"FlipHorizontal": false
-					},
-					"compiled": "textures/generated/svgsource/74df76e844d64c97.vtex"
-				},
 				"Body": {
 					"_type": "gameobject",
 					"go": "d0a8e1e1-bce2-477a-908c-3cfc0ac57de8"
 				},
 				"Health": 100,
-				"HealthIcon": {
-					"$compiler": "texture",
-					"$source": "svgsource",
-					"data": {
-						"Size": "256,256",
-						"Source": "\n<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<svg width=\"1200pt\" height=\"1200pt\" version=\"1.1\" viewBox=\"0 0 1200 1200\" xmlns=\"http://www.w3.org/2000/svg\">\n <path d=\"m474.98 200.02c-6.6562-0.046875-13.078 2.625-17.766 7.3125-4.7344 4.7344-7.3594 11.109-7.3125 17.766v224.81h-224.81c-6.6562 0-13.078 2.625-17.766 7.3125-4.7344 4.7344-7.3594 11.156-7.3594 17.812v249.89c0 6.6562 2.625 13.078 7.3594 17.766 4.6875 4.7344 11.109 7.3594 17.766 7.3125h224.81v200.02c-0.046875 6.6562 2.5781 13.078 7.3125 17.766 4.6875 4.7344 11.109 7.3594 17.766 7.3125h249.89c6.6562 0.046874 13.078-2.5781 17.766-7.3125 4.7344-4.6875 7.3594-11.109 7.3594-17.766v-200.02h225.1c6.6562 0.046874 13.031-2.5781 17.766-7.3125 4.6875-4.6875 7.3594-11.109 7.3125-17.766v-249.89c0.046875-6.6562-2.625-13.078-7.3125-17.812-4.7344-4.6875-11.109-7.3125-17.766-7.3125h-225.1v-224.81c0-6.6562-2.625-13.031-7.3594-17.766-4.6875-4.6875-11.109-7.3594-17.766-7.3125z\"/>\n</svg>\n",
-						"Colorize": true,
-						"TargetColor": "1,1,1,1",
-						"Scale": 1.4186046,
-						"Offset": "0,0",
-						"Rotate": 0,
-						"FlipVertical": false,
-						"FlipHorizontal": false
-					},
-					"compiled": "textures/generated/svgsource/b62fb7af3ae97c5f.vtex"
-				},
 				"MaxArmour": 100,
 				"MaxHealth": 100,
 				"OnComponentDestroy": null,
@@ -89,7 +57,7 @@
 				"BodyMass": 500,
 				"BodyRadius": 16,
 				"BrakePower": 0.2,
-				"CameraOffset": "256,0,12",
+				"CameraOffset": "96,0,-4",
 				"ColliderObject": {
 					"_type": "gameobject",
 					"go": "3dc9b5dd-44a4-4ac8-a4cb-2a632afbc3f3"
@@ -209,6 +177,7 @@
 				"__guid": "7a0edd28-8894-48d5-8ba4-ba5aadaef5be",
 				"__enabled": true,
 				"Flags": 0,
+				"MaxSlots": 9,
 				"OnComponentDestroy": null,
 				"OnComponentDisabled": null,
 				"OnComponentEnabled": null,
@@ -2868,7 +2837,7 @@
 				"OwnerTransfer": 1,
 				"Components": [
 					{
-						"__type": "Sandbox.Voice",
+						"__type": "Sandbox.SandboxVoice",
 						"__guid": "4704a16b-4224-4754-b2b6-b7bd711ef508",
 						"__enabled": true,
 						"Flags": 0,
@@ -2889,6 +2858,7 @@
 								"mode": "Mirrored"
 							}
 						],
+						"LipSync": true,
 						"Loopback": false,
 						"Mode": "PushToTalk",
 						"MorphScale": 3,
@@ -3048,6 +3018,66 @@
 					}
 				],
 				"Children": []
+			},
+			{
+				"__guid": "3241975f-6bb3-48f2-8438-c3fba0f46ea7",
+				"__version": 2,
+				"Flags": 0,
+				"Name": "FlashLight",
+				"Position": "16,0,0",
+				"Rotation": "0,0,0,1",
+				"Scale": "1,1,1",
+				"Tags": "light_spot,light",
+				"Enabled": true,
+				"NetworkMode": 2,
+				"NetworkFlags": 0,
+				"NetworkOrphaned": 0,
+				"NetworkTransmit": true,
+				"OwnerTransfer": 1,
+				"Components": [
+					{
+						"__type": "PlayerFlashlight",
+						"__guid": "0000897c-f685-40d2-bdcd-88b5663c0e09",
+						"__enabled": true,
+						"Flags": 0,
+						"Light": {
+							"_type": "component",
+							"component_id": "b94699a4-3f31-4f22-9393-324e3cb589d6",
+							"go": "3241975f-6bb3-48f2-8438-c3fba0f46ea7",
+							"component_type": "SpotLight"
+						},
+						"OnComponentDestroy": null,
+						"OnComponentDisabled": null,
+						"OnComponentEnabled": null,
+						"OnComponentFixedUpdate": null,
+						"OnComponentStart": null,
+						"OnComponentUpdate": null,
+						"ToggleOffSound": "sounds/flashlight/flashlight-off.sound",
+						"ToggleOnSound": "sounds/flashlight/flashlight-on.sound"
+					},
+					{
+						"__type": "Sandbox.SpotLight",
+						"__guid": "b94699a4-3f31-4f22-9393-324e3cb589d6",
+						"__enabled": true,
+						"Flags": 0,
+						"Attenuation": 0.75581396,
+						"ConeInner": 18.313953,
+						"ConeOuter": 40.2907,
+						"Cookie": "textures/lightcookies/lightcookies_01.vtex",
+						"FogMode": "Enabled",
+						"FogStrength": 1,
+						"LightColor": "1,0.96549,0.91373,1",
+						"OnComponentDestroy": null,
+						"OnComponentDisabled": null,
+						"OnComponentEnabled": null,
+						"OnComponentFixedUpdate": null,
+						"OnComponentStart": null,
+						"OnComponentUpdate": null,
+						"Radius": 500,
+						"Shadows": true
+					}
+				],
+				"Children": []
 			}
 		],
 		"__properties": {
@@ -3059,13 +3089,14 @@
 				"Enabled": false,
 				"IncludeStaticBodies": true,
 				"IncludeKeyframedBodies": true,
-				"EditorAutoUpdate": true,
+				"EditorAutoUpdate": false,
 				"AgentHeight": 64,
 				"AgentRadius": 16,
 				"AgentStepSize": 18,
 				"AgentMaxSlope": 40,
 				"ExcludedBodies": "",
-				"IncludedBodies": ""
+				"IncludedBodies": "",
+				"CustomBounds": false
 			}
 		},
 		"__variables": []

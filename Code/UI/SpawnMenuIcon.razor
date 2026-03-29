@@ -4,7 +4,7 @@
 
 <root>
 
-    @if ( !string.IsNullOrWhiteSpace( Title ) )
+    @if ( !string.IsNullOrWhiteSpace( Title ) && !HideText )
     {
         <div class="title">@Title</div>
     }
@@ -13,16 +13,28 @@
 
 @code
 {
-    [Parameter] public string Type { get; set; }
+    [Parameter] public string Ident { get; set; }
     [Parameter] public string Icon { get; set; }
     [Parameter] public string Title { get; set; }
-    [Parameter] public string Path { get; set; }
+    [Parameter] public bool HideText { get; set; }
+    [Parameter] public string Metadata { get; set; }
+
+    string Type;
+    string Path;
+    string Source;
+
+    /// <summary>
+    /// We want to drag from this panel
+    /// </summary>
+    public override bool WantsDrag => true;
 
     protected override void OnParametersSet()
     {
         base.OnParametersSet();
 
-        if (string.IsNullOrWhiteSpace( Icon ) )
+        (Type, Path, Source) = SpawnlistItem.ParseIdent( Ident );
+
+        if ( string.IsNullOrWhiteSpace( Icon ) )
         {
             Icon = $"thumb:{Path}";
         }
@@ -30,10 +42,90 @@
         Style.SetBackgroundImage(Icon);
     }
 
-    protected override void OnClick(MousePanelEvent e)
+    protected override int BuildHash()
     {
-        base.OnClick(e);
+        return HashCode.Combine( Ident, Icon, Title, HideText );
+    }
 
-        GameManager.Spawn(Path);
+    protected override async void OnDragStart( DragEvent e )
+    {
+        var dragData = new DragData
+        {
+            Type = Type,
+            Path = Path,
+            Icon = Icon ?? $"thumb:{Path}",
+            Title = Title,
+            Source = this
+        };
+
+        DragHandler.StartDragging( dragData );
+
+        if ( Type == "dupe" )
+        {
+            dragData.Data = await LoadDupeJson( Path, Source );
+        }
+    }
+
+    protected override void OnDragEnd( DragEvent e )
+    {
+        DragHandler.StopDragging();
+    }
+
+    protected override void OnClick( MousePanelEvent e )
+    {
+        GameManager.Spawn( Ident, Metadata );
+    }
+
+    protected override void OnRightClick( MousePanelEvent e )
+    {
+        var menu = MenuPanel.Open( this );
+
+        // If inside a spawnlist, offer removal
+        var spawnlistView = Ancestors.OfType<SpawnlistView>().FirstOrDefault();
+        if ( spawnlistView?.Entry is not null )
+        {
+            menu.AddOption( "delete", "Remove from List", () =>
+            {
+                var data = SpawnlistData.Load( spawnlistView.Entry );
+                var idx = data.Items.FindIndex( x => x.Ident == Ident );
+                if ( idx >= 0 )
+                {
+                    SpawnlistData.RemoveItem( spawnlistView.Entry, idx );
+                    spawnlistView.RefreshCache();
+                }
+            } );
+            menu.AddSpacer();
+        }
+
+        SpawnlistData.PopulateContextMenu( menu, new SpawnlistItem
+        {
+            Ident = Ident,
+            Title = Title,
+            Icon = Icon,
+        }, spawnlistView?.Entry );
+
+        e.StopPropagation();
+    }
+
+    async Task<string> LoadDupeJson( string id, string source )
+    {
+        if ( !ulong.TryParse( id, out var fileId ) )
+            return null;
+
+        if ( source == "workshop" )
+        {
+            var query = new Storage.Query { FileIds = [fileId] };
+            var result = await query.Run();
+            var item = result.Items?.FirstOrDefault();
+            if ( item is null ) return null;
+
+            var installed = await item.Install();
+            return installed?.Files.ReadAllText( "/dupe.json" );
+        }
+
+        var entry = Storage.GetAll( "dupe" ).FirstOrDefault( x => x.Id.ToString() == fileId.ToString() );
+        if ( entry is null ) return null;
+
+        return await entry.Files.ReadAllTextAsync( "/dupe.json" );
     }
 }

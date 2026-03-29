@@ -1,25 +1,63 @@
+using Sandbox.Citizen;
+
 public sealed class PlayerInventory : Component, IPlayerEvent
 {
+	[Property] public int MaxSlots { get; set; } = 6;
+
 	[RequireComponent] public Player Player { get; set; }
 
-	public List<BaseCarryable> Weapons => GetComponentsInChildren<BaseCarryable>( true ).OrderBy( x => x.InventorySlot ).ThenBy( x => x.InventoryOrder ).ToList();
+	/// <summary>
+	/// All weapons currently in the inventory, ordered by slot.
+	/// </summary>
+	public List<BaseCarryable> Weapons => GetComponentsInChildren<BaseCarryable>( true )
+		.OrderBy( x => x.InventorySlot )
+		.ToList();
 
-	[Sync] public BaseCarryable ActiveWeapon { get; private set; }
+	[Sync( SyncFlags.FromHost ), Change] public BaseCarryable ActiveWeapon { get; private set; }
+
+	public void OnActiveWeaponChanged( BaseCarryable oldWeapon, BaseCarryable newWeapon )
+	{
+		if ( oldWeapon.IsValid() )
+			oldWeapon.GameObject.Enabled = false;
+
+		if ( newWeapon.IsValid() )
+			newWeapon.GameObject.Enabled = true;
+	}
+
+	/// <summary>
+	/// Returns the weapon in the given slot, or null if the slot is empty.
+	/// </summary>
+	public BaseCarryable GetSlot( int slot )
+	{
+		if ( slot < 0 || slot >= MaxSlots ) return null;
+		return GetComponentsInChildren<BaseCarryable>( true )
+			.FirstOrDefault( x => x.InventorySlot == slot );
+	}
+
+	/// <summary>
+	/// Returns the first empty slot index, or -1 if the inventory is full.
+	/// </summary>
+	public int FindEmptySlot()
+	{
+		var occupied = GetComponentsInChildren<BaseCarryable>( true )
+			.Where( x => x.InventorySlot >= 0 )
+			.Select( x => x.InventorySlot )
+			.ToHashSet();
+
+		for ( int i = 0; i < MaxSlots; i++ )
+		{
+			if ( !occupied.Contains( i ) )
+				return i;
+		}
+
+		return -1;
+	}
 
 	public void GiveDefaultWeapons()
 	{
-		// Don't run any pickup notices when spawning in
-		using var _ = Player.NoNoticeScope();
-
-		Pickup( "weapons/camera/camera.prefab" );
-		Pickup( "weapons/physgun/physgun.prefab" );
-		Pickup( "weapons/toolgun/toolgun.prefab" );
-		Pickup( "weapons/glock/glock.prefab" );
-
-		Player.GiveAmmo( ResourceLibrary.Get<AmmoResource>( "ammotype/9mm.ammo" ), 200, false );
-
-		var toolgun = GetComponentInChildren<Toolgun>( true );
-		toolgun?.CreateToolComponents();
+		Pickup( "weapons/physgun/physgun.prefab", false );
+		Pickup( "weapons/toolgun/toolgun.prefab", false );
+		Pickup( "weapons/camera/camera.prefab", 8, false );
 	}
 
 	public bool Pickup( string prefabName, bool notice = true )
@@ -39,11 +77,13 @@ public sealed class PlayerInventory : Component, IPlayerEvent
 
 	public bool HasWeapon( GameObject prefab )
 	{
-		var baseCarry = prefab.Components.Get<BaseCarryable>( true );
-		if ( baseCarry is null )
+		var baseCarry = prefab.GetComponent<BaseCarryable>( true );
+		if ( !baseCarry.IsValid() )
 			return false;
 
-		return Weapons.Where( x => x.GetType() == baseCarry.GetType() ).FirstOrDefault().IsValid();
+		return Weapons.Where( x => x.GetType() == baseCarry.GetType() )
+			.FirstOrDefault()
+			.IsValid();
 	}
 
 	public bool HasWeapon<T>() where T : BaseCarryable
@@ -58,34 +98,62 @@ public sealed class PlayerInventory : Component, IPlayerEvent
 
 	public bool Pickup( GameObject prefab, bool notice = true )
 	{
+		var slot = FindEmptySlot();
+		if ( slot < 0 )
+			return false;
+
+		return Pickup( prefab, slot, notice );
+	}
+
+	public bool Pickup( string prefabName, int targetSlot, bool notice = true )
+	{
 		if ( !Networking.IsHost )
 			return false;
 
+		var prefab = GameObject.GetPrefab( prefabName );
+		if ( prefab is null )
+		{
+			Log.Warning( $"Prefab not found: {prefabName}" );
+			return false;
+		}
+
+		return Pickup( prefab, targetSlot, notice );
+	}
+
+	public bool Pickup( GameObject prefab, int targetSlot, bool notice = true )
+	{
+		if ( !Networking.IsHost )
+			return false;
+
+		if ( targetSlot < 0 || targetSlot >= MaxSlots )
+			return false;
+
 		var baseCarry = prefab.Components.Get<BaseCarryable>( true );
-		if ( baseCarry is null )
+		if ( !baseCarry.IsValid() )
 			return false;
 
 		var existing = Weapons.Where( x => x.GameObject.Name == prefab.Name ).FirstOrDefault();
 		if ( existing.IsValid() )
 		{
-			// We already have this weapon type
-
-			if ( baseCarry is BaseWeapon baseWeapon && baseWeapon.UsesAmmo )
+			if ( existing is BaseWeapon existingWeapon && baseCarry is BaseWeapon pickupWeapon && existingWeapon.UsesAmmo )
 			{
-				var ammo = baseWeapon.AmmoResource;
-				if ( ammo is null )
+				if ( existingWeapon.ReserveAmmo >= existingWeapon.MaxReserveAmmo )
 					return false;
 
-				if ( Player.GetAmmoCount( ammo ) >= ammo.MaxAmount )
-					return false;
+				var ammoToGive = pickupWeapon.UsesClips ? pickupWeapon.ClipContents : pickupWeapon.StartingAmmo;
+				existingWeapon.AddReserveAmmo( ammoToGive );
 
-				Player.GiveAmmo( ammo, baseWeapon.UsesClips ? baseWeapon.ClipContents : baseWeapon.StartingAmmo, notice );
-				OnClientPickup( existing, true );
+				if ( notice )
+					OnClientPickup( existing, true );
+
 				return true;
 			}
-
-			return false;
 		}
+
+		// Reject if the target slot is already occupied
+		var occupant = GetSlot( targetSlot );
+		if ( occupant.IsValid() )
+			return false;
 
 		var clone = prefab.Clone( new CloneConfig { Parent = GameObject, StartEnabled = false } );
 		clone.NetworkSpawn( false, Network.Owner );
@@ -93,10 +161,14 @@ public sealed class PlayerInventory : Component, IPlayerEvent
 		var weapon = clone.Components.Get<BaseCarryable>( true );
 		Assert.NotNull( weapon );
 
+		weapon.InventorySlot = targetSlot;
 		weapon.OnAdded( Player );
 
 		IPlayerEvent.PostToGameObject( Player.GameObject, e => e.OnPickup( weapon ) );
-		OnClientPickup( weapon );
+
+		if ( notice )
+			OnClientPickup( weapon );
+
 		return true;
 	}
 
@@ -105,38 +177,89 @@ public sealed class PlayerInventory : Component, IPlayerEvent
 		var existing = Weapons.Where( x => x.GetType() == item.GetType() ).FirstOrDefault();
 		if ( existing.IsValid() )
 		{
-			// We already have this weapon type
-			if ( item is BaseWeapon baseWeapon && baseWeapon.UsesAmmo )
+			if ( existing is BaseWeapon existingWeapon && item is BaseWeapon pickupWeapon && existingWeapon.UsesAmmo )
 			{
-				var ammo = baseWeapon.AmmoResource;
-				if ( ammo is null )
-					return;
-
-				if ( Player.GetAmmoCount( ammo ) >= ammo.MaxAmount )
-					return;
-
-				Player.GiveAmmo( baseWeapon.AmmoResource, baseWeapon.ClipContents, includeNotices );
-				OnClientPickup( existing, true );
+				if ( existingWeapon.ReserveAmmo < existingWeapon.MaxReserveAmmo )
+				{
+					existingWeapon.AddReserveAmmo( pickupWeapon.ClipContents );
+					OnClientPickup( existing, true );
+				}
 			}
 
 			item.DestroyGameObject();
 			return;
 		}
 
+		// Reject if the inventory is full
+		var slot = FindEmptySlot();
+		if ( slot < 0 )
+			return;
+
 		item.GameObject.Parent = GameObject;
 		item.Network.Refresh();
+		item.InventorySlot = slot;
 
 		if ( Network.Owner is not null )
-		{
 			item.Network.AssignOwnership( Network.Owner );
-		}
 		else
-		{
 			item.Network.DropOwnership();
-		}
 
 		IPlayerEvent.PostToGameObject( GameObject, e => e.OnPickup( item ) );
 		OnClientPickup( item );
+	}
+
+	/// <summary>
+	/// Drops the given weapon from the inventory.
+	/// </summary>
+	public bool Drop( BaseCarryable weapon )
+	{
+		if ( !Networking.IsHost )
+		{
+			HostDrop( weapon );
+			return true;
+		}
+
+		if ( !weapon.IsValid() ) return false;
+		if ( weapon.Owner != Player ) return false;
+		if ( !weapon.ItemPrefab.IsValid() ) return false;
+
+		var dropPosition = Player.EyeTransform.Position + Player.EyeTransform.Forward * 48f;
+		var dropVelocity = Player.EyeTransform.Forward * 200f + Vector3.Up * 100f;
+
+		// If this is the active weapon, holster first
+		if ( ActiveWeapon == weapon )
+		{
+			SwitchWeapon( null, true );
+		}
+
+		// Spawn the item prefab in the world
+		var pickup = weapon.ItemPrefab.Clone( new CloneConfig
+		{
+			Transform = new Transform( dropPosition ),
+			StartEnabled = true
+		} );
+
+		pickup.NetworkSpawn();
+
+		// Apply velocity if there's a rigidbody
+		if ( pickup.GetComponent<Rigidbody>() is { } rb )
+		{
+			var baseVelocity = Player.Controller.Velocity;
+
+			rb.Velocity = baseVelocity + dropVelocity;
+			rb.AngularVelocity = Vector3.Random * 8.0f;
+		}
+
+		weapon.DestroyGameObject();
+
+		// Auto-switch to best remaining weapon
+		var best = GetBestWeapon();
+		if ( best.IsValid() )
+		{
+			SwitchWeapon( best );
+		}
+
+		return true;
 	}
 
 	[Rpc.Owner]
@@ -168,10 +291,8 @@ public sealed class PlayerInventory : Component, IPlayerEvent
 
 		if ( item is BaseWeapon weapon && weapon.UsesAmmo )
 		{
-			var ammo = weapon.AmmoResource;
-			if ( ammo is not null && Player.GetAmmoCount( ammo ) < 1 )
+			if ( !weapon.HasAmmo() && !weapon.CanReload() )
 			{
-				// don't autoswitch to a weapon we've got no ammo for
 				return false;
 			}
 		}
@@ -179,49 +300,120 @@ public sealed class PlayerInventory : Component, IPlayerEvent
 		return item.Value > ActiveWeapon.Value;
 	}
 
+	/// <summary>
+	/// Moves the item in <paramref name="fromSlot"/> to <paramref name="toSlot"/>.
+	/// If both slots are occupied the items are swapped; if <paramref name="toSlot"/> is
+	/// empty the item is simply relocated.
+	/// </summary>
+	public void MoveSlot( int fromSlot, int toSlot )
+	{
+		if ( !Networking.IsHost )
+		{
+			HostMoveSlot( fromSlot, toSlot );
+			return;
+		}
+
+		if ( fromSlot == toSlot ) return;
+		if ( fromSlot < 0 || fromSlot >= MaxSlots ) return;
+		if ( toSlot < 0 || toSlot >= MaxSlots ) return;
+
+		var fromWeapon = GetSlot( fromSlot );
+		if ( !fromWeapon.IsValid() ) return;
+
+		var toWeapon = GetSlot( toSlot );
+
+		fromWeapon.InventorySlot = toSlot;
+		if ( toWeapon.IsValid() )
+			toWeapon.InventorySlot = fromSlot;
+	}
+
+	[Rpc.Host]
+	private void HostMoveSlot( int fromSlot, int toSlot )
+	{
+		MoveSlot( fromSlot, toSlot );
+	}
+
 	public BaseCarryable GetBestWeapon()
 	{
 		return Weapons.OrderByDescending( x => x.Value ).FirstOrDefault();
 	}
 
-	public BaseCarryable GetBestWeaponHolstered()
+	public void SwitchWeapon( BaseCarryable weapon, bool allowHolster = false )
 	{
-		return Weapons.Where( x => !x.ShouldAvoid ).OrderByDescending( x => x.Value ).Where( x => x != ActiveWeapon ).FirstOrDefault();
-	}
-
-	public void SwitchWeapon( BaseCarryable weapon )
-	{
-		if ( weapon == ActiveWeapon ) return;
-
-		if ( ActiveWeapon.IsValid() )
+		if ( !Networking.IsHost )
 		{
-			ActiveWeapon.OnHolstered( Player );
-			ActiveWeapon.GameObject.Enabled = false;
+			HostSwitchWeapon( weapon, allowHolster );
+			return;
+		}
+
+		if ( weapon == ActiveWeapon )
+		{
+			if ( allowHolster )
+			{
+				ActiveWeapon = null;
+			}
+			return;
 		}
 
 		ActiveWeapon = weapon;
+	}
 
-		if ( ActiveWeapon.IsValid() )
-		{
-			ActiveWeapon.OnEquipped( Player );
-			ActiveWeapon.GameObject.Enabled = true;
-		}
+	[Rpc.Host]
+	private void HostSwitchWeapon( BaseCarryable weapon, bool allowHolster = false )
+	{
+		SwitchWeapon( weapon, allowHolster );
 	}
 
 	protected override void OnUpdate()
 	{
+		var renderer = Player?.Controller?.Renderer;
+
 		if ( ActiveWeapon.IsValid() )
 		{
 			ActiveWeapon.OnFrameUpdate( Player );
+
+			if ( renderer.IsValid() )
+			{
+				renderer.Set( "holdtype", (int)ActiveWeapon.HoldType );
+			}
+		}
+		else
+		{
+			if ( renderer.IsValid() )
+			{
+				renderer.Set( "holdtype", (int)CitizenAnimationHelper.HoldTypes.None );
+			}
 		}
 	}
 
 	public void OnControl()
 	{
-		if ( ActiveWeapon.IsValid() )
+		if ( Input.Pressed( "drop" ) )
 		{
-			ActiveWeapon.OnPlayerUpdate( Player );
+			if ( ActiveWeapon.IsValid() )
+				DropActiveWeapon();
+
+			return;
 		}
+
+		if ( ActiveWeapon.IsValid() )
+			ActiveWeapon.OnPlayerUpdate( Player );
+	}
+
+	/// <summary>
+	/// Called by the owning client to drop their currently held weapon.
+	/// </summary>
+	[Rpc.Host]
+	private void DropActiveWeapon()
+	{
+		if ( !ActiveWeapon.IsValid() ) return;
+		Drop( ActiveWeapon );
+	}
+
+	[Rpc.Host]
+	private void HostDrop( BaseCarryable weapon )
+	{
+		Drop( weapon );
 	}
 
 	void IPlayerEvent.OnSpawned()
@@ -231,37 +423,22 @@ public sealed class PlayerInventory : Component, IPlayerEvent
 
 	void IPlayerEvent.OnDied( IPlayerEvent.DiedParams args )
 	{
-		if ( ActiveWeapon.IsValid() )
-		{
-			ActiveWeapon.OnPlayerDeath( args );
-		}
-	}
-
-	void IPlayerEvent.OnPickup( BaseCarryable item )
-	{
-		if ( item is BaseWeapon weapon && weapon.IsSelfAmmo )
-		{
-			Player.ShowNotice( $"{weapon.AmmoResource.AmmoType} x {weapon.StartingAmmo}" );
-		}
-		else
-		{
-			Player.ShowNotice( item.DisplayName );
-		}
+		if ( !ActiveWeapon.IsValid() ) return;
+		
+		ActiveWeapon.OnPlayerDeath( args );
 	}
 
 	void IPlayerEvent.OnCameraMove( ref Angles angles )
 	{
-		if ( ActiveWeapon.IsValid() )
-		{
-			ActiveWeapon.OnCameraMove( Player, ref angles );
-		}
+		if ( !ActiveWeapon.IsValid() ) return;
+		
+		ActiveWeapon.OnCameraMove( Player, ref angles );
 	}
 
 	void IPlayerEvent.OnCameraPostSetup( Sandbox.CameraComponent camera )
 	{
-		if ( ActiveWeapon.IsValid() )
-		{
-			ActiveWeapon.OnCameraSetup( Player, camera );
-		}
+		if ( !ActiveWeapon.IsValid() ) return;
+
+		ActiveWeapon.OnCameraSetup( Player, camera );
 	}
 }

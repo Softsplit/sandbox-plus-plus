@@ -1,4 +1,4 @@
-
+﻿
 using Sandbox.UI;
 
 [Hide]
@@ -8,8 +8,14 @@ using Sandbox.UI;
 [Group( "Building" )]
 public class WheelTool : ToolMode
 {
+	public override bool UseSnapGrid => true;
+	public override IEnumerable<string> TraceIgnoreTags => ["constraint", "collision"];
 	[Property, ResourceSelect( Extension = "wdef", AllowPackages = true ), Title( "Wheel" )]
 	public string Definition { get; set; } = "entities/wheel/basic.wdef";
+
+	public override string Description => "#tool.hint.wheeltool.description";
+	public override string PrimaryAction => "#tool.hint.wheeltool.place";
+	public override string SecondaryAction => "#tool.hint.wheeltool.toggle_axis";
 
 	Vector3 _axis = Vector3.Right;
 
@@ -58,12 +64,13 @@ public class WheelTool : ToolMode
 		var wheelGo = scene.Clone( new CloneConfig { StartEnabled = false } );
 		wheelGo.Name = "wheel";
 		wheelGo.Tags.Add( "removable" );
+		wheelGo.Tags.Add( "constraint" );
 		wheelGo.WorldTransform = tx;
 
 		var we = wheelGo.GetOrAddComponent<WheelEntity>();
 		var joint = wheelGo.GetComponentInChildren<WheelJoint>( true );
 
-		if ( joint == null )
+		if ( joint is null )
 		{
 			var wheelAnchor = new GameObject( true, "anchor2" );
 			wheelAnchor.Parent = wheelGo;
@@ -77,6 +84,8 @@ public class WheelTool : ToolMode
 			joint.SuspensionLimits = new Vector2( -32, 32 );
 			joint.EnableCollision = false;
 		}
+
+		ApplyPhysicsProperties( wheelGo );
 
 		joint.Body = point.GameObject;
 

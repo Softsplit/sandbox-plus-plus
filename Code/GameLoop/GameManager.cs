@@ -1,4 +1,6 @@
-public sealed partial class GameManager : GameObjectSystem<GameManager>, Component.INetworkListener, ISceneStartup
+using Sandbox.UI;
+
+public sealed partial class GameManager : GameObjectSystem<GameManager>, Component.INetworkListener, ISceneStartup, IScenePhysicsEvents, ICleanupEvents
 {
 	public GameManager( Scene scene ) : base( scene )
 	{
@@ -8,7 +10,7 @@ public sealed partial class GameManager : GameObjectSystem<GameManager>, Compone
 	{
 		if ( !Networking.IsActive )
 		{
-			Networking.CreateLobby( new Sandbox.Network.LobbyConfig() { Privacy = Sandbox.Network.LobbyPrivacy.Public, MaxPlayers = 128, Name = "My Sandbox++ Server", DestroyWhenHostLeaves = true } );
+			Networking.CreateLobby( new Sandbox.Network.LobbyConfig() { Privacy = Sandbox.Network.LobbyPrivacy.Public, MaxPlayers = 32, Name = "Sandbox", DestroyWhenHostLeaves = true } );
 		}
 	}
 
@@ -34,6 +36,10 @@ public sealed partial class GameManager : GameObjectSystem<GameManager>, Compone
 
 	private PlayerData CreatePlayerInfo( Connection channel )
 	{
+		var existingPlayerInfo = PlayerData.For( channel );
+		if ( existingPlayerInfo.IsValid() )
+			return existingPlayerInfo;
+
 		var go = new GameObject( true, $"PlayerInfo - {channel.DisplayName}" );
 		var data = go.AddComponent<PlayerData>();
 		data.SteamId = (long)channel.SteamId;
@@ -85,11 +91,6 @@ public sealed partial class GameManager : GameObjectSystem<GameManager>, Compone
 	}
 
 	/// <summary>
-	/// In the editor, spawn the player where they're looking
-	/// </summary>
-	public static Transform EditorSpawnLocation { get; set; }
-
-	/// <summary>
 	/// Find the most appropriate place to respawn
 	/// </summary>
 	Transform FindSpawnLocation()
@@ -101,51 +102,10 @@ public sealed partial class GameManager : GameObjectSystem<GameManager>, Compone
 
 		if ( spawnPoints.Length == 0 )
 		{
-			if ( Application.IsEditor && !EditorSpawnLocation.Position.IsNearlyZero() )
-			{
-				return EditorSpawnLocation;
-			}
-
 			return Transform.Zero;
 		}
 
-		var players = Scene.GetAll<Player>();
-
-		if ( !players.Any() )
-		{
-			return Random.Shared.FromArray( spawnPoints ).Transform.World;
-		}
-
-		//
-		// Find spawnpoint furthest away from any players
-		// TODO: in the future we may want a different logic, as spawning far away is not necessarily good.
-		// But good enough for now and also reduces chances of players from spawning on top of  or inside each other.
-		//
-		SpawnPoint spawnPointFurthestAway = null;
-		float spawnPointFurthestAwayDistanceSqr = float.MinValue;
-
-		foreach ( var spawnPoint in spawnPoints )
-		{
-			float closestPlayerDistanceToSpawnpointSqr = float.MaxValue;
-
-			foreach ( var player in players )
-			{
-				float playerDistanceToSpawnPointSqr = (spawnPoint.Transform.World.Position - player.Transform.World.Position).LengthSquared;
-
-				if ( playerDistanceToSpawnPointSqr < closestPlayerDistanceToSpawnpointSqr )
-				{
-					closestPlayerDistanceToSpawnpointSqr = playerDistanceToSpawnPointSqr;
-				}
-			}
-
-			if ( closestPlayerDistanceToSpawnpointSqr > spawnPointFurthestAwayDistanceSqr )
-			{
-				spawnPointFurthestAwayDistanceSqr = closestPlayerDistanceToSpawnpointSqr;
-				spawnPointFurthestAway = spawnPoint;
-			}
-		}
-
-		return spawnPointFurthestAway.WorldTransform;
+		return Random.Shared.FromArray( spawnPoints ).Transform.World;
 	}
 
 	[Rpc.Broadcast]
@@ -208,19 +168,23 @@ public sealed partial class GameManager : GameObjectSystem<GameManager>, Compone
 	}
 
 	[ConCmd( "spawn" )]
-	private static void SpawnCommand( string path_or_ident )
+	private static void SpawnCommand( string ident )
 	{
-		Spawn( path_or_ident );
+		Spawn( ident );
 	}
 
+	/// <summary>
+	/// Spawn from a string identifier (e.g. "prop:path", "entity:path", "dupe.local:id", "dupe.workshop:id").
+	/// Optional metadata string is passed through to the spawner for type-specific use (e.g. mount bounds/title).
+	/// </summary>
 	[Rpc.Broadcast]
-	public static async void Spawn( string path_or_ident )
+	public static async void Spawn( string ident, string metadata = null )
 	{
 		// if we're the person calling this, then we don't do anything but add the spawn stat
 		if ( Rpc.Caller == Connection.Local )
 		{
 			var data = new Dictionary<string, object>();
-			data["ident"] = path_or_ident;
+			data["ident"] = ident;
 			Sandbox.Services.Stats.Increment( "spawn", 1, data );
 
 			Sound.Play( "sounds/ui/ui.spawn.sound" );
@@ -233,14 +197,12 @@ public sealed partial class GameManager : GameObjectSystem<GameManager>, Compone
 		var player = Player.FindForConnection( Rpc.Caller );
 		if ( player is null ) return;
 
-		// store off their eye transform
 		var eyes = player.EyeTransform;
 
 		var trace = Game.SceneTrace.Ray( eyes.Position, eyes.Position + eyes.Forward * 200 )
 			.IgnoreGameObject( player.GameObject )
 			.WithoutTags( "player" )
 			.Run();
-
 
 		var up = trace.Normal;
 		var backward = -eyes.Forward;
@@ -251,181 +213,73 @@ public sealed partial class GameManager : GameObjectSystem<GameManager>, Compone
 
 		var spawnTransform = new Transform( trace.EndPosition, facingAngle );
 
-		using var spawnInfo = new SpawnConfig();
-		spawnInfo.Location = new Transform( trace.EndPosition, facingAngle );
-		spawnInfo.Path = path_or_ident;
-
 		// TODO - can this user spawn this package?
 
-		// we're a model
-		if ( await FindModelPath( spawnInfo ) is Model model )
+		var (type, path, source) = SpawnlistItem.ParseIdent( ident );
+
+		ISpawner spawner = type switch
 		{
-			SpawnModel( model, spawnTransform, player );
+			"prop" => new PropSpawner( path ),
+			"mount" => new MountSpawner( path, metadata ),
+			"entity" or "sent" => new EntitySpawner( path ),
+			"dupe" => await FindDupe( path, source ),
+			_ => null
+		};
+
+		if ( spawner is not null && await spawner.Loading )
+		{
+			Log.Info( $"[Spawn] Spawning '{ident}' type='{type}' spawner={spawner.GetType().Name} metadata={(metadata ?? "null")}" );
+			await SpawnAndUndo( spawner, spawnTransform, player );
 			return;
 		}
 
-		// we're a model
-		if ( await FindEntityPath( spawnInfo ) is ScriptedEntity entity )
-		{
-			SpawnEntity( entity, spawnTransform, player );
-			return;
-		}
-
-		Log.Warning( $"Couldn't resolve '{path_or_ident}'" );
-
+		Log.Warning( $"[Spawn] Couldn't resolve '{ident}' — spawner={(spawner is null ? "null" : "not ready")}" );
 	}
 
-	class SpawnConfig : IDisposable
+	/// <summary>
+	/// Resolve a dupe ident to a <see cref="DuplicatorSpawner"/>, this sucks a bit but okay, the DuplicatorSpawner should handle this
+	/// </summary>
+	private static async Task<DuplicatorSpawner> FindDupe( string id, string source )
 	{
-		public SpawningProgress Placeholder;
-		public Transform Location;
-		public string Path;
-
-		public void Dispose()
-		{
-			Placeholder?.GameObject?.Destroy();
-		}
-
-		public void CreatePlaceholder()
-		{
-			if ( Placeholder is not null )
-				return;
-
-			const string placeholderPath = "/prefabs/engine/spawn-progress.prefab";
-
-			var go = GameObject.Clone( placeholderPath );
-			go.WorldTransform = Location.WithScale( 1 );
-
-			go.NetworkSpawn( true, null );
-			Placeholder = go.GetComponent<SpawningProgress>();
-		}
-
-		internal void UpdatePlaceholder( Package package )
-		{
-			var mins = package.GetMeta<Vector3>( "RenderMins", -1 );
-			var maxs = package.GetMeta<Vector3>( "RenderMaxs", -1 );
-
-			Placeholder.SpawnBounds = new BBox( mins, maxs );
-		}
-	}
-
-	static async Task<Model> FindModelPath( SpawnConfig spawn )
-	{
-		if ( spawn.Path.EndsWith( ".vmdl" ) )
-		{
-			var se = await ResourceLibrary.LoadAsync<Model>( spawn.Path );
-			if ( se is not null ) return se;
-		}
-
-		Package package = default;
-
-		// Already downloaded, cool
-		if ( Package.TryGetCached( spawn.Path, out package, false ) )
-		{
-			return await Cloud.Load<Model>( spawn.Path );
-		}
-
-		spawn.CreatePlaceholder();
-
-		package = await Package.FetchAsync( spawn.Path, false );
-		if ( package is null || package.TypeName != "model" )
+		if ( !ulong.TryParse( id, out var fileId ) )
 			return null;
 
-		spawn.UpdatePlaceholder( package );
+		if ( source == "workshop" )
+		{
+			var query = new Storage.Query { FileIds = [fileId] };
 
-		return await Cloud.Load<Model>( spawn.Path );
+			var result = await query.Run();
+			var item = result.Items?.FirstOrDefault();
+			if ( item is null ) return null;
+
+			var installed = await item.Install();
+			if ( installed is null ) return null;
+
+			var json = await installed.Files.ReadAllTextAsync( "/dupe.json" );
+			return DuplicatorSpawner.FromJson( json, item.Title );
+		}
+
+		var entry = Storage.GetAll( "dupe" ).FirstOrDefault( x => x.Id.ToString() == fileId.ToString() );
+		if ( entry is null ) return null;
+
+		var dupeJson = await entry.Files.ReadAllTextAsync( "/dupe.json" );
+		return DuplicatorSpawner.FromJson( dupeJson, entry.GetMeta<string>( "name" ) );
 	}
 
-	static async Task<ScriptedEntity> FindEntityPath( SpawnConfig spawn )
+	private static async Task SpawnAndUndo( ISpawner spawner, Transform transform, Player player )
 	{
-		var se = await ResourceLibrary.LoadAsync<ScriptedEntity>( spawn.Path );
-		if ( se is not null ) return se;
+		var objects = await spawner.Spawn( transform, player );
 
-		Package package = default;
-
-		// Already downloaded, cool
-		if ( Package.TryGetCached( spawn.Path, out package, false ) )
+		if ( objects is { Count: > 0 } )
 		{
-			return await Cloud.Load<ScriptedEntity>( spawn.Path, true );
+			var undo = player.Undo.Create();
+			undo.Name = $"Spawn {spawner.DisplayName}";
+
+			foreach ( var go in objects )
+			{
+				undo.Add( go );
+			}
 		}
-
-		spawn.CreatePlaceholder();
-
-		package = await Package.FetchAsync( spawn.Path, false );
-		if ( package is null || package.TypeName != "sent" )
-			return null;
-
-		spawn.UpdatePlaceholder( package );
-
-		return await Cloud.Load<ScriptedEntity>( spawn.Path, true );
-	}
-
-
-	private static void SpawnModel( Model model, Transform spawnTransform, Player player )
-	{
-		Log.Info( $"[{player}] Spawning Model {model.Name}" );
-
-		var depth = -model.Bounds.Mins.z;
-
-		spawnTransform.Position += spawnTransform.Up * depth;
-
-		var go = new GameObject( false, "prop" );
-		go.Tags.Add( "removable" );
-		go.WorldTransform = spawnTransform;
-
-		var prop = go.AddComponent<Prop>();
-		prop.Model = model;
-
-		if ( (model.Physics?.Parts?.Count ?? 0) == 0 )
-		{
-			Log.Info( "No physics - adding a cube" );
-
-			var collider = go.AddComponent<BoxCollider>();
-			collider.Scale = model.Bounds.Size;
-			collider.Center = model.Bounds.Center;
-
-
-			go.AddComponent<Rigidbody>();
-		}
-
-		go.NetworkSpawn( true, null );
-
-		var undo = player.Undo.Create();
-		undo.Name = "Spawn Model";
-		undo.Add( go );
-
-		var modelName = model.Name?.ToLowerInvariant() ?? "";
-		if ( modelName.Contains( "ragdoll" ) )
-		{
-			Sandbox.Services.Stats.Increment( "ragdolls_spawned", 1 );
-		}
-		else
-		{
-			Sandbox.Services.Stats.Increment( "props_spawned", 1 );
-		}
-	}
-
-	private static void SpawnEntity( ScriptedEntity entity, Transform spawnTransform, Player player )
-	{
-		Log.Info( $"[{player}] Spawning Entity {entity.Title}" );
-
-		var prefabFile = entity.Prefab;
-		//var bounds = prefabFile.GetScene().GetLocalBounds();
-		var bounds = SceneUtility.GetPrefabScene( prefabFile ).GetLocalBounds();
-
-		var depth = -bounds.Mins.z;
-		spawnTransform.Position += spawnTransform.Up * depth;
-
-		var go = GameObject.Clone( prefabFile, new CloneConfig { Transform = spawnTransform, StartEnabled = false } );
-		go.Tags.Add( "removable" );
-		go.WorldTransform = spawnTransform;
-
-		go.NetworkSpawn( true, null );
-
-		var undo = player.Undo.Create();
-		undo.Name = $"Spawn {entity.Title}";
-		undo.Add( go );
-
 	}
 
 	/// <summary>
@@ -450,5 +304,96 @@ public sealed partial class GameManager : GameObjectSystem<GameManager>, Compone
 		// c.GameObject.Network.Refresh( c );
 
 		c.GameObject.Network?.Refresh();
+	}
+
+	/// <summary>
+	/// Apply a debounced batch of morph changes to a <see cref="SkinnedModelRenderer"/>,
+	/// replicated to all clients. Only the morphs present in the batch are modified.
+	/// </summary>
+	[Rpc.Host]
+	public static void ApplyMorphBatch( SkinnedModelRenderer smr, string morphsJson )
+	{
+		if ( !smr.IsValid() ) return;
+		smr.GameObject.GetOrAddComponent<MorphState>().ApplyBatch( morphsJson );
+	}
+
+	/// <summary>
+	/// Apply a full morph preset (as json), and captures with <see cref="MorphState"/> which replicates changes to other clients
+	/// </summary>
+	[Rpc.Host]
+	public static void ApplyFacePosePreset( SkinnedModelRenderer smr, string morphsJson )
+	{
+		if ( !smr.IsValid() ) return;
+		smr.GameObject.GetOrAddComponent<MorphState>().ApplyPreset( morphsJson );
+	}
+
+	[Rpc.Host]
+	public static async void ChangeMaterialOverride( ModelRenderer renderer, int materialIndex, string materialPath )
+	{
+		if ( !renderer.IsValid() ) return;
+
+		Material material = null;
+
+		if ( !string.IsNullOrEmpty( materialPath ) )
+		{
+			material = Material.Load( materialPath );
+			material ??= await Cloud.Load<Material>( materialPath );
+		}
+
+		if ( !renderer.IsValid() ) return;
+
+		renderer.Materials.SetOverride( materialIndex, material );
+
+		renderer.GameObject.Network?.Refresh();
+	}
+
+	[Rpc.Host]
+	public static void GiveSpawnerWeaponAt( string type, string path, int slot, string data = null, string icon = null, string title = null )
+	{
+		var player = Player.FindForConnection( Rpc.Caller );
+		if ( player is null ) return;
+
+		var inventory = player.GetComponent<PlayerInventory>();
+		if ( !inventory.IsValid() ) return;
+
+		if ( slot < 0 || slot >= inventory.MaxSlots ) return;
+
+		ISpawner s = type switch
+		{
+			"prop" or "mount" => new PropSpawner( path ),
+			"entity" or "sent" => new EntitySpawner( path ),
+			"dupe" when data is not null => DuplicatorSpawner.FromJson( data, title, icon ),
+			_ => null
+		};
+
+		if ( s is null ) return;
+
+		// If there's already a spawner weapon in this slot, just update
+		if ( inventory.GetSlot( slot ) is SpawnerWeapon existingSpawner )
+		{
+			existingSpawner.SetSpawner( s );
+			inventory.SwitchWeapon( existingSpawner );
+			return;
+		}
+
+		// Slot is occupied by something else — don't replace it
+		if ( inventory.GetSlot( slot ).IsValid() ) return;
+
+		inventory.Pickup( "weapons/spawner/spawner.prefab", slot, false );
+		var spawner = inventory.GetSlot( slot ) as SpawnerWeapon;
+		if ( !spawner.IsValid() ) return;
+
+		spawner.SetSpawner( s );
+		inventory.SwitchWeapon( spawner );
+	}
+
+	void IScenePhysicsEvents.OnOutOfBounds( Rigidbody body )
+	{
+		body.DestroyGameObject();
+	}
+
+	public void OnCleanup( int removedObjects, int restoredObjects )
+	{
+		Notices.AddNotice( "cleaning_services", Color.Green, $"Cleanup! Removed {removedObjects} objects, restored {restoredObjects} objects." );
 	}
 }

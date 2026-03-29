@@ -5,10 +5,30 @@
 [Title( "Entity" ), Order( 2000 ), Icon( "🧠" )]
 public class EntityPage : BaseSpawnMenu
 {
+	static Dictionary<string, string> CategoryIcons = new()
+	{
+		{ "Chair", "🪑" },
+		{ "Weapon", "🔫" },
+		{ "Npc", "🤖" },
+		{ "Vehicle", "🚕" },
+		{ "World", "🌍" },
+	};
+
 	protected override void Rebuild()
 	{
-		AddHeader( "You" );
-		AddOption( "📂", "Installed", () => new EntityListLocal() { } );
+		AddHeader( "Local" );
+
+		var categories = ResourceLibrary.GetAll<ScriptedEntity>()
+			.Select( e => string.IsNullOrWhiteSpace( e.Category ) ? "Other" : e.Category )
+			.Distinct()
+			.OrderBy( c => c == "Other" ? "\xFF" : c ); // sort Other last
+
+		foreach ( var category in categories )
+		{
+			var cat = category; // capture for lambda
+			var icon = CategoryIcons.GetValueOrDefault( cat, "📦" );
+			AddOption( icon, cat, () => new EntityListLocal { Category = cat } );
+		}
 
 		AddHeader( "Workshop" );
 		AddOption( "\U0001f9e0", "All", () => new EntityListCloud() { Query = "" } );

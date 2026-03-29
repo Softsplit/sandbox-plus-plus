@@ -7,6 +7,17 @@ public class BallSocket : BaseConstraintToolMode
 	[Property, Sync]
 	public bool EnableCollision { get; set; } = false;
 
+	public override string Description => Stage == 1 ? "#tool.hint.ballsocket.stage1" : "#tool.hint.ballsocket.stage0";
+	public override string PrimaryAction => Stage == 1 ? "#tool.hint.ballsocket.finish" : "#tool.hint.ballsocket.source";
+	public override string ReloadAction => "#tool.hint.ballsocket.remove";
+
+	protected override IEnumerable<GameObject> FindConstraints( GameObject linked, GameObject target )
+	{
+		foreach ( var joint in linked.GetComponentsInChildren<BallJoint>( true ) )
+			if ( linked == target || joint.Body?.Root == target )
+				yield return joint.GameObject;
+	}
+
 	protected override void CreateConstraint( SelectionPoint point1, SelectionPoint point2 )
 	{
 		if ( point1.GameObject == point2.GameObject )

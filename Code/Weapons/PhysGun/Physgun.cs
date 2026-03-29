@@ -1,12 +1,15 @@
 using Sandbox.Physics;
+using Sandbox.Rendering;
 
-public partial class Physgun : BaseCarryable
+public partial class Physgun
 {
 	[Property, RequireComponent] public HighlightOutline BeamHighlight { get; set; }
 
 	[Property, Group( "Sound" )] SoundEvent ReleasedSound { get; set; }
 	[Property, Group( "Sound" )] SoundEvent ButtonInSound { get; set; }
 	[Property, Group( "Sound" )] SoundEvent ButtonOutSound { get; set; }
+
+	[Property] public float Range { get; set; } = 8196f;
 
 	public struct GrabState
 	{
@@ -41,8 +44,7 @@ public partial class Physgun : BaseCarryable
 		public readonly Rigidbody Body => GameObject?.GetComponent<Rigidbody>();
 	}
 
-	[Sync]
-	public GrabState _state { get; set; } = default;
+	[Sync] public GrabState _state { get; set; } = default;
 
 	public GrabState _stateHovered { get; set; } = default;
 
@@ -97,10 +99,10 @@ public partial class Physgun : BaseCarryable
 	{
 		base.OnControl( player );
 
-		if ( Scene.TimeScale == 0 )
-			return;
+		UpdateViewmodelScreen();
+		UpdateScreenGraph();
 
-		if ( player.TimeSincePickupDropped < 0.2f )
+		if ( Scene.TimeScale == 0 )
 			return;
 
 		if ( Input.Pressed( "use" ) && _state.IsValid() )
@@ -195,7 +197,9 @@ public partial class Physgun : BaseCarryable
 
 				if ( _isSnapping )
 				{
-					var eyeRotation = _state.Pulling ? player.EyeTransform.Rotation : Rotation.FromYaw( player.Controller.EyeAngles.yaw );
+					var eyeRotation = _state.Pulling
+						? player.EyeTransform.Rotation
+						: Rotation.FromYaw( player.Controller.EyeAngles.yaw );
 
 					// convert rotation to worldspace
 					spinRotation = eyeRotation * spinRotation;
@@ -245,11 +249,7 @@ public partial class Physgun : BaseCarryable
 
 			if ( distance <= PullDistance )
 			{
-				_state = sh with
-				{
-					Active = true,
-					Pulling = true,
-				};
+				_state = sh with { Active = true, Pulling = true, };
 			}
 		}
 
@@ -343,16 +343,14 @@ public partial class Physgun : BaseCarryable
 			return;
 		}
 
-		_body ??= new PhysicsBody( Scene.PhysicsWorld )
-		{
-			BodyType = PhysicsBodyType.Keyframed,
-			AutoSleep = false
-		};
+		_body ??= new PhysicsBody( Scene.PhysicsWorld ) { BodyType = PhysicsBodyType.Keyframed, AutoSleep = false };
 
 		var eyeTransform = Owner.EyeTransform;
 		var grabDistance = ClampGrabDistance( _state.Body, _state.EndPoint, eyeTransform, _state.GrabDistance );
 		var targetPosition = eyeTransform.Position + eyeTransform.Rotation.Forward * grabDistance;
-		var targetRotation = _state.Pulling ? eyeTransform.Rotation * _state.GrabOffset : Rotation.FromYaw( Owner.Controller.EyeAngles.yaw ) * _state.GrabOffset;
+		var targetRotation = _state.Pulling
+			? eyeTransform.Rotation * _state.GrabOffset
+			: Rotation.FromYaw( Owner.Controller.EyeAngles.yaw ) * _state.GrabOffset;
 		_body.Transform = new Transform( targetPosition, targetRotation );
 
 		if ( _joint is null )
@@ -393,9 +391,9 @@ public partial class Physgun : BaseCarryable
 	{
 		state = default;
 
-		var tr = Scene.Trace.Ray( aim.Position, aim.Position + aim.Forward * 1000 )
-				.IgnoreGameObjectHierarchy( GameObject.Root )
-				.Run();
+		var tr = Scene.Trace.Ray( aim.Position, aim.Position + aim.Forward * Range )
+			.IgnoreGameObjectHierarchy( GameObject.Root )
+			.Run();
 
 		state.LocalOffset = tr.EndPosition;
 		state.LocalNormal = tr.Normal;

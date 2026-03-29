@@ -1,0 +1,44 @@
+@import "/UI/Theme.scss";
+
+EffectsProperties
+{
+    background-color: $menu-panel-bg;
+    backdrop-filter: blur( 2px );
+    border-radius: 8px;
+    flex-direction: column;
+    overflow: hidden;
+
+    .header
+    {
+        padding: 10px 14px;
+        flex-shrink: 0;
+
+        h2
+        {
+            gap: 0.5rem;
+            align-items: center;
+            font-size: 14px;
+            font-weight: 650;
+            font-family: $subtitle-font;
+            color: $menu-color;
+        }
+    }
+
+    .empty-state
+    {
+        font-family: $subtitle-font;
+        padding: 16px 12px;
+        text-align: center;
+        color: $menu-text;
+        flex-grow: 1;
+        align-items: center;
+        justify-content: center;
+    }
+
+    ControlSheet
+    {
+        padding: 6px 0;
+        flex-grow: 1;
+        overflow-y: scroll;
+    }
+}

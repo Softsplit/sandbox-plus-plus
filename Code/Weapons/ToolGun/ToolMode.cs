@@ -1,6 +1,6 @@
 using Sandbox.Rendering;
 
-public abstract partial class ToolMode : Component
+public abstract partial class ToolMode : Component, IToolInfo
 {
 	public Toolgun Toolgun => GetComponent<Toolgun>();
 	public Player Player => GetComponentInParent<Player>();
@@ -10,11 +10,75 @@ public abstract partial class ToolMode : Component
 	/// </summary>
 	public bool IsValidState { get; protected set; } = true;
 
-	public virtual void OnControl() { }
+	/// <summary>
+	/// When true, the toolgun will absorb mouse input so the camera doesn't move.
+	/// The mode can then read <see cref="Input.AnalogLook"/> to use the mouse for rotation etc.
+	/// </summary>
+	public virtual bool AbsorbMouseInput => false;
+
+	/// <summary>
+	/// Display name for the tool, defaults to the TypeDescription title.
+	/// </summary>
+	public virtual string Name => TypeDescription?.Title ?? GetType().Name;
+
+	/// <summary>
+	/// Description of what this tool does.
+	/// </summary>
+	public virtual string Description => string.Empty;
+
+	/// <summary>
+	/// Label for the primary action (attack1), or null if none.
+	/// </summary>
+	public virtual string PrimaryAction => null;
+
+	/// <summary>
+	/// Label for the secondary action (attack2), or null if none.
+	/// </summary>
+	public virtual string SecondaryAction => null;
+
+	/// <summary>
+	/// Label for the reload action, or null if none.
+	/// </summary>
+	public virtual string ReloadAction => null;
+
+	/// <summary>
+	/// Tags that TraceSelect will ignore. Override per-tool to filter out specific objects.
+	/// </summary>
+	public virtual IEnumerable<string> TraceIgnoreTags => [];
+
+	/// <summary>
+	/// When true, TraceSelect will also hit hitboxes.
+	/// </summary>
+	public virtual bool TraceHitboxes => false;
+
+	public TypeDescription TypeDescription { get; protected set; }
+
+	protected override void OnStart()
+	{
+		TypeDescription = TypeLibrary.GetType( GetType() );
+	}
+
+	protected override void OnEnabled()
+	{
+		if ( Network.IsOwner )
+		{
+			this.LoadCookies();
+		}
+	}
+
+	protected override void OnDisabled()
+	{
+		DisableSnapGrid();
+
+		if ( Network.IsOwner )
+		{
+			this.SaveCookies();
+		}
+	}
 
 	public virtual void DrawScreen( Rect rect, HudPainter paint )
 	{
-		var t = $"{TypeLibrary.GetType( GetType() ).Icon} {GetType().Name}";
+		var t = $"{TypeDescription.Icon} {TypeDescription.Title}";
 
 		var text = new TextRendering.Scope( t, Color.White, 64 );
 		text.LineHeight = 0.75f;
@@ -23,13 +87,22 @@ public abstract partial class ToolMode : Component
 		text.FontWeight = 700;
 
 		paint.DrawText( text, rect, TextFlag.Center );
-
 	}
 
 	public virtual void DrawHud( HudPainter painter, Vector2 crosshair )
 	{
-		painter.SetBlendMode( BlendMode.Normal );
-		painter.DrawCircle( crosshair, 8, Color.Black.WithAlpha( 0.5f ) );
-		painter.DrawCircle( crosshair, 4, Color.White );
+		if ( IsValidState )
+		{
+			painter.SetBlendMode( BlendMode.Normal );
+			painter.DrawCircle( crosshair, 5, Color.Black );
+			painter.DrawCircle( crosshair, 3, Color.White );
+		}
+		else
+		{
+			Color redColor = "#e53";
+			painter.SetBlendMode( BlendMode.Normal );
+			painter.DrawCircle( crosshair, 5, redColor.Darken( 0.3f ) );
+			painter.DrawCircle( crosshair, 3, redColor );
+		}
 	}
 }

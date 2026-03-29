@@ -1,8 +1,12 @@
-[Icon( "🧨" )]
+﻿[Icon( "🧨" )]
 [ClassName( "remover" )]
 [Group( "Tools" )]
 public class Remover : ToolMode
 {
+	public override bool TraceHitboxes => true;
+	public override string Description => "#tool.hint.remover.description";
+	public override string PrimaryAction => "#tool.hint.remover.remove";
+
 	bool CanDestroy( GameObject go )
 	{
 		if ( !go.IsValid() ) return false;
@@ -38,20 +42,6 @@ public class Remover : ToolMode
 		if ( go.IsProxy ) return;
 
 		go.Destroy();
-
-		var connection = Rpc.Caller;
-		if ( connection is not null )
-		{
-			using ( Rpc.FilterInclude( connection ) )
-			{
-				IncrementDestroyedStat();
-			}
-		}
 	}
 
-	[Rpc.Broadcast]
-	private static void IncrementDestroyedStat()
-	{
-		Sandbox.Services.Stats.Increment( "things_destroyed", 1 );
-	}
 }

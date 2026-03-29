@@ -21,16 +21,15 @@
         "__enabled": true,
         "Flags": 0,
         "AnimationSpeed": 1,
-        "BobScale": 1,
         "EjectBrass": null,
         "EjectTransform": {
           "_type": "gameobject",
           "go": "dcc37bca-a959-4b1d-87ee-15eaa48af28d"
         },
         "IncrementalAnimationSpeed": 3,
+        "InertiaScale": "2,2",
         "IsIncremental": false,
         "IsThrowable": false,
-        "MaxSwayDegrees": 3,
         "MuzzleEffect": {
           "_type": "gameobject",
           "prefab": "prefabs/weapon_effects/pistol_muzzleflash.prefab"
@@ -47,12 +46,10 @@
         "OnComponentUpdate": null,
         "Renderer": {
           "_type": "component",
-          "component_id": "0d315a8a-856e-49cb-b5d6-a16482eaf1be",
+          "component_id": "d270c311-cac8-4b91-8f81-bbe7065040a2",
           "go": "2658361a-cbbf-4054-9dfc-7eafdd48f589",
           "component_type": "SkinnedModelRenderer"
         },
-        "SwayScale": 1,
-        "SwaySpeed": 10,
         "ThrowableType": "HEGrenade",
         "TracerEffect": null
       }
@@ -76,13 +73,13 @@
         "Components": [
           {
             "__type": "Sandbox.SkinnedModelRenderer",
-            "__guid": "0d315a8a-856e-49cb-b5d6-a16482eaf1be",
+            "__guid": "d270c311-cac8-4b91-8f81-bbe7065040a2",
             "__enabled": true,
             "Flags": 0,
             "AnimationGraph": null,
-            "BodyGroups": 291,
+            "BodyGroups": 147,
             "BoneMergeTarget": null,
-            "CreateAttachments": true,
+            "CreateAttachments": false,
             "CreateBoneObjects": true,
             "LodOverride": null,
             "MaterialGroup": null,
@@ -110,7 +107,7 @@
               "BloomLayer": false,
               "AfterUILayer": false
             },
-            "RenderType": "Off",
+            "RenderType": "On",
             "Sequence": {
               "Name": null,
               "Looping": true,
@@ -1611,9 +1608,9 @@
           {
             "__guid": "2c2fb3e4-1fb2-4724-a085-3a2981a5a1a9",
             "__version": 2,
-            "Flags": 8,
+            "Flags": 0,
             "Name": "muzzle",
-            "Position": "0,0,0",
+            "Position": "3.848412,0.0000004676039,4.945133",
             "Rotation": "0,0,0,1",
             "Scale": "1,1,1",
             "Tags": "",
@@ -1629,10 +1626,10 @@
           {
             "__guid": "df8fbf6f-20cd-4d94-97e4-8e29b2fa4ba6",
             "__version": 2,
-            "Flags": 8,
+            "Flags": 0,
             "Name": "eject",
-            "Position": "0,0,0",
-            "Rotation": "0,0,0,1",
+            "Position": "-0.9765913,-0.1475517,5.091545",
+            "Rotation": "-0.1830126,-0.1830127,-0.6830124,0.6830129",
             "Scale": "1,1,1",
             "Tags": "",
             "Enabled": true,
@@ -1671,7 +1668,7 @@
             "BodyGroups": 21,
             "BoneMergeTarget": {
               "_type": "component",
-              "component_id": "0d315a8a-856e-49cb-b5d6-a16482eaf1be",
+              "component_id": "d270c311-cac8-4b91-8f81-bbe7065040a2",
               "go": "2658361a-cbbf-4054-9dfc-7eafdd48f589",
               "component_type": "SkinnedModelRenderer"
             },
@@ -1725,15 +1722,14 @@
         "Enabled": false,
         "IncludeStaticBodies": true,
         "IncludeKeyframedBodies": true,
-        "EditorAutoUpdate": true,
+        "EditorAutoUpdate": false,
         "AgentHeight": 64,
         "AgentRadius": 16,
         "AgentStepSize": 18,
         "AgentMaxSlope": 40,
         "ExcludedBodies": "",
         "IncludedBodies": ""
-      },
-      "GameObjectSystems": []
+      }
     },
     "__variables": []
   },
@@ -1744,8 +1740,8 @@
   "DontBreakAsTemplate": false,
   "__references": [
     "facepunch.pistol_muzzleflash#76089",
-    "facepunch.v_first_person_arms_human#122024",
-    "facepunch.v_usp#110418"
+    "facepunch.v_first_person_arms_human#142949",
+    "facepunch.v_usp#152496"
   ],
   "__version": 2
 }

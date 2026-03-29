@@ -78,17 +78,15 @@ public partial class BaseWeapon : BaseCarryable
 	{
 		base.OnAdded( player );
 
-		if ( AmmoResource is not null && StartingAmmo > 0 )
+		if ( UsesAmmo && StartingAmmo > 0 )
 		{
-			// When this weapon gets added to a player's inventory, give player some ammo
-			player.GiveAmmo( AmmoResource, StartingAmmo, false );
+			ReserveAmmo = Math.Min( StartingAmmo, MaxReserveAmmo );
 		}
 	}
 
 	public override void DrawHud( HudPainter painter, Vector2 crosshair )
 	{
 		DrawCrosshair( painter, crosshair );
-		DrawAmmo( painter, new Vector2( Screen.Size.x - 32f * Hud.Scale, Screen.Size.y - 32f * Hud.Scale ) );
 	}
 
 	public override void OnPlayerUpdate( Player player )
@@ -104,7 +102,7 @@ public partial class BaseWeapon : BaseCarryable
 			DestroyViewModel();
 		}
 
-		GameObject.NetworkInterpolation = false;
+		GameObject.Network.Interpolation = false;
 
 		if ( !player.IsLocalPlayer )
 			return;
@@ -196,25 +194,13 @@ public partial class BaseWeapon : BaseCarryable
 
 	public virtual void DrawCrosshair( HudPainter hud, Vector2 center )
 	{
-		hud.SetBlendMode( BlendMode.Normal );
-		hud.DrawCircle( center, 8, Color.Black.WithAlpha( 0.5f ) );
-		hud.DrawCircle( center, 4, Color.White );
+		Color color = Color.Red;
+
+		hud.DrawLine( center + Vector2.Left * 32, center + Vector2.Left * 15, 3, color );
+		hud.DrawLine( center - Vector2.Left * 32, center - Vector2.Left * 15, 3, color );
+		hud.DrawLine( center + Vector2.Up * 32, center + Vector2.Up * 15, 3, color );
+		hud.DrawLine( center - Vector2.Up * 32, center - Vector2.Up * 15, 3, color );
 	}
-
-	Texture ammoIcon = Texture.Load( $"ui/ammo_icon.png" );
-
-	public virtual void DrawAmmo( HudPainter hud, Vector2 bottomright )
-	{
-		if ( AmmoResource is null )
-			return;
-
-		var owner = Owner;
-		if ( owner is null ) return;
-
-		var clipAmmo = ClipContents;
-		var reserveAmmo = owner.GetAmmoCount( AmmoResource );
-
-		hud.DrawAmmo( clipAmmo, reserveAmmo, bottomright, UsesClips );
-	}
-
+	protected Color CrosshairCanShoot => Color.White;
+	protected Color CrosshairNoShoot => Color.Red;
 }

@@ -1,190 +1,210 @@
+@import "/UI/Theme.scss";
+
 Scoreboard
 {
 	position: absolute;
-	justify-content: flex-start;
+	justify-content: center;
 	align-items: center;
-	flex-direction: column;
-	font-family: Poppins;
-	font-size: 22px;
-	font-weight: 700;
+	font-family: $body-font;
+	font-size: 18px;
 	opacity: 0;
+	transform: translateY( -32px ) scale( 1.02 );
+	transition: all 0.1s ease-in;
+	background-color: rgba( 0, 0, 0, 0.5 );
+	backdrop-filter: blur( 10px );
+	margin: auto;
 	width: 100%;
 	height: 100%;
-	padding-top: 100px;
-	pointer-events: none;
+	margin: auto;
+	z-index: 9199;
+	gap: 16px;
 
-	&.visible
+	.voting
 	{
-		opacity: 1.0;
-		pointer-events: all;
+		width: 20%;
 	}
 
-	.header
+	.body
 	{
-		width: 700px;
-		height: 100px;
-		justify-content: center;
-		align-items: center;
+		flex-direction: column;
+	}
 
-		.title
+	.title
+	{
+		width: 100%;
+		align-items: center;
+		flex-direction: column;
+		padding: 0px 32px;
+
+		label
 		{
 			font-size: 32px;
-			font-weight: 800;
-			color: rgb(230, 230, 230);
-			text-shadow: 2px 2px 0px rgba(0, 0, 0, 0.78);
+			font-weight: 600;
+			opacity: 1;
+			height: 40px;
+			text-shadow: 1px 1px 5px black;
 		}
-	}
 
-	.scores
-	{
-		width: 700px;
-		flex-direction: column;
-		gap: 2px;
-		max-height: calc(100% - 200px);
-		overflow: visible;
-	}
-
-	.player_row
-	{
-		flex-direction: row;
-		align-items: center;
-		height: 38px;
-		padding: 3px;
-		margin: 0px 2px 2px 2px;
-		background-color: rgb(230, 230, 230);
-		border-radius: 4px;
-		overflow: visible;
-
-		&.dead
+		.big
 		{
-			background-color: rgb(230, 200, 200);
+			font-size: 40px;
+			font-weight: 900;
+			color: white;
+			height: 58px;
+			border-bottom: 5px solid $color-accent;
+			margin-bottom: 16px;
 		}
 
-		&.admin
+		> .small
 		{
-			background-color: rgb(230, 255, 230);
+			font-size: 18px;
+			color: linear-gradient( to right, #cdf, #8ea3ce );
 		}
-
-		&.connecting
-		{
-			background-color: rgb(200, 200, 200);
-		}
-	}
-
-	.avatar_button
-	{
-		width: 32px;
-		height: 32px;
-		cursor: pointer;
 	}
 
 	.avatar
 	{
-		width: 32px;
-		height: 32px;
+		margin-left: 4px;
+		width: 28px;
+		border-radius: 50%;
+		height: 28px;
+		box-shadow: 0px 0px 10px rgba( #cdf, 0.2 );
 	}
 
-	.name
+	.avatar-spacer
 	{
-		flex-grow: 1;
-		color: rgb(93, 93, 93);
-		margin-left: 8px;
+		margin-left: 4px;
+		width: 28px;
+	}
+
+	.mute-spacer
+	{
+		width: 36px;
+	}
+
+	.table
+	{
 		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-	}
+		flex-direction: column;
+		width: 600px;
+		color: #cdf;
+		border-radius: 2px;
+		min-height: 256px;
+		max-height: 1024px;
+		min-width: 768px;
 
-	.stat
-	{
-		width: 50px;
-		color: rgb(93, 93, 93);
-		text-align: center;
-		justify-content: center;
-	}
-
-	.mute
-	{
-		width: 32px;
-		height: 32px;
-		font-family: Material Icons;
-		font-size: 24px;
-		color: rgb(93, 93, 93);
-		justify-content: center;
-		align-items: center;
-		cursor: pointer;
-		position: relative;
-		overflow: visible;
-
-		> *
+		.center label
 		{
-			pointer-events: none;
+			flex-grow: 1;
+			text-align: center;
 		}
 
-		&:hover
+		.col
 		{
-			color: rgb(50, 50, 50);
+			flex-direction: column;
+			padding: 8px;
+			gap: 4px;
+		}
 
-			.volume_popup
+		.row
+		{
+			width: 100%;
+			white-space: nowrap;
+			align-items: center;
+			border-radius: 8px;
+			padding: 4px 8px;
+			gap: 8px;
+
+			> .name
 			{
-				opacity: 1;
+				font-weight: 600;
+				flex-grow: 1;
+			}
+
+			> .stat
+			{
+				width: 100px;
+				justify-content: center;
+				text-transform: lowercase;
+				font-weight: 600;
 			}
 		}
 
-		&.disabled
+		.header
 		{
-			opacity: 0.3;
-			cursor: default;
-			pointer-events: none;
-		}
+			align-items: flex-end;
+			justify-content: flex-end;
 
-		.volume_popup
-		{
-			position: absolute;
-			left: 40px;
-			top: 0px;
-			height: 32px;
-			width: 70px;
-			padding: 0px 8px;
-			background-color: #222;
-			border-radius: 4px;
-			flex-direction: row;
-			align-items: center;
-			gap: 4px;
-			pointer-events: none;
-			opacity: 0;
-
-			.wheel_icon
+			> .stat
 			{
-				width: 20px;
+				font-size: 16px;
+				font-weight: 600;
+				opacity: 0.2;
 				height: 20px;
 			}
+		}
 
-			.volume_text
+		.mute-btn
+		{
+			width: 36px;
+			justify-content: center;
+			align-items: center;
+			cursor: pointer;
+			opacity: 0.3;
+			transition: opacity 0.15s ease;
+			font-size: 20px;
+
+			&:hover
 			{
-				font-family: Roboto;
-				font-size: 14px;
-				font-weight: 400;
-				color: white;
-				white-space: nowrap;
-				flex-grow: 1;
-				text-align: center;
-				justify-content: center;
+				opacity: 0.8;
+			}
+
+			&.muted
+			{
+				opacity: 0.6;
+				color: #e55;
+
+				&:hover
+				{
+					opacity: 1;
+				}
+			}
+		}
+
+		.player
+		{
+			height: 50px;
+			background-color: rgba( #0c202fcc, 0.7 );
+			border: 0.25px solid rgba( black, 0.1 );
+			text-shadow: 0px 0px 5px rgba( black, 0.75 );
+			transition: all 0.1s ease;
+
+			&.me
+			{
+				/*background-image: linear-gradient( to right, rgba( black, 0.5 ), rgba( black, 0 ));*/
+			}
+
+			&.friend
+			{
+				.avatar
+				{
+					box-shadow: 0px 0px 15px rgba( #70cf4f, 0.2 );
+				}
+			}
+
+			&:hover
+			{
+				border: 1px solid rgba( black, 0.1 );
+				background-color: rgba( #194769cc, 0.4 );
 			}
 		}
 	}
 
-	.muted
+	&.visible
 	{
-		color: rgb(180, 50, 50);
-
-		&:hover
-		{
-			color: rgb(200, 70, 70);
-
-			.volume_popup
-			{
-				opacity: 1;
-			}
-		}
+		opacity: 1.0;
+		transform: scale( 1 );
+		transition: all 0.1s ease-out;
+		pointer-events: all;
 	}
 }

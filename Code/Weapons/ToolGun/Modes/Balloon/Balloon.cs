@@ -5,6 +5,7 @@ using Sandbox.UI;
 [Group( "Building" )]
 public class Balloon : ToolMode
 {
+	public override bool UseSnapGrid => true;
 	[Property, ResourceSelect( Extension = "bdef", AllowPackages = true ), Title( "Balloon" )]
 	public string Definition { get; set; } = "entities/balloon/basic.bdef";
 
@@ -22,6 +23,18 @@ public class Balloon : ToolMode
 	[Property, Sync]
 	public Color Tint { get; set; } = Color.White;
 
+	public override string Description => "#tool.hint.balloon.description";
+	public override string PrimaryAction => "#tool.hint.balloon.place_rope";
+	public override string SecondaryAction => "#tool.hint.balloon.place";
+
+	Color _previewTint = Color.Random;
+
+	protected override void OnEnabled()
+	{
+		base.OnEnabled();
+		_previewTint = Color.Random;
+	}
+
 	public override void OnControl()
 	{
 		base.OnControl();
@@ -37,29 +50,33 @@ public class Balloon : ToolMode
 
 		if ( Input.Pressed( "attack1" ) )
 		{
-			Spawn( select, thrusterDef.Prefab, placementTx, true );
+			Spawn( select, thrusterDef.Prefab, placementTx, true, _previewTint );
 			ShootEffects( select );
+			_previewTint = Color.Random;
 		}
 		else if ( Input.Pressed( "attack2" ) )
 		{
-			Spawn( select, thrusterDef.Prefab, placementTx, false );
+			Spawn( select, thrusterDef.Prefab, placementTx, false, _previewTint );
 			ShootEffects( select );
+			_previewTint = Color.Random;
 		}
 
-		DebugOverlay.GameObject( thrusterDef.Prefab.GetScene(), transform: placementTx, castShadows: true, color: Tint.WithAlpha( 0.9f ) );
+		var previewTint = Tint == Color.White ? _previewTint : Tint;
+		DebugOverlay.GameObject( thrusterDef.Prefab.GetScene(), transform: placementTx, castShadows: true, color: previewTint.WithAlpha( 0.9f ) );
 	}
 
 	[Rpc.Host]
-	public void Spawn( SelectionPoint point, PrefabFile thrusterPrefab, Transform tx, bool withRope )
+	public void Spawn( SelectionPoint point, PrefabFile thrusterPrefab, Transform tx, bool withRope, Color spawnTint )
 	{
 		var go = thrusterPrefab.GetScene().Clone( global::Transform.Zero, startEnabled: false );
 		go.Tags.Add( "removable" );
 		go.WorldTransform = Rigid && withRope ? tx.WithPosition( tx.Position + Vector3.Up * Length ) : tx;
 
+		var tint = Tint == Color.White ? spawnTint : Tint;
+
 		foreach ( var c in go.GetComponentsInChildren<Prop>( true ) )
 		{
-			c.Tint = Tint;
-			c.Health = 1;
+			c.Tint = tint;
 		}
 
 		if ( withRope )
@@ -108,6 +125,8 @@ public class Balloon : ToolMode
 			anchor.NetworkSpawn( true, null );
 		}
 
+		ApplyPhysicsProperties( go );
+
 		go.NetworkSpawn( true, null );
 
 		foreach ( var c in go.GetComponentsInChildren<Rigidbody>( true ) )
@@ -115,40 +134,8 @@ public class Balloon : ToolMode
 			c.GravityScale = Force;
 		}
 
-		var prop = go.GetComponent<Prop>();
-		if ( prop.IsValid() )
-		{
-			Player lastAttacker = null;
-
-			prop.OnPropTakeDamage += ( damage ) =>
-			{
-				lastAttacker = damage.Attacker?.GetComponent<Player>();
-			};
-
-			prop.OnPropBreak += () =>
-			{
-				if ( lastAttacker.IsValid() )
-				{
-					var connection = lastAttacker.Network?.Owner;
-					if ( connection is not null )
-					{
-						using ( Rpc.FilterInclude( connection ) )
-						{
-							IncrementBalloonStat();
-						}
-					}
-				}
-			};
-		}
-
 		var undo = Player.Undo.Create();
 		undo.Name = "Balloon";
 		undo.Add( go );
-	}
-
-	[Rpc.Broadcast]
-	private static void IncrementBalloonStat()
-	{
-		Sandbox.Services.Stats.Increment( "balloons_burst", 1 );
 	}
 }

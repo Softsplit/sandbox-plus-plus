@@ -1,0 +1,26 @@
+@import "/UI/Theme.scss";
+
+Vitals
+{
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	pointer-events: none;
+
+	.vitals
+	{
+		position: absolute;
+		bottom: $deadzone-y;
+		left: $deadzone-x;
+		flex-direction: row;
+		gap: $deadzone-x;
+		height: 96px;
+	}
+
+	.ammo
+	{
+		position: absolute;
+		bottom: $deadzone-y;
+		right: $deadzone-x;
+	}
+}

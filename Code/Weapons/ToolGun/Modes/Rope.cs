@@ -1,4 +1,4 @@
-
+﻿
 [Icon( "🐍" )]
 [ClassName( "rope" )]
 [Group( "Constraints" )]
@@ -15,7 +15,22 @@ public class Rope : BaseConstraintToolMode
 	[Property]
 	public float Radius { get; set; } = 1f;
 
+	public override string Description => Stage == 1 ? "#tool.hint.rope.stage1" : "#tool.hint.rope.stage0";
+	public override string PrimaryAction => Stage == 1 ? "#tool.hint.rope.finish" : "#tool.hint.rope.source";
+	public override string ReloadAction => "#tool.hint.rope.remove";
+
 	public override bool CanConstraintToSelf => true;
+
+	protected override IEnumerable<GameObject> FindConstraints( GameObject linked, GameObject target )
+	{
+		foreach ( var cleanup in linked.GetComponentsInChildren<ConstraintCleanup>( true ) )
+		{
+			if ( linked != target && cleanup.Attachment?.Root != target ) continue;
+			var go = cleanup.GameObject;
+			if ( go.GetComponent<SpringJoint>() is not null || go.GetComponent<VerletRope>() is not null )
+				yield return go;
+		}
+	}
 
 	protected override void CreateConstraint( SelectionPoint point1, SelectionPoint point2 )
 	{

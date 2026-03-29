@@ -1,0 +1,1403 @@
+<!-- kv3 encoding:text:version{e21c7f3c-8a33-41c5-9977-a76d3a32aa0d} format:vrfunknown:version{0f7898b8-5471-45c4-9867-cd9c46bcfdb5} -->
+// this format guid is not known to Source 2 Viewer, make a pull request to update KV3IDLookup file
+{
+	_class = "CAnimationGraph"
+	m_nodeManager = 
+	{
+		_class = "CAnimNodeManager"
+		m_nodes = 
+		[
+			
+			{
+				key = 
+				{
+					m_id = 493113462
+				}
+				value = 
+				{
+					_class = "CRootAnimNode"
+					m_sName = "Unnamed"
+					m_vecPosition = 
+					[
+						544.000000,
+						272.000000,
+					]
+					m_nNodeID = 
+					{
+						m_id = 493113462
+					}
+					m_sNote = ""
+					m_inputConnection = 
+					{
+						m_nodeID = 
+						{
+							m_id = 4294967295
+						}
+						m_outputID = 
+						{
+							m_id = 4294967295
+						}
+					}
+				}
+			},
+		]
+	}
+	m_pParameterList = 
+	{
+		_class = "CAnimParameterList"
+		m_Parameters = 
+		[
+			
+			{
+				_class = "CFloatAnimParameter"
+				m_name = "FingerAdjustment_R4_Spread"
+				m_id = 
+				{
+					m_id = 646704449
+				}
+				m_previewButton = "ANIMPARAM_BUTTON_NONE"
+				m_bUseMostRecentValue = false
+				m_bAutoReset = false
+				m_fDefaultValue = 0.000000
+				m_fMinValue = -60.000000
+				m_fMaxValue = 60.000000
+			},
+			
+			{
+				_class = "CFloatAnimParameter"
+				m_name = "FingerAdjustment_R1_Curl"
+				m_id = 
+				{
+					m_id = 1882993337
+				}
+				m_previewButton = "ANIMPARAM_BUTTON_NONE"
+				m_bUseMostRecentValue = false
+				m_bAutoReset = false
+				m_fDefaultValue = 0.000000
+				m_fMinValue = -120.000000
+				m_fMaxValue = 120.000000
+			},
+			
+			{
+				_class = "CFloatAnimParameter"
+				m_name = "FingerAdjustment_L3_Bend"
+				m_id = 
+				{
+					m_id = 251900260
+				}
+				m_previewButton = "ANIMPARAM_BUTTON_NONE"
+				m_bUseMostRecentValue = false
+				m_bAutoReset = false
+				m_fDefaultValue = 0.000000
+				m_fMinValue = -140.000000
+				m_fMaxValue = 140.000000
+			},
+			
+			{
+				_class = "CFloatAnimParameter"
+				m_name = "FingerAdjustment_L3_Roll"
+				m_id = 
+				{
+					m_id = 894163753
+				}
+				m_previewButton = "ANIMPARAM_BUTTON_NONE"
+				m_bUseMostRecentValue = false
+				m_bAutoReset = false
+				m_fDefaultValue = 0.000000
+				m_fMinValue = -60.000000
+				m_fMaxValue = 60.000000
+			},
+			
+			{
+				_class = "CFloatAnimParameter"
+				m_name = "FingerAdjustment_L4_Roll"
+				m_id = 
+				{
+					m_id = 397551312
+				}
+				m_previewButton = "ANIMPARAM_BUTTON_NONE"
+				m_bUseMostRecentValue = false
+				m_bAutoReset = false
+				m_fDefaultValue = 0.000000
+				m_fMinValue = -60.000000
+				m_fMaxValue = 60.000000
+			},
+			
+			{
+				_class = "CFloatAnimParameter"
+				m_name = "FingerAdjustment_R1_Roll"
+				m_id = 
+				{
+					m_id = 410213737
+				}
+				m_previewButton = "ANIMPARAM_BUTTON_NONE"
+				m_bUseMostRecentValue = false
+				m_bAutoReset = false
+				m_fDefaultValue = 0.000000
+				m_fMinValue = -60.000000
+				m_fMaxValue = 60.000000
+			},
+			
+			{
+				_class = "CFloatAnimParameter"
+				m_name = "FingerAdjustment_BlendNeutralPose_L"
+				m_id = 
+				{
+					m_id = 1027049275
+				}
+				m_previewButton = "ANIMPARAM_BUTTON_NONE"
+				m_bUseMostRecentValue = false
+				m_bAutoReset = false
+				m_fDefaultValue = 0.000000
+				m_fMinValue = 0.000000
+				m_fMaxValue = 1.000000
+			},
+			
+			{
+				_class = "CFloatAnimParameter"
+				m_name = "FingerAdjustment_R4_Curl"
+				m_id = 
+				{
+					m_id = 1647134874
+				}
+				m_previewButton = "ANIMPARAM_BUTTON_NONE"
+				m_bUseMostRecentValue = false
+				m_bAutoReset = false
+				m_fDefaultValue = 0.000000
+				m_fMinValue = -120.000000
+				m_fMaxValue = 120.000000
+			},
+			
+			{
+				_class = "CFloatAnimParameter"
+				m_name = "FingerAdjustment_R5_Curl"
+				m_id = 
+				{
+					m_id = 169610802
+				}
+				m_previewButton = "ANIMPARAM_BUTTON_NONE"
+				m_bUseMostRecentValue = false
+				m_bAutoReset = false
+				m_fDefaultValue = 0.000000
+				m_fMinValue = -120.000000
+				m_fMaxValue = 120.000000
+			},
+			
+			{
+				_class = "CFloatAnimParameter"
+				m_name = "FingerAdjustment_R5_Roll"
+				m_id = 
+				{
+					m_id = 980087788
+				}
+				m_previewButton = "ANIMPARAM_BUTTON_NONE"
+				m_bUseMostRecentValue = false
+				m_bAutoReset = false
+				m_fDefaultValue = 0.000000
+				m_fMinValue = -60.000000
+				m_fMaxValue = 60.000000
+			},
+			
+			{
+				_class = "CFloatAnimParameter"
+				m_name = "FingerAdjustment_R5_Spread"
+				m_id = 
+				{
+					m_id = 1540367355
+				}
+				m_previewButton = "ANIMPARAM_BUTTON_NONE"
+				m_bUseMostRecentValue = false
+				m_bAutoReset = false
+				m_fDefaultValue = 0.000000
+				m_fMinValue = -60.000000
+				m_fMaxValue = 60.000000
+			},
+			
+			{
+				_class = "CFloatAnimParameter"
+				m_name = "FingerAdjustment_R2_Bend"
+				m_id = 
+				{
+					m_id = 1711143370
+				}
+				m_previewButton = "ANIMPARAM_BUTTON_NONE"
+				m_bUseMostRecentValue = false
+				m_bAutoReset = false
+				m_fDefaultValue = 0.000000
+				m_fMinValue = -140.000000
+				m_fMaxValue = 140.000000
+			},
+			
+			{
+				_class = "CFloatAnimParameter"
+				m_name = "FingerAdjustment_L4_Curl"
+				m_id = 
+				{
+					m_id = 1647134875
+				}
+				m_previewButton = "ANIMPARAM_BUTTON_NONE"
+				m_bUseMostRecentValue = false
+				m_bAutoReset = false
+				m_fDefaultValue = 0.000000
+				m_fMinValue = -120.000000
+				m_fMaxValue = 120.000000
+			},
+			
+			{
+				_class = "CFloatAnimParameter"
+				m_name = "FingerAdjustment_L4_Spread"
+				m_id = 
+				{
+					m_id = 646704450
+				}
+				m_previewButton = "ANIMPARAM_BUTTON_NONE"
+				m_bUseMostRecentValue = false
+				m_bAutoReset = false
+				m_fDefaultValue = 0.000000
+				m_fMinValue = -60.000000
+				m_fMaxValue = 60.000000
+			},
+			
+			{
+				_class = "CFloatAnimParameter"
+				m_name = "FingerAdjustment_R1_Bend"
+				m_id = 
+				{
+					m_id = 523708441
+				}
+				m_previewButton = "ANIMPARAM_BUTTON_NONE"
+				m_bUseMostRecentValue = false
+				m_bAutoReset = false
+				m_fDefaultValue = 0.000000
+				m_fMinValue = -140.000000
+				m_fMaxValue = 140.000000
+			},
+			
+			{
+				_class = "CFloatAnimParameter"
+				m_name = "FingerAdjustment_R5_Bend"
+				m_id = 
+				{
+					m_id = 310878243
+				}
+				m_previewButton = "ANIMPARAM_BUTTON_NONE"
+				m_bUseMostRecentValue = false
+				m_bAutoReset = false
+				m_fDefaultValue = 0.000000
+				m_fMinValue = -140.000000
+				m_fMaxValue = 140.000000
+			},
+			
+			{
+				_class = "CFloatAnimParameter"
+				m_name = "FingerAdjustment_L5_Roll"
+				m_id = 
+				{
+					m_id = 980087789
+				}
+				m_previewButton = "ANIMPARAM_BUTTON_NONE"
+				m_bUseMostRecentValue = false
+				m_bAutoReset = false
+				m_fDefaultValue = 0.000000
+				m_fMinValue = -60.000000
+				m_fMaxValue = 60.000000
+			},
+			
+			{
+				_class = "CFloatAnimParameter"
+				m_name = "FingerAdjustment_R1_Spread"
+				m_id = 
+				{
+					m_id = 75772950
+				}
+				m_previewButton = "ANIMPARAM_BUTTON_NONE"
+				m_bUseMostRecentValue = false
+				m_bAutoReset = false
+				m_fDefaultValue = 0.000000
+				m_fMinValue = -60.000000
+				m_fMaxValue = 60.000000
+			},
+			
+			{
+				_class = "CFloatAnimParameter"
+				m_name = "FingerAdjustment_L2_Curl"
+				m_id = 
+				{
+					m_id = 359536546
+				}
+				m_previewButton = "ANIMPARAM_BUTTON_NONE"
+				m_bUseMostRecentValue = false
+				m_bAutoReset = false
+				m_fDefaultValue = 0.000000
+				m_fMinValue = -120.000000
+				m_fMaxValue = 120.000000
+			},
+			
+			{
+				_class = "CFloatAnimParameter"
+				m_name = "FingerAdjustment_L1_Spread"
+				m_id = 
+				{
+					m_id = 75772951
+				}
+				m_previewButton = "ANIMPARAM_BUTTON_NONE"
+				m_bUseMostRecentValue = false
+				m_bAutoReset = false
+				m_fDefaultValue = 0.000000
+				m_fMinValue = -60.000000
+				m_fMaxValue = 60.000000
+			},
+			
+			{
+				_class = "CFloatAnimParameter"
+				m_name = "FingerAdjustment_L2_Bend"
+				m_id = 
+				{
+					m_id = 1711143371
+				}
+				m_previewButton = "ANIMPARAM_BUTTON_NONE"
+				m_bUseMostRecentValue = false
+				m_bAutoReset = false
+				m_fDefaultValue = 0.000000
+				m_fMinValue = -140.000000
+				m_fMaxValue = 140.000000
+			},
+			
+			{
+				_class = "CFloatAnimParameter"
+				m_name = "FingerAdjustment_L1_Bend"
+				m_id = 
+				{
+					m_id = 523708442
+				}
+				m_previewButton = "ANIMPARAM_BUTTON_NONE"
+				m_bUseMostRecentValue = false
+				m_bAutoReset = false
+				m_fDefaultValue = 0.000000
+				m_fMinValue = -140.000000
+				m_fMaxValue = 140.000000
+			},
+			
+			{
+				_class = "CFloatAnimParameter"
+				m_name = "FingerAdjustment_R3_Roll"
+				m_id = 
+				{
+					m_id = 894163752
+				}
+				m_previewButton = "ANIMPARAM_BUTTON_NONE"
+				m_bUseMostRecentValue = false
+				m_bAutoReset = false
+				m_fDefaultValue = 0.000000
+				m_fMinValue = -60.000000
+				m_fMaxValue = 60.000000
+			},
+			
+			{
+				_class = "CFloatAnimParameter"
+				m_name = "FingerAdjustment_R2_Curl"
+				m_id = 
+				{
+					m_id = 359536545
+				}
+				m_previewButton = "ANIMPARAM_BUTTON_NONE"
+				m_bUseMostRecentValue = false
+				m_bAutoReset = false
+				m_fDefaultValue = 0.000000
+				m_fMinValue = -120.000000
+				m_fMaxValue = 120.000000
+			},
+			
+			{
+				_class = "CFloatAnimParameter"
+				m_name = "FingerAdjustment_R3_Bend"
+				m_id = 
+				{
+					m_id = 251900259
+				}
+				m_previewButton = "ANIMPARAM_BUTTON_NONE"
+				m_bUseMostRecentValue = false
+				m_bAutoReset = false
+				m_fDefaultValue = 0.000000
+				m_fMinValue = -140.000000
+				m_fMaxValue = 140.000000
+			},
+			
+			{
+				_class = "CFloatAnimParameter"
+				m_name = "FingerAdjustment_R4_Roll"
+				m_id = 
+				{
+					m_id = 397551311
+				}
+				m_previewButton = "ANIMPARAM_BUTTON_NONE"
+				m_bUseMostRecentValue = false
+				m_bAutoReset = false
+				m_fDefaultValue = 0.000000
+				m_fMinValue = -60.000000
+				m_fMaxValue = 60.000000
+			},
+			
+			{
+				_class = "CFloatAnimParameter"
+				m_name = "FingerAdjustment_L3_Spread"
+				m_id = 
+				{
+					m_id = 277536058
+				}
+				m_previewButton = "ANIMPARAM_BUTTON_NONE"
+				m_bUseMostRecentValue = false
+				m_bAutoReset = false
+				m_fDefaultValue = 0.000000
+				m_fMinValue = -60.000000
+				m_fMaxValue = 60.000000
+			},
+			
+			{
+				_class = "CFloatAnimParameter"
+				m_name = "FingerAdjustment_L5_Spread"
+				m_id = 
+				{
+					m_id = 1540367356
+				}
+				m_previewButton = "ANIMPARAM_BUTTON_NONE"
+				m_bUseMostRecentValue = false
+				m_bAutoReset = false
+				m_fDefaultValue = 0.000000
+				m_fMinValue = -60.000000
+				m_fMaxValue = 60.000000
+			},
+			
+			{
+				_class = "CFloatAnimParameter"
+				m_name = "FingerAdjustment_L5_Curl"
+				m_id = 
+				{
+					m_id = 169610803
+				}
+				m_previewButton = "ANIMPARAM_BUTTON_NONE"
+				m_bUseMostRecentValue = false
+				m_bAutoReset = false
+				m_fDefaultValue = 0.000000
+				m_fMinValue = -120.000000
+				m_fMaxValue = 120.000000
+			},
+			
+			{
+				_class = "CFloatAnimParameter"
+				m_name = "FingerAdjustment_R2_Roll"
+				m_id = 
+				{
+					m_id = 1284959863
+				}
+				m_previewButton = "ANIMPARAM_BUTTON_NONE"
+				m_bUseMostRecentValue = false
+				m_bAutoReset = false
+				m_fDefaultValue = 0.000000
+				m_fMinValue = -60.000000
+				m_fMaxValue = 60.000000
+			},
+			
+			{
+				_class = "CFloatAnimParameter"
+				m_name = "FingerAdjustment_L2_Spread"
+				m_id = 
+				{
+					m_id = 52684289
+				}
+				m_previewButton = "ANIMPARAM_BUTTON_NONE"
+				m_bUseMostRecentValue = false
+				m_bAutoReset = false
+				m_fDefaultValue = 0.000000
+				m_fMinValue = -60.000000
+				m_fMaxValue = 60.000000
+			},
+			
+			{
+				_class = "CFloatAnimParameter"
+				m_name = "FingerAdjustment_L3_Curl"
+				m_id = 
+				{
+					m_id = 174622265
+				}
+				m_previewButton = "ANIMPARAM_BUTTON_NONE"
+				m_bUseMostRecentValue = false
+				m_bAutoReset = false
+				m_fDefaultValue = 0.000000
+				m_fMinValue = -120.000000
+				m_fMaxValue = 120.000000
+			},
+			
+			{
+				_class = "CFloatAnimParameter"
+				m_name = "FingerAdjustment_L5_Bend"
+				m_id = 
+				{
+					m_id = 310878244
+				}
+				m_previewButton = "ANIMPARAM_BUTTON_NONE"
+				m_bUseMostRecentValue = false
+				m_bAutoReset = false
+				m_fDefaultValue = 0.000000
+				m_fMinValue = -140.000000
+				m_fMaxValue = 140.000000
+			},
+			
+			{
+				_class = "CFloatAnimParameter"
+				m_name = "FingerAdjustment_BlendNeutralPose_R"
+				m_id = 
+				{
+					m_id = 2098469177
+				}
+				m_previewButton = "ANIMPARAM_BUTTON_NONE"
+				m_bUseMostRecentValue = false
+				m_bAutoReset = false
+				m_fDefaultValue = 0.000000
+				m_fMinValue = 0.000000
+				m_fMaxValue = 1.000000
+			},
+			
+			{
+				_class = "CFloatAnimParameter"
+				m_name = "FingerAdjustment_R4_Bend"
+				m_id = 
+				{
+					m_id = 1483609900
+				}
+				m_previewButton = "ANIMPARAM_BUTTON_NONE"
+				m_bUseMostRecentValue = false
+				m_bAutoReset = false
+				m_fDefaultValue = 0.000000
+				m_fMinValue = -140.000000
+				m_fMaxValue = 140.000000
+			},
+			
+			{
+				_class = "CFloatAnimParameter"
+				m_name = "FingerAdjustment_L4_Bend"
+				m_id = 
+				{
+					m_id = 1483609901
+				}
+				m_previewButton = "ANIMPARAM_BUTTON_NONE"
+				m_bUseMostRecentValue = false
+				m_bAutoReset = false
+				m_fDefaultValue = 0.000000
+				m_fMinValue = -140.000000
+				m_fMaxValue = 140.000000
+			},
+			
+			{
+				_class = "CFloatAnimParameter"
+				m_name = "FingerAdjustment_L1_Curl"
+				m_id = 
+				{
+					m_id = 1882993338
+				}
+				m_previewButton = "ANIMPARAM_BUTTON_NONE"
+				m_bUseMostRecentValue = false
+				m_bAutoReset = false
+				m_fDefaultValue = 0.000000
+				m_fMinValue = -120.000000
+				m_fMaxValue = 120.000000
+			},
+			
+			{
+				_class = "CFloatAnimParameter"
+				m_name = "FingerAdjustment_R3_Spread"
+				m_id = 
+				{
+					m_id = 277536057
+				}
+				m_previewButton = "ANIMPARAM_BUTTON_NONE"
+				m_bUseMostRecentValue = false
+				m_bAutoReset = false
+				m_fDefaultValue = 0.000000
+				m_fMinValue = -60.000000
+				m_fMaxValue = 60.000000
+			},
+			
+			{
+				_class = "CFloatAnimParameter"
+				m_name = "FingerAdjustment_L1_Roll"
+				m_id = 
+				{
+					m_id = 410213738
+				}
+				m_previewButton = "ANIMPARAM_BUTTON_NONE"
+				m_bUseMostRecentValue = false
+				m_bAutoReset = false
+				m_fDefaultValue = 0.000000
+				m_fMinValue = -60.000000
+				m_fMaxValue = 60.000000
+			},
+			
+			{
+				_class = "CFloatAnimParameter"
+				m_name = "FingerAdjustment_R2_Spread"
+				m_id = 
+				{
+					m_id = 52684288
+				}
+				m_previewButton = "ANIMPARAM_BUTTON_NONE"
+				m_bUseMostRecentValue = false
+				m_bAutoReset = false
+				m_fDefaultValue = 0.000000
+				m_fMinValue = -60.000000
+				m_fMaxValue = 60.000000
+			},
+			
+			{
+				_class = "CFloatAnimParameter"
+				m_name = "FingerAdjustment_R3_Curl"
+				m_id = 
+				{
+					m_id = 174622264
+				}
+				m_previewButton = "ANIMPARAM_BUTTON_NONE"
+				m_bUseMostRecentValue = false
+				m_bAutoReset = false
+				m_fDefaultValue = 0.000000
+				m_fMinValue = -120.000000
+				m_fMaxValue = 120.000000
+			},
+			
+			{
+				_class = "CFloatAnimParameter"
+				m_name = "FingerAdjustment_L2_Roll"
+				m_id = 
+				{
+					m_id = 1284959864
+				}
+				m_previewButton = "ANIMPARAM_BUTTON_NONE"
+				m_bUseMostRecentValue = false
+				m_bAutoReset = false
+				m_fDefaultValue = 0.000000
+				m_fMinValue = -60.000000
+				m_fMaxValue = 60.000000
+			},
+			
+			{
+				_class = "CBoolAnimParameter"
+				m_name = "b_attack"
+				m_id = 
+				{
+					m_id = 1109690972
+				}
+				m_previewButton = "ANIMPARAM_BUTTON_NONE"
+				m_bUseMostRecentValue = false
+				m_bAutoReset = true
+				m_bDefaultValue = false
+			},
+			
+			{
+				_class = "CBoolAnimParameter"
+				m_name = "b_reload"
+				m_id = 
+				{
+					m_id = 2002006573
+				}
+				m_previewButton = "ANIMPARAM_BUTTON_NONE"
+				m_bUseMostRecentValue = false
+				m_bAutoReset = true
+				m_bDefaultValue = false
+			},
+			
+			{
+				_class = "CBoolAnimParameter"
+				m_name = "b_deploy_skip"
+				m_id = 
+				{
+					m_id = 873563732
+				}
+				m_previewButton = "ANIMPARAM_BUTTON_NONE"
+				m_bUseMostRecentValue = false
+				m_bAutoReset = false
+				m_bDefaultValue = false
+			},
+			
+			{
+				_class = "CBoolAnimParameter"
+				m_name = "b_empty"
+				m_id = 
+				{
+					m_id = 50744351
+				}
+				m_previewButton = "ANIMPARAM_BUTTON_NONE"
+				m_bUseMostRecentValue = false
+				m_bAutoReset = false
+				m_bDefaultValue = false
+			},
+			
+			{
+				_class = "CBoolAnimParameter"
+				m_name = "b_attack_dry"
+				m_id = 
+				{
+					m_id = 1350666882
+				}
+				m_previewButton = "ANIMPARAM_BUTTON_NONE"
+				m_bUseMostRecentValue = false
+				m_bAutoReset = true
+				m_bDefaultValue = false
+			},
+			
+			{
+				_class = "CBoolAnimParameter"
+				m_name = "b_twohanded"
+				m_id = 
+				{
+					m_id = 1400225236
+				}
+				m_previewButton = "ANIMPARAM_BUTTON_NONE"
+				m_bUseMostRecentValue = false
+				m_bAutoReset = false
+				m_bDefaultValue = false
+			},
+			
+			{
+				_class = "CEnumAnimParameter"
+				m_name = "skeleton"
+				m_id = 
+				{
+					m_id = 89042335
+				}
+				m_previewButton = "ANIMPARAM_BUTTON_NONE"
+				m_bUseMostRecentValue = false
+				m_bAutoReset = false
+				m_defaultValue = 0
+				m_enumOptions = 
+				[
+					"default",
+					"citizen_4fingers",
+				]
+			},
+			
+			{
+				_class = "CBoolAnimParameter"
+				m_name = "b_jump"
+				m_id = 
+				{
+					m_id = 912097649
+				}
+				m_previewButton = "ANIMPARAM_BUTTON_X"
+				m_bUseMostRecentValue = false
+				m_bAutoReset = true
+				m_bDefaultValue = false
+			},
+			
+			{
+				_class = "CBoolAnimParameter"
+				m_name = "b_grounded"
+				m_id = 
+				{
+					m_id = 1818780977
+				}
+				m_previewButton = "ANIMPARAM_BUTTON_Y"
+				m_bUseMostRecentValue = false
+				m_bAutoReset = false
+				m_bDefaultValue = true
+			},
+			
+			{
+				_class = "CBoolAnimParameter"
+				m_name = "b_lower_weapon"
+				m_id = 
+				{
+					m_id = 225877878
+				}
+				m_previewButton = "ANIMPARAM_BUTTON_NONE"
+				m_bUseMostRecentValue = false
+				m_bAutoReset = false
+				m_bDefaultValue = false
+			},
+			
+			{
+				_class = "CFloatAnimParameter"
+				m_name = "move_x"
+				m_id = 
+				{
+					m_id = 508154327
+				}
+				m_previewButton = "ANIMPARAM_BUTTON_NONE"
+				m_bUseMostRecentValue = false
+				m_bAutoReset = false
+				m_fDefaultValue = 0.000000
+				m_fMinValue = -2.000000
+				m_fMaxValue = 2.000000
+			},
+			
+			{
+				_class = "CFloatAnimParameter"
+				m_name = "aim_yaw_inertia"
+				m_id = 
+				{
+					m_id = 409531239
+				}
+				m_previewButton = "ANIMPARAM_BUTTON_NONE"
+				m_bUseMostRecentValue = false
+				m_bAutoReset = false
+				m_fDefaultValue = 0.000000
+				m_fMinValue = -180.000000
+				m_fMaxValue = 180.000000
+			},
+			
+			{
+				_class = "CFloatAnimParameter"
+				m_name = "move_y"
+				m_id = 
+				{
+					m_id = 1684147082
+				}
+				m_previewButton = "ANIMPARAM_BUTTON_NONE"
+				m_bUseMostRecentValue = false
+				m_bAutoReset = false
+				m_fDefaultValue = 0.000000
+				m_fMinValue = -2.000000
+				m_fMaxValue = 2.000000
+			},
+			
+			{
+				_class = "CFloatAnimParameter"
+				m_name = "aim_pitch"
+				m_id = 
+				{
+					m_id = 856992746
+				}
+				m_previewButton = "ANIMPARAM_BUTTON_NONE"
+				m_bUseMostRecentValue = false
+				m_bAutoReset = false
+				m_fDefaultValue = 0.000000
+				m_fMinValue = -180.000000
+				m_fMaxValue = 180.000000
+			},
+			
+			{
+				_class = "CFloatAnimParameter"
+				m_name = "aim_yaw"
+				m_id = 
+				{
+					m_id = 1765270925
+				}
+				m_previewButton = "ANIMPARAM_BUTTON_NONE"
+				m_bUseMostRecentValue = false
+				m_bAutoReset = false
+				m_fDefaultValue = 0.000000
+				m_fMinValue = -180.000000
+				m_fMaxValue = 180.000000
+			},
+			
+			{
+				_class = "CFloatAnimParameter"
+				m_name = "move_bob_cycle_control"
+				m_id = 
+				{
+					m_id = 284604479
+				}
+				m_previewButton = "ANIMPARAM_BUTTON_NONE"
+				m_bUseMostRecentValue = false
+				m_bAutoReset = false
+				m_fDefaultValue = 0.000000
+				m_fMinValue = 0.000000
+				m_fMaxValue = 1.000000
+			},
+			
+			{
+				_class = "CFloatAnimParameter"
+				m_name = "holdtype_pose"
+				m_id = 
+				{
+					m_id = 1399802040
+				}
+				m_previewButton = "ANIMPARAM_BUTTON_NONE"
+				m_bUseMostRecentValue = false
+				m_bAutoReset = false
+				m_fDefaultValue = 0.000000
+				m_fMinValue = 0.000000
+				m_fMaxValue = 8.000000
+			},
+			
+			{
+				_class = "CFloatAnimParameter"
+				m_name = "aim_pitch_inertia"
+				m_id = 
+				{
+					m_id = 1743460719
+				}
+				m_previewButton = "ANIMPARAM_BUTTON_NONE"
+				m_bUseMostRecentValue = false
+				m_bAutoReset = false
+				m_fDefaultValue = 0.000000
+				m_fMinValue = -180.000000
+				m_fMaxValue = 180.000000
+			},
+			
+			{
+				_class = "CFloatAnimParameter"
+				m_name = "move_z"
+				m_id = 
+				{
+					m_id = 872747329
+				}
+				m_previewButton = "ANIMPARAM_BUTTON_NONE"
+				m_bUseMostRecentValue = false
+				m_bAutoReset = false
+				m_fDefaultValue = 0.000000
+				m_fMinValue = -2.000000
+				m_fMaxValue = 2.000000
+			},
+			
+			{
+				_class = "CFloatAnimParameter"
+				m_name = "move_bob"
+				m_id = 
+				{
+					m_id = 901935176
+				}
+				m_previewButton = "ANIMPARAM_BUTTON_NONE"
+				m_bUseMostRecentValue = false
+				m_bAutoReset = false
+				m_fDefaultValue = 0.000000
+				m_fMinValue = 0.000000
+				m_fMaxValue = 1.000000
+			},
+			
+			{
+				_class = "CFloatAnimParameter"
+				m_name = "attack_hold"
+				m_id = 
+				{
+					m_id = 1746366027
+				}
+				m_previewButton = "ANIMPARAM_BUTTON_NONE"
+				m_bUseMostRecentValue = false
+				m_bAutoReset = false
+				m_fDefaultValue = 0.000000
+				m_fMinValue = 0.000000
+				m_fMaxValue = 1.000000
+			},
+			
+			{
+				_class = "CBoolAnimParameter"
+				m_name = "b_holster"
+				m_id = 
+				{
+					m_id = 886138795
+				}
+				m_previewButton = "ANIMPARAM_BUTTON_NONE"
+				m_bUseMostRecentValue = false
+				m_bAutoReset = false
+				m_bDefaultValue = false
+			},
+			
+			{
+				_class = "CEnumAnimParameter"
+				m_name = "ironsights"
+				m_id = 
+				{
+					m_id = 765097019
+				}
+				m_previewButton = "ANIMPARAM_BUTTON_NONE"
+				m_bUseMostRecentValue = false
+				m_bAutoReset = false
+				m_defaultValue = 0
+				m_enumOptions = 
+				[
+					"not_in_ironsights",
+					"enabled",
+				]
+			},
+			
+			{
+				_class = "CFloatAnimParameter"
+				m_name = "ironsights_fire_scale"
+				m_id = 
+				{
+					m_id = 1583594447
+				}
+				m_previewButton = "ANIMPARAM_BUTTON_NONE"
+				m_bUseMostRecentValue = false
+				m_bAutoReset = false
+				m_fDefaultValue = 0.500000
+				m_fMinValue = 0.000000
+				m_fMaxValue = 1.000000
+			},
+			
+			{
+				_class = "CEnumAnimParameter"
+				m_name = "firing_mode"
+				m_id = 
+				{
+					m_id = 1010616533
+				}
+				m_previewButton = "ANIMPARAM_BUTTON_NONE"
+				m_bUseMostRecentValue = false
+				m_bAutoReset = false
+				m_defaultValue = 0
+				m_enumOptions = 
+				[
+					"off",
+					"single",
+					"burst",
+					"full_auto",
+				]
+			},
+			
+			{
+				_class = "CBoolAnimParameter"
+				m_name = "b_sprint"
+				m_id = 
+				{
+					m_id = 1732712902
+				}
+				m_previewButton = "ANIMPARAM_BUTTON_NONE"
+				m_bUseMostRecentValue = false
+				m_bAutoReset = false
+				m_bDefaultValue = false
+			},
+			
+			{
+				_class = "CFloatAnimParameter"
+				m_name = "speed_ironsights"
+				m_id = 
+				{
+					m_id = 1729227788
+				}
+				m_previewButton = "ANIMPARAM_BUTTON_NONE"
+				m_bUseMostRecentValue = false
+				m_bAutoReset = false
+				m_fDefaultValue = 1.000000
+				m_fMinValue = 0.050000
+				m_fMaxValue = 5.000000
+			},
+			
+			{
+				_class = "CFloatAnimParameter"
+				m_name = "speed_reload"
+				m_id = 
+				{
+					m_id = 1012713408
+				}
+				m_previewButton = "ANIMPARAM_BUTTON_NONE"
+				m_bUseMostRecentValue = false
+				m_bAutoReset = false
+				m_fDefaultValue = 1.000000
+				m_fMinValue = 0.050000
+				m_fMaxValue = 5.000000
+			},
+			
+			{
+				_class = "CFloatAnimParameter"
+				m_name = "speed_deploy"
+				m_id = 
+				{
+					m_id = 1078608653
+				}
+				m_previewButton = "ANIMPARAM_BUTTON_NONE"
+				m_bUseMostRecentValue = false
+				m_bAutoReset = false
+				m_fDefaultValue = 1.000000
+				m_fMinValue = 0.050000
+				m_fMaxValue = 5.000000
+			},
+			
+			{
+				_class = "CBoolAnimParameter"
+				m_name = "b_grab"
+				m_id = 
+				{
+					m_id = 962294395
+				}
+				m_previewButton = "ANIMPARAM_BUTTON_NONE"
+				m_bUseMostRecentValue = false
+				m_bAutoReset = false
+				m_bDefaultValue = false
+			},
+			
+			{
+				_class = "CEnumAnimParameter"
+				m_name = "grab_action"
+				m_id = 
+				{
+					m_id = 1231850615
+				}
+				m_previewButton = "ANIMPARAM_BUTTON_NONE"
+				m_bUseMostRecentValue = false
+				m_bAutoReset = true
+				m_defaultValue = 0
+				m_enumOptions = 
+				[
+					"none",
+					"sweep_down",
+					"sweep_right",
+					"sweep_left",
+					"push_button",
+				]
+			},
+			
+			{
+				_class = "CFloatAnimParameter"
+				m_name = "speed_grab"
+				m_id = 
+				{
+					m_id = 615131918
+				}
+				m_previewButton = "ANIMPARAM_BUTTON_NONE"
+				m_bUseMostRecentValue = false
+				m_bAutoReset = false
+				m_fDefaultValue = 1.000000
+				m_fMinValue = 0.050000
+				m_fMaxValue = 5.000000
+			},
+			
+			{
+				_class = "CFloatAnimParameter"
+				m_name = "brake"
+				m_id = 
+				{
+					m_id = 1194219770
+				}
+				m_previewButton = "ANIMPARAM_BUTTON_NONE"
+				m_bUseMostRecentValue = false
+				m_bAutoReset = false
+				m_fDefaultValue = 0.000000
+				m_fMinValue = 0.000000
+				m_fMaxValue = 1.000000
+			},
+			
+			{
+				_class = "CFloatAnimParameter"
+				m_name = "stylus"
+				m_id = 
+				{
+					m_id = 222578082
+				}
+				m_previewButton = "ANIMPARAM_BUTTON_NONE"
+				m_bUseMostRecentValue = false
+				m_bAutoReset = false
+				m_fDefaultValue = 0.000000
+				m_fMinValue = -1.000000
+				m_fMaxValue = 1.000000
+			},
+			
+			{
+				_class = "CBoolAnimParameter"
+				m_name = "b_button"
+				m_id = 
+				{
+					m_id = 936210227
+				}
+				m_previewButton = "ANIMPARAM_BUTTON_NONE"
+				m_bUseMostRecentValue = false
+				m_bAutoReset = false
+				m_bDefaultValue = false
+			},
+			
+			{
+				_class = "CEnumAnimParameter"
+				m_name = "reload_type"
+				m_id = 
+				{
+					m_id = 1604691790
+				}
+				m_previewButton = "ANIMPARAM_BUTTON_NONE"
+				m_bUseMostRecentValue = false
+				m_bAutoReset = false
+				m_defaultValue = 0
+				m_enumOptions = 
+				[
+					"normal",
+					"fast",
+				]
+			},
+			
+			{
+				_class = "CEnumAnimParameter"
+				m_name = "deploy_type"
+				m_id = 
+				{
+					m_id = 1268452216
+				}
+				m_previewButton = "ANIMPARAM_BUTTON_NONE"
+				m_bUseMostRecentValue = false
+				m_bAutoReset = false
+				m_defaultValue = 0
+				m_enumOptions = 
+				[
+					"normal",
+					"fast",
+				]
+			},
+		]
+	}
+	m_pTagManager = 
+	{
+		_class = "CAnimTagManager"
+		m_tags = 
+		[
+			
+			{
+				_class = "CStringAnimTag"
+				m_name = "Disable right arm IK"
+				m_tagID = 
+				{
+					m_id = 1598377644
+				}
+			},
+			
+			{
+				_class = "CStringAnimTag"
+				m_name = "Disable left arm IK"
+				m_tagID = 
+				{
+					m_id = 1924333109
+				}
+			},
+			
+			{
+				_class = "CStringAnimTag"
+				m_name = "Disable sprint additives & ironsight transitions while active"
+				m_tagID = 
+				{
+					m_id = 1301938313
+				}
+			},
+			
+			{
+				_class = "CStringAnimTag"
+				m_name = "This animation explicitly controls the 'gun is empty' parts"
+				m_tagID = 
+				{
+					m_id = 334376567
+				}
+			},
+			
+			{
+				_class = "CStringAnimTag"
+				m_name = "Disable ironsights while active"
+				m_tagID = 
+				{
+					m_id = 1290566357
+				}
+			},
+			
+			{
+				_class = "CStringAnimTag"
+				m_name = "Apply and play mode selector change now"
+				m_tagID = 
+				{
+					m_id = 722624482
+				}
+			},
+			
+			{
+				_class = "CStringAnimTag"
+				m_name = "firing_mode can't currently be changed"
+				m_tagID = 
+				{
+					m_id = 1600186593
+				}
+			},
+			
+			{
+				_class = "CStringAnimTag"
+				m_name = "firing_mode has been changed"
+				m_tagID = 
+				{
+					m_id = 228359954
+				}
+			},
+			
+			{
+				_class = "CStringAnimTag"
+				m_name = "Disable movement cycle & aim additives while active"
+				m_tagID = 
+				{
+					m_id = 2066526627
+				}
+			},
+			
+			{
+				_class = "CStringAnimTag"
+				m_name = "Bolt action: bring striker pin back up"
+				m_tagID = 
+				{
+					m_id = 743597051
+				}
+			},
+			
+			{
+				_class = "CEventAnimTag"
+				m_name = "Reload: change bodygroup now"
+				m_tagID = 
+				{
+					m_id = 58626476
+				}
+			},
+		]
+	}
+	m_pMovementManager = 
+	{
+		_class = "CAnimMovementManager"
+		m_MotorList = 
+		{
+			_class = "CAnimMotorList"
+			m_motors = 
+			[
+			]
+		}
+		m_MovementSettings = 
+		{
+			_class = "CAnimMovementSettings"
+			m_bShouldCalculateSlope = false
+		}
+	}
+	m_pSettingsManager = 
+	{
+		_class = "CAnimGraphSettingsManager"
+		m_settingsGroups = 
+		[
+			
+			{
+				_class = "CAnimGraphGeneralSettings"
+				m_iGridSnap = 16
+			},
+			
+			{
+				_class = "CAnimGraphNetworkSettings"
+			},
+		]
+	}
+	m_pActivityValuesList = 
+	{
+		_class = "CActivityValueList"
+		m_activities = 
+		[
+		]
+	}
+	m_previewModels = 
+	[
+		"weapons/physgun/v_physgun.vmdl",
+	]
+	m_boneMergeModels = 
+	[
+		
+		{
+			m_name = "models/first_person/first_person_arms.vmdl"
+			m_bEnabled = true
+		},
+		
+		{
+			m_name = "models/first_person/first_person_arms_citizen_4fingers.vmdl"
+			m_bEnabled = false
+		},
+	]
+	m_cameraSettings = 
+	{
+		m_flFov = 80.000000
+		m_sLockBoneName = "camera"
+		m_bLockCamera = true
+		m_bViewModelCamera = false
+	}
+}

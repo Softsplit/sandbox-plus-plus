@@ -1,0 +1,31 @@
+@import "/UI/Theme.scss";
+
+EffectsHost
+{
+    position: absolute;
+    top: $deadzone-y;
+    right: $deadzone-x;
+    left: $deadzone-x;
+    bottom: 150px;
+    width: auto;
+    height: auto;
+    pointer-events: none;
+    flex-direction: row;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 2rem;
+    z-index: 10000000;
+
+    EffectsList
+    {
+        width: 250px;
+        height: 500px;
+        pointer-events: all;
+    }
+
+    EffectsProperties
+    {
+        width: 500px;
+        pointer-events: all;
+    }
+}

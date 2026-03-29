@@ -28,7 +28,7 @@ public partial class BaseSpawnMenu : Panel
 		}
 	}
 
-	bool _firstViewed;
+	protected bool _firstViewed;
 
 	public override void Tick()
 	{
@@ -102,6 +102,45 @@ public partial class BaseSpawnMenu : Panel
 		StateHasChanged();
 	}
 
+	public void AddOption( string icon, string name, Func<Panel> createPanelFunction, Action onRightClick )
+	{
+		var o = new SpawnMenuOption
+		{
+			Icon = icon,
+			Name = name,
+			PanelCreator = createPanelFunction,
+			OnRightClick = onRightClick
+		};
+
+		options.Add( o );
+		StateHasChanged();
+	}
+
+	void OnOptionClick( SpawnMenuOption o )
+	{
+		if ( o.OnClick != null )
+		{
+			o.OnClick.Invoke();
+			return;
+		}
+
+		SwitchOption( o );
+	}
+
+	void OnOptionRightClick( SpawnMenuOption o )
+	{
+		o.OnRightClick?.Invoke();
+	}
+
+	void OnOptionMouseDown( SpawnMenuOption o, PanelEvent e )
+	{
+		if ( e is MousePanelEvent me && me.MouseButton == MouseButtons.Right && o.OnRightClick != null )
+		{
+			o.OnRightClick.Invoke();
+			e.StopPropagation();
+		}
+	}
+
 	void SwitchOption( SpawnMenuOption o )
 	{
 		if ( o == activeOption ) return;
@@ -120,6 +159,40 @@ public partial class BaseSpawnMenu : Panel
 		StateHasChanged();
 	}
 
+	public void AddAction( string icon, string name, Action action )
+	{
+		var o = new SpawnMenuOption
+		{
+			Icon = icon,
+			Name = name,
+			OnClick = action
+		};
+
+		options.Add( o );
+		StateHasChanged();
+	}
+
+	public void SelectOption( string name )
+	{
+		var option = options.FirstOrDefault( o => o.Name == name && (o.PanelCreator != null || o.Panel != null) );
+		if ( option != null ) SwitchOption( option );
+	}
+
+	public void DeselectOption()
+	{
+		activeOption?.Panel?.SetClass( "hidden", true );
+		activeOption = null;
+		StateHasChanged();
+	}
+
+	public void AddSkeletons( int count )
+	{
+		for ( int i = 0; i < count; i++ )
+		{
+			options.Add( new SpawnMenuOption { Type = "skeleton" } );
+		}
+		StateHasChanged();
+	}
 
 	class SpawnMenuOption
 	{
@@ -128,6 +201,8 @@ public partial class BaseSpawnMenu : Panel
 		public string Icon { get; set; }
 		public Func<Panel> PanelCreator { get; set; }
 		public Panel Panel { get; set; }
+		public Action OnClick { get; set; }
+		public Action OnRightClick { get; set; }
 	}
 
 	List<SpawnMenuOption> options = new();

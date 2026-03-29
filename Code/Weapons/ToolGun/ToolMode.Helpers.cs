@@ -56,9 +56,16 @@ public abstract partial class ToolMode
 		var player = Toolgun?.Owner;
 		if ( !player.IsValid() ) return default;
 
-		var tr = Scene.Trace.Ray( player.EyeTransform.ForwardRay, 4096 )
-		.IgnoreGameObjectHierarchy( player.GameObject )
-		.Run();
+		var trace = Scene.Trace.Ray( player.EyeTransform.ForwardRay, 4096 )
+		.IgnoreGameObjectHierarchy( player.GameObject );
+
+		if ( TraceIgnoreTags.Any() )
+			trace = trace.WithoutTags( TraceIgnoreTags.ToArray() );
+
+		if ( TraceHitboxes )
+			trace = trace.UseHitboxes();
+
+		var tr = trace.Run();
 
 		return new SelectionPoint
 		{
@@ -81,5 +88,29 @@ public abstract partial class ToolMode
 		return tx;
 	}
 
+	/// <summary>
+	/// Helper to apply physics properties from a model to a GameObject's <see cref="Rigidbody"/>
+	/// </summary>
+	/// <param name="go"></param>
+	protected void ApplyPhysicsProperties( GameObject go )
+	{
+        var model = go.GetComponentInChildren<ModelRenderer>();
+
+        if ( !model.IsValid() ) return;
+        if ( model.Model.Physics is null ) return;
+
+        if ( model.Model.Physics.Parts.Count == 1 )
+        {
+            var part = model.Model.Physics.Parts[0];
+            var rb = go.GetComponent<Rigidbody>();
+
+            rb.MassOverride = part.Mass;
+            rb.LinearDamping = part.LinearDamping;
+            rb.AngularDamping = part.AngularDamping;
+            rb.OverrideMassCenter = part.OverrideMassCenter;
+            rb.MassCenterOverride = part.MassCenterOverride;
+            rb.GravityScale = part.GravityScale;
+        }
+    }
 }
 

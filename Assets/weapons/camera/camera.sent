@@ -1,0 +1,9 @@
+{
+	"Prefab": "weapons/camera/item_camera.prefab",
+	"Title": "Camera",
+	"Description": "📷📷📷",
+	"Category": "Weapon",
+	"IncludeCode": false,
+	"__references": [],
+	"__version": 0
+}

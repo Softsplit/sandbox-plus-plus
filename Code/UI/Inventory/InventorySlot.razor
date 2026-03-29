@@ -3,56 +3,157 @@
 @inherits Panel
 
 <root>
-    @{
-        var weapons = GetWeapons().ToList();
-        var activeWeapon = weapons.FirstOrDefault(w => w == Active) ?? weapons.FirstOrDefault();
-        bool primaryIsActive = activeWeapon != null && activeWeapon == Hovered;
-    }
-    <div class="index @(primaryIsActive ? "primary-active" : "")">
-        <span class="number">@(Index+1)</span>
-        @{
-            if (activeWeapon != null && (Hovered?.InventorySlot == Index || Active?.InventorySlot == Index))
-            {
-                <InventoryWeapon class="primary" Weapon="@activeWeapon" CanSwitch=@activeWeapon.CanSwitch() IsHovered="@(activeWeapon == Hovered)" IsActive="@(activeWeapon == Active)"></InventoryWeapon>
-            }
-        }
-    </div>
+    <div class="index">@(Index + 1)</div>
 
-    <div class="list">
     @{
-        var allWeapons = GetWeapons().ToList();
-        var firstWeapon = allWeapons.FirstOrDefault(w => w == Active) ?? allWeapons.FirstOrDefault();
-        foreach ( var weapon in allWeapons.Where(w => w != firstWeapon) )
-        {
-            <InventoryWeapon Weapon="@weapon" CanSwitch=@weapon.CanSwitch() IsHovered="@(weapon == Hovered)" IsActive="@(weapon == Active)"></InventoryWeapon>
-        }
+        var weapon = GetWeapon();
     }
-    </div>
 
+    @if (weapon.IsValid())
+    {
+        <div class="icon" @ref="IconPanel"></div>
+        <div class="name">@weapon.DisplayName</div>
+    }
 </root>
 
 @code
 {
     public PlayerInventory Inventory { get; set; }
-    public BaseCarryable Active { get; set; }
-    public BaseCarryable Hovered { get; set; }
+    public bool Active { get; set; }
+    public bool Hovered { get; set; }
 
     public int Index { get; set; }
 
-    IEnumerable<BaseCarryable> GetWeapons()
-    {
-        if (!Inventory.IsValid()) return Enumerable.Empty<BaseCarryable>();
+    Panel IconPanel { get; set; }
 
-        return Inventory.Weapons.Where(x => x.InventorySlot == Index).OrderBy(x => x.InventoryOrder);
+    static InventorySlot _hoveredDragSlot;
+
+    public override bool WantsDrag => true;
+
+    protected override void OnDragStart( DragEvent e )
+    {
+        var weapon = GetWeapon();
+        if ( !weapon.IsValid() ) return;
+
+        var icon = weapon.InventoryIconOverride ?? weapon.DisplayIcon?.ResourcePath;
+
+        DragHandler.StartDragging( new DragData
+        {
+            Source = this,
+            Icon = icon,
+            Title = weapon.DisplayName
+        } );
+    }
+
+    protected override void OnDragEnd( DragEvent e )
+    {
+        var data = DragHandler.Current;
+        DragHandler.StopDragging();
+        base.OnDragEnd( e );
+
+        // OnDrop on the target already handled the swap.
+        if ( data?.Handled == true )
+        {
+            if ( data.Source is not null ) data.Source.UserData = null;
+            return;
+        }
+
+        // Mouse is hovering over a different slot — OnDrop will fire and handle the swap.
+        // Don't clear UserData yet so OnDrop can still retrieve it via e.Target.UserData.
+        if ( _hoveredDragSlot is not null && _hoveredDragSlot != this )
+            return;
+
+        // No slot handled it — clean up.
+        if ( data?.Source is not null ) data.Source.UserData = null;
+
+        // If the mouse is still over this slot the user dragged back to the source — no-op.
+        var mousePos = Mouse.Position * ScaleFromScreen;
+        if ( Box.RectOuter.IsInside( mousePos ) ) return;
+
+        var weapon = GetWeapon();
+        if ( !Inventory.Drop( weapon ) && weapon.IsValid() )
+            weapon.DestroyGameObject();
+    }
+
+    BaseCarryable GetWeapon()
+    {
+        if (!Inventory.IsValid()) return null;
+
+        return Inventory.GetSlot(Index);
+    }
+
+    bool IsSpawnMenuOpen()
+    {
+        var host = Game.ActiveScene.Get<SpawnMenuHost>();
+        return host?.Panel?.HasClass("open") ?? false;
     }
 
     public override void Tick()
     {
         base.Tick();
 
-        SetClass("active", Hovered?.InventorySlot == Index || Active?.InventorySlot == Index);
+        var weapon = GetWeapon();
+        var hasWeapon = weapon.IsValid();
+
+        var spawnMenuOpen = IsSpawnMenuOpen();
+        SetClass("droppable", spawnMenuOpen);
+
+        SetClass("active", Hovered || Active);
+        SetClass("empty", !hasWeapon);
+        SetClass("selected", Active && hasWeapon);
+        SetClass("hovered", Hovered && hasWeapon);
+        SetClass("switchable", hasWeapon && weapon.CanSwitch());
+
+        if (hasWeapon && IconPanel is not null)
+        {
+            var iconOverride = weapon.InventoryIconOverride;
+            if (!string.IsNullOrEmpty(iconOverride))
+            {
+                IconPanel.Style.SetBackgroundImage(iconOverride);
+            }
+            else
+            {
+                IconPanel.Style.SetBackgroundImage(weapon.DisplayIcon);
+            }
+        }
     }
 
-	protected override int BuildHash() => HashCode.Combine( GetWeapons().Count() );
+    protected override void OnDragEnter(PanelEvent e)
+    {
+        AddClass("drag-hover");
+        _hoveredDragSlot = this;
+    }
 
+    protected override void OnDragLeave(PanelEvent e)
+    {
+        RemoveClass("drag-hover");
+        if ( _hoveredDragSlot == this ) _hoveredDragSlot = null;
+    }
+
+    protected override void OnDrop( PanelEvent e )
+    {
+        RemoveClass( "drag-hover" );
+        _hoveredDragSlot = null;
+
+        // Use DragHandler.Current first; fall back to UserData for the case where
+        // OnDragEnd fired first and cleared Current (but preserved UserData).
+        var data = DragHandler.Current ?? e.Target.UserData as DragData;
+
+        // Clean up UserData now that the drop is being processed.
+        if ( data?.Source is not null ) data.Source.UserData = null;
+
+        if ( data is null ) return;
+
+        // Hotbar-to-hotbar: move or swap the dragged slot with this slot.
+        if ( data.Source is InventorySlot sourceSlot && sourceSlot.Inventory == Inventory )
+        {
+            data.Handled = true;
+            Inventory.MoveSlot( sourceSlot.Index, Index );
+            return;
+        }
+
+        GameManager.GiveSpawnerWeaponAt( data.Type, data.Path, Index, data.Data as string, data.Icon, data.Title );
+    }
+
+    protected override int BuildHash() => HashCode.Combine(GetWeapon(), Hovered, Active);
 }

@@ -12,6 +12,7 @@ partial class Feed : PanelComponent
 
 	protected override void OnUpdate()
 	{
+		SetClass( "hide", Player.FindLocalPlayer()?.WantsHideHud ?? false );
 	}
 
 	[Rpc.Broadcast]

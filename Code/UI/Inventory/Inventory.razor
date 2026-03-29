@@ -3,86 +3,48 @@
 @inherits PanelComponent
 @implements ILocalPlayerEvent
 
+@if ( Player.IsValid() && Player.WantsHideHud )
+    return;
+
+@if ( !inventory.IsValid() )
+    return;
+
 <root>
-	@for (int i = 0; i < 6; i++)
+	@for (int i = 0; i < inventory.MaxSlots; i++)
 	{
-		<InventorySlot Index=@i Inventory=@inventory Hovered=@hovered Active=@active></InventorySlot>
+		<InventorySlot Index=@i Inventory=@inventory Active=@(activeSlot == i)></InventorySlot>
 	}
 </root>
 
 @code
 {
     [Property, Group("Sound")] public SoundEvent SwitchSound { get; set; }
-    [Property, Group("Sound")] public SoundEvent SelectSound { get; set; }
+
+    Player Player => Player.FindLocalPlayer();
 
     PlayerInventory inventory;
-    BaseCarryable hovered;
-    BaseCarryable active;
+    int activeSlot = -1;
     BaseCarryable prev;
 
-    protected override int BuildHash() => HashCode.Combine(inventory, hovered, active);
-
-    protected override void OnEnabled()
-    {
-        base.OnEnabled();
-        Panel.SetClass("hidden", true);
-    }
+    protected override int BuildHash() => HashCode.Combine( inventory, activeSlot, Player?.WantsHideHud );
 
     void ILocalPlayerEvent.OnPickup(BaseCarryable weapon)
     {
         StateHasChanged();
     }
 
+    bool IsSpawnMenuOpen()
+    {
+	    var host = Game.ActiveScene.Get<SpawnMenuHost>();
+	    return host?.Panel?.HasClass("open") ?? false;
+    }
+
     protected override void OnUpdate()
     {
         inventory = Game.ActiveScene.GetAllComponents<PlayerInventory>().Where(x => x.Network.IsOwner).FirstOrDefault();
+        activeSlot = inventory?.ActiveWeapon?.InventorySlot ?? -1;
 
-        var player = Player.FindLocalPlayer();
-        if (player is null || player.Health < 1)
-        {
-            hovered = null;
-            active = null;
-            Panel.SetClass("hidden", true);
-        }
-    }
-
-    RealTimeSince timeSinceInteraction;
-
-    public void HandleInputOpen()
-    {
-        if (hovered is null)
-            return;
-
-        if (Input.Pressed("Attack1") || Input.Pressed("Attack2"))
-        {
-            Input.ReleaseAction("Attack1");
-            Input.SetAction("Attack1", false);
-            Input.ReleaseAction("Attack2");
-            Input.SetAction("Attack2", false);
-
-            prev = inventory.ActiveWeapon;
-            inventory.SwitchWeapon(hovered);
-            active = hovered;
-            hovered = null;
-            Panel.Style.Opacity = 0;
-            Panel.SetClass("hidden", true);
-            Sound.Play(SelectSound);
-            return;
-        }
-
-        if (timeSinceInteraction > 2.5f)
-        {
-            hovered = null;
-            Panel.SetClass("hidden", true);
-            active = null;
-            return;
-        }
-
-        if (timeSinceInteraction > 1.0f)
-        {
-            float fadeProgress = (timeSinceInteraction - 1.0f) / 1.5f;
-            Panel.Style.Opacity = 1f - fadeProgress;
-        }
+        Panel.SetClass( "spawnmenu-open", IsSpawnMenuOpen() );
     }
 
     public void HandleInput()
@@ -99,12 +61,35 @@
             inventory.SwitchWeapon( weapon );
         }
 
-        if (Input.Pressed("Slot1")) IterateSlot(0);
-        if (Input.Pressed("Slot2")) IterateSlot(1);
-        if (Input.Pressed("Slot3")) IterateSlot(2);
-        if (Input.Pressed("Slot4")) IterateSlot(3);
-        if (Input.Pressed("Slot5")) IterateSlot(4);
-        if (Input.Pressed("Slot6")) IterateSlot(5);
+        if (Input.Pressed("SlotNext")) MoveSlot(1);
+        if (Input.Pressed("SlotPrev")) MoveSlot(-1);
+
+        if (Input.Pressed("Slot1")) SelectSlot(0);
+        if (Input.Pressed("Slot2")) SelectSlot(1);
+        if (Input.Pressed("Slot3")) SelectSlot(2);
+        if (Input.Pressed("Slot4")) SelectSlot(3);
+        if (Input.Pressed("Slot5")) SelectSlot(4);
+        if (Input.Pressed("Slot6")) SelectSlot(5);
+        if (Input.Pressed("Slot7")) SelectSlot(6);
+        if (Input.Pressed("Slot8")) SelectSlot(7);
+        if (Input.Pressed("Slot9")) SelectSlot(8);
+    }
+
+    /// <summary>
+    /// Pressing a number key directly switches to that slot's weapon.
+    /// If the slot is empty or already active, holsters the current weapon.
+    /// </summary>
+    public void SelectSlot( int slot )
+    {
+        var weapon = inventory.GetSlot( slot );
+
+        if ( weapon.IsValid() && !weapon.CanSwitch() )
+            return;
+
+        prev = inventory.ActiveWeapon;
+        inventory.SwitchWeapon( weapon, allowHolster: true );
+
+        Sound.Play( SwitchSound );
     }
 
     public void MoveSlot( int delta )
@@ -112,71 +97,25 @@
         if ( delta == 0 )
             return;
 
-        var weapons = inventory.Weapons.ToList();
+        var weapons = inventory.Weapons.Where( x => x.CanSwitch() ).ToList();
 
         if ( weapons.Count == 0 )
             return;
 
-        var currentHover = hovered ?? active ?? inventory.ActiveWeapon ?? weapons.FirstOrDefault();
+        // Find current position in the ordered weapon list
+        BaseCarryable current = inventory.ActiveWeapon ?? weapons.FirstOrDefault();
 
-        int currentIndex = weapons.IndexOf( currentHover );
-
+        int currentIndex = weapons.IndexOf( current );
         currentIndex += delta;
         currentIndex %= weapons.Count;
         if ( currentIndex < 0 )
             currentIndex = weapons.Count + currentIndex;
 
-        active = null;
-        if ( GamePreferences.FastSwitch )
-        {
-            inventory.SwitchWeapon( weapons[currentIndex] );
-        }
-        else
-        {
-            hovered = weapons[currentIndex];
-            timeSinceInteraction = 0;
-            Panel.Style.Opacity = 1;
-            Panel.SetClass("hidden", false);
-        }
+        var target = weapons[currentIndex];
 
-        Sound.Play(SwitchSound);
-	}
+        prev = inventory.ActiveWeapon;
+        inventory.SwitchWeapon( target );
 
-	public void IterateSlot( int slot )
-	{
-		var slotWeapons = inventory.Weapons.Where( x => x.InventorySlot == slot ).OrderBy( x => x.InventoryOrder ).ToList();
-		if ( slotWeapons.Count == 0 )
-			return;
-
-		var currentHover = hovered ?? active;
-
-		int currentIndex = -1;
-
-		if ( currentHover != null && currentHover.InventorySlot == slot )
-		{
-			currentIndex = slotWeapons.IndexOf( currentHover );
-		}
-		else if ( inventory.ActiveWeapon != null && inventory.ActiveWeapon.InventorySlot == slot )
-		{
-			currentIndex = slotWeapons.IndexOf( inventory.ActiveWeapon );
-		}
-
-		currentIndex += 1;
-		currentIndex %= slotWeapons.Count;
-
-		active = null;
-		if ( GamePreferences.FastSwitch )
-		{
-			inventory.SwitchWeapon( slotWeapons[currentIndex] );
-		}
-		else
-		{
-			hovered = slotWeapons[currentIndex];
-			timeSinceInteraction = 0;
-			Panel.Style.Opacity = 1;
-			Panel.SetClass("hidden", false);
-		}
-
-        Sound.Play(SwitchSound);
+        Sound.Play( SwitchSound );
     }
 }

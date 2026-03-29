@@ -7,7 +7,7 @@ using Sandbox.UI.Inventory;
 /// </summary>
 public sealed partial class Player : Component, Component.IDamageable, PlayerController.IEvents
 {
-	public static Player FindLocalPlayer() => Game.ActiveScene.GetAllComponents<Player>().Where( x => x.IsLocalPlayer ).FirstOrDefault();
+	public static Player FindLocalPlayer() => Game.ActiveScene.GetAll<Player>().FirstOrDefault( x => x.IsLocalPlayer );
 	public static T FindLocalWeapon<T>() where T : BaseCarryable => FindLocalPlayer()?.GetComponentInChildren<T>( true );
 	public static T FindLocalToolMode<T>() where T : ToolMode => FindLocalPlayer()?.GetComponentInChildren<T>( true );
 
@@ -21,23 +21,23 @@ public sealed partial class Player : Component, Component.IDamageable, PlayerCon
 
 	[Sync( SyncFlags.FromHost )] public PlayerData PlayerData { get; set; }
 
-	[Header( "Icons" )]
-	[Property] public Texture HealthIcon { get; set; }
-	[Property] public Texture ArmourIcon { get; set; }
-
-
 	public Transform EyeTransform
 	{
 		get
 		{
-			Assert.True( Controller.IsValid(), $"Player {DisplayName}'s PlayerController is invalid (IsValid: {this.IsValid()}, IsLocalPlayer: {IsLocalPlayer}, IsHost: {Networking.IsHost}, IsActive: {PlayerData?.Connection?.IsActive})" );
+			if ( !Controller.IsValid() )
+			{
+				Log.Warning( $"Invalid Controller for {this.GameObject}" );
+				return default;
+			}
 			return Controller.EyeTransform;
 		}
 	}
+
 	public bool IsLocalPlayer => !IsProxy;
-	public Guid PlayerId => PlayerData.PlayerId;
-	public long SteamId => PlayerData.SteamId;
-	public string DisplayName => PlayerData.DisplayName;
+	public Guid PlayerId => PlayerData.IsValid() ? PlayerData.PlayerId : Guid.Empty;
+	public long SteamId => PlayerData.IsValid() ? PlayerData.SteamId : 0;
+	public string DisplayName => PlayerData.IsValid() ? PlayerData.DisplayName : "Unknown";
 
 	/// <summary>
 	/// True if the player wants the HUD not to draw right now
@@ -46,7 +46,8 @@ public sealed partial class Player : Component, Component.IDamageable, PlayerCon
 	{
 		get
 		{
-			if ( CarriedObject.IsValid() && WeaponBeforePickup.IsValid() && WeaponBeforePickup.WantsHideHud )
+			var freeCam = Scene.Get<FreeCamGameObjectSystem>();
+			if ( freeCam.IsActive )
 				return true;
 
 			var weapon = GetComponent<PlayerInventory>()?.ActiveWeapon;
@@ -186,6 +187,7 @@ public sealed partial class Player : Component, Component.IDamageable, PlayerCon
 			inventory.SwitchWeapon( null );
 		}
 
+
 		if ( d.Tags.HasAny( DamageTags.Crush, DamageTags.Explosion, DamageTags.GibAlways ) )
 		{
 			Gib( d.Position, d.Origin );
@@ -202,7 +204,7 @@ public sealed partial class Player : Component, Component.IDamageable, PlayerCon
 		GameObject.Destroy();
 	}
 
-	[Rpc.Owner]
+	[Rpc.Host]
 	public void EquipBestWeapon()
 	{
 		var inventory = GetComponent<PlayerInventory>();
@@ -216,19 +218,27 @@ public sealed partial class Player : Component, Component.IDamageable, PlayerCon
 		OnControl();
 	}
 
+	private RealTimeSince _timeSinceJumpPressed;
+
 	void OnControl()
 	{
-		if ( !CarriedObject.IsValid() )
-			Scene.Get<Inventory>()?.HandleInputOpen();
-
-		UpdateCarriedObject(); 
-
-		if ( Input.Pressed( "noclip" ) )
+		if ( Input.Pressed( "die" ) )
 		{
-			if ( GetComponent<NoclipMoveMode>( true ) is { } noclip )
+			KillSelf();
+			return;
+		}
+
+		if ( Input.Pressed( "jump" ) )
+		{
+			if ( _timeSinceJumpPressed < 0.3f )
 			{
-				noclip.Enabled = !noclip.Enabled;
+				if ( GetComponent<NoclipMoveMode>( true ) is { } noclip )
+				{
+					noclip.Enabled = !noclip.Enabled;
+				}
 			}
+
+			_timeSinceJumpPressed = 0;
 		}
 
 		if ( Input.Pressed( "undo" ) )
@@ -238,17 +248,7 @@ public sealed partial class Player : Component, Component.IDamageable, PlayerCon
 
 		GetComponent<PlayerInventory>()?.OnControl();
 
-		if ( !CarriedObject.IsValid() )
-			Scene.Get<Inventory>()?.HandleInput();
-
-		if ( Scene.Camera.RenderExcludeTags.Contains( "ui" ) )
-			return;
-
-		if ( !WantsHideHud )
-		{
-			var hud = Scene.Camera.Hud;
-			DrawVitals( hud, new Vector2( 32f * Hud.Scale, Screen.Size.y - 32f * Hud.Scale ) );
-		}
+		Scene.Get<Inventory>()?.HandleInput();
 	}
 
 	[ConCmd( "sbdm.dev.sethp", ConVarFlags.Cheat )]
@@ -387,7 +387,7 @@ public sealed partial class Player : Component, Component.IDamageable, PlayerCon
 		var r = Controller.WishVelocity.Dot( EyeTransform.Left ) / -250.0f;
 		roll = MathX.Lerp( roll, r, Time.Delta * 10.0f, true );
 
-		// camera.WorldRotation *= new Angles( 0, 0, roll );
+		camera.WorldRotation *= new Angles( 0, 0, roll );
 	}
 
 	void PlayerController.IEvents.OnLanded( float distance, Vector3 impactVelocity )
@@ -399,29 +399,7 @@ public sealed partial class Player : Component, Component.IDamageable, PlayerCon
 
 		if ( Controller.ThirdPerson || !player.IsLocalPlayer ) return;
 
-		new Punch( new Vector3( 0.3f * Math.Min( distance, 100f ), Random.Shared.Float( -1, 1 ), Random.Shared.Float( -1, 1 ) ), 1.0f, 1.5f, 0.7f );
-	}
-
-	bool noPickupNotices = false;
-	public IDisposable NoNoticeScope()
-	{
-		noPickupNotices = true;
-		return new Sandbox.Utility.DisposeAction( () => noPickupNotices = false );
-	}
-
-	public void ShowNotice( string message )
-	{
-		if ( noPickupNotices ) return;
-		NotifyNotice( message );
-	}
-
-	[Rpc.Owner]
-	public void NotifyNotice( string message )
-	{
-		if ( !IsLocalPlayer ) return;
-
-		Log.Info( $"you picked up {message}" );
-		//Scene.RunEvent<Sandbox.UI.Notices>( x => x.Display( message ) );
+		new Punch( new Vector3( 0.3f * distance, Random.Shared.Float( -1, 1 ), Random.Shared.Float( -1, 1 ) ), 1.0f, 1.5f, 0.7f );
 	}
 
 	void PlayerController.IEvents.OnJumped()
@@ -433,11 +411,6 @@ public sealed partial class Player : Component, Component.IDamageable, PlayerCon
 		if ( Controller.ThirdPerson || !player.IsLocalPlayer ) return;
 
 		new Punch( new Vector3( -20, 0, 0 ), 0.5f, 2.0f, 1.0f );
-	}
-
-	public void DrawVitals( HudPainter hud, Vector2 bottomleft )
-	{
-		hud.DrawHealth( Health.CeilToInt(), bottomleft );
 	}
 
 	public T GetWeapon<T>() where T : BaseCarryable
@@ -452,7 +425,6 @@ public sealed partial class Player : Component, Component.IDamageable, PlayerCon
 
 		GetComponent<PlayerInventory>().SwitchWeapon( weapon );
 	}
-
 
 	public override void OnParentDestroy()
 	{

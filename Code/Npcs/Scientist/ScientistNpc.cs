@@ -1,3 +1,4 @@
+using Sandbox.Npcs.Layers;
 using Sandbox.Npcs.Schedules;
 
 namespace Sandbox.Npcs.Scientist;
@@ -10,54 +11,112 @@ public class ScientistNpc : Npc, Component.IDamageable
 	[Property]
 	public SkinnedModelRenderer Renderer { get; set; }
 
-	private Vector3? _lastTarget;
-	private TimeSince _timeSinceLostVision;
+	/// <summary>
+	/// Current fear level (0–1). Computed from peak fear and time since last hurt.
+	/// </summary>
+	public float AfraidLevel
+	{
+		get
+		{
+			if ( _peakFear <= 0f ) return 0f;
+			if ( _timeSinceHurt <= FearGracePeriod ) return _peakFear;
+
+			var decayTime = _timeSinceHurt - FearGracePeriod;
+			return MathF.Max( _peakFear - decayTime * FearDecayRate, 0f );
+		}
+	}
+
+	/// <summary>
+	/// Seconds at full fear before decay begins.
+	/// </summary>
+	[Property, Group( "Balance" )]
+	private float FearGracePeriod { get; set; } = 3f;
+
+	/// <summary>
+	/// Fear units lost per second after the grace period.
+	/// </summary>
+	[Property, Group( "Balance" )]
+	private float FearDecayRate { get; set; } = 0.15f;
+
+	private float _peakFear;
+	private GameObject _attacker;
+	private TimeSince _timeSinceHurt;
 
 	public override ScheduleBase GetSchedule()
 	{
-		//
-		// Update last known position if we can see a target
-		//
-		if ( Senses.VisibleTargets.Any() )
+		var fear = AfraidLevel;
+
+		// Fear fully decayed — clear state
+		if ( fear <= 0f && _peakFear > 0f )
 		{
-			var visible = Senses.GetNearestVisible();
-			if ( visible.IsValid() )
-			{
-				_lastTarget = visible.WorldPosition;
-				_timeSinceLostVision = 0;
-			}
+			_peakFear = 0f;
+			_attacker = null;
 		}
 
-		//
-		// Is someone in our face?
-		//
-		if ( Senses.DistanceToNearest <= Senses.PersonalSpace && Senses.Nearest.IsValid() )
+		// Afraid — flee from the attacker
+		if ( fear > 0f && _attacker.IsValid() )
 		{
 			var flee = GetSchedule<ScientistFleeSchedule>();
-			flee.Source = Senses.Nearest;
+			flee.Source = _attacker;
+			flee.PanicLevel = fear;
 			return flee;
 		}
 
-		if ( Senses.VisibleTargets.Any() )
+		return GetIdleSchedule();
+	}
+
+	/// <summary>
+	/// Pick a random idle behavior so the scientist doesn't just stand around.
+	/// </summary>
+	private ScheduleBase GetIdleSchedule()
+	{
+		var roll = Game.Random.Float();
+
+		if ( roll < 0.35f )
+		{ 
+			return GetSchedule<ScientistWanderSchedule>();
+		}
+
+		if ( roll < 0.60f )
 		{
-			var visible = Senses.GetNearestVisible();
-			if ( visible.IsValid() )
+			var prop = FindNearbyProp();
+			if ( prop.IsValid() )
 			{
-				var investigate = GetSchedule<ScientistInvestigateSchedule>();
-				investigate.Target = visible;
-				return investigate;
+				var inspect = GetSchedule<ScientistInspectPropSchedule>();
+				inspect.PropTarget = prop;
+				return inspect;
 			}
 		}
 
-		if ( _lastTarget.HasValue && _timeSinceLostVision < 10f )
+		return GetSchedule<ScientistIdleSchedule>();
+	}
+
+	/// <summary>
+	/// Find the nearest prop within range to inspect.
+	/// </summary>
+	private GameObject FindNearbyProp()
+	{
+		// TODO: I feel like the senses layer should be able to hand all of this in a cost effective way.
+
+		var nearby = Scene.FindInPhysics( new Sphere( WorldPosition, 2048 ) );
+
+		GameObject best = null;
+		float bestDist = float.MaxValue;
+
+		foreach ( var obj in nearby )
 		{
-			var search = GetSchedule<ScientistSearchSchedule>();
-			search.Target = _lastTarget.Value;
-			return search;
+			if ( obj == GameObject ) continue;
+			if ( obj.GetComponent<Prop>() is null ) continue;
+
+			var dist = WorldPosition.Distance( obj.WorldPosition );
+			if ( dist < bestDist )
+			{
+				bestDist = dist;
+				best = obj;
+			}
 		}
 
-		_lastTarget = null;
-		return GetSchedule<ScientistIdleSchedule>();
+		return best;
 	}
 
 	void IDamageable.OnDamage( in DamageInfo damage )
@@ -67,18 +126,41 @@ public class ScientistNpc : Npc, Component.IDamageable
 
 		Health -= damage.Damage;
 
+		// Escalate fear — each hit stacks, clamped to 1
+		_peakFear = MathF.Min( _peakFear + damage.Damage / 50f, 1f );
+		_attacker = damage.Attacker;
+		_timeSinceHurt = 0;
+
+		// Interrupt whatever we're doing so flee picks up immediately
+		EndCurrentSchedule();
+
 		if ( Health < 1 )
 		{
-			CreateRagdoll();
+			var attackerVelocity = GetAttackerVelocity( damage.Attacker );
+			CreateRagdoll( attackerVelocity );
 			GameObject.Destroy();
 		}
+	}
+
+	/// <summary>
+	/// Resolve the attacker's current velocity from whatever movement source it has.
+	/// </summary>
+	private Vector3 GetAttackerVelocity( GameObject attacker )
+	{
+		if ( !attacker.IsValid() )
+			return Vector3.Zero;
+
+		if ( attacker.GetComponent<Rigidbody>() is { } rb )
+			return rb.Velocity;
+
+		return Vector3.Zero;
 	}
 
 	/// <summary>
 	/// Should this be a nice helper?
 	/// </summary>
 	[Rpc.Broadcast( NetFlags.HostOnly )]
-	void CreateRagdoll()
+	void CreateRagdoll( Vector3 velocity )
 	{
 		if ( !Renderer.IsValid() )
 			return;
@@ -108,5 +190,14 @@ public class ScientistNpc : Npc, Component.IDamageable
 		physics.Model = mainBody.Model;
 		physics.Renderer = mainBody;
 		physics.CopyBonesFrom( Renderer, true );
+
+		// todo: better way?
+		if ( velocity.LengthSquared > 0f )
+		{
+			foreach ( var body in physics.Bodies )
+			{
+				body.Component.Velocity = velocity;
+			}
+		}
 	}
 }

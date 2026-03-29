@@ -1,16 +1,26 @@
 using Sandbox.Rendering;
 
-public partial class Toolgun : BaseCarryable
+public partial class Toolgun : ScreenWeapon
 {
 	public override void OnCameraMove( Player player, ref Angles angles )
 	{
 		base.OnCameraMove( player, ref angles );
+
+		var currentMode = GetCurrentMode();
+		if ( currentMode is { AbsorbMouseInput: true } )
+		{
+			angles = default;
+		}
+
+		currentMode?.OnCameraMove( player, ref angles );
 	}
 
-	protected override void OnAwake()
+	public override void OnAdded( Player player )
 	{
-		if ( IsProxy )
-			return;
+		base.OnAdded( player );
+
+		if ( Networking.IsHost )
+			CreateToolComponents();
 	}
 
 	public void CreateToolComponents()
@@ -23,7 +33,6 @@ public partial class Toolgun : BaseCarryable
 
 		bool enabled = true;
 
-		// create every available mode, but disabled
 		foreach ( var mode in Game.TypeLibrary.GetTypes<ToolMode>() )
 		{
 			if ( mode.IsAbstract ) continue;
@@ -33,12 +42,8 @@ public partial class Toolgun : BaseCarryable
 		}
 	}
 
-	float _coilSpin = 0;
 	public override void OnControl( Player player )
 	{
-		if ( player.TimeSincePickupDropped < 0.2f )
-			return;
-
 		var currentMode = GetCurrentMode();
 		if ( currentMode == null )
 			return;
@@ -84,18 +89,24 @@ public partial class Toolgun : BaseCarryable
 
 		var currentMode = GetCurrentMode();
 
-		// already in this mode
 		if ( newMode == currentMode )
 			return;
 
-		if ( currentMode != null )
-		{
-			currentMode.Enabled = false;
-		}
-
+		currentMode?.Enabled = false;
 		newMode.Enabled = true;
+
 		GameObject.Enabled = true;
 		Network.Refresh( GameObject );
+
+		using ( Rpc.FilterInclude( Rpc.Caller ) )
+		{
+			BroadcastSwitchToolMode();
+		}
 	}
 
+	[Rpc.Broadcast( NetFlags.HostOnly )]
+	private void BroadcastSwitchToolMode()
+	{
+		SwitchToolMode();
+	}
 }

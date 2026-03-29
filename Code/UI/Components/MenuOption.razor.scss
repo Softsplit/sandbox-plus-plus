@@ -1,3 +1,5 @@
+@import "/UI/Theme.scss";
+
 MenuOption
 {
 	flex-direction: row;
@@ -12,6 +14,11 @@ MenuOption
 	width: 24px;
 }
 
+Label
+{
+	text-overflow: ellipsis;
+}
+
 MenuOption:hover
 {
 	color: white;
@@ -20,13 +27,13 @@ MenuOption:hover
 
 MenuOption:active
 {
-	color: #fff;
-	background-color: #08f3;
+	color: $menu-text-strong;
+	background-color: $menu-accent-soft;
 	sound-in: ui.select;
 }
 
 MenuOption.active
 {
 	color: white;
-	background-color: #08f;
+	background-color: $menu-accent;
 }

@@ -1,9 +1,20 @@
-
+﻿
 [Icon( "➖" )]
 [ClassName( "slider" )]
 [Group( "Constraints" )]
 public class Slider : BaseConstraintToolMode
 {
+	public override string Description => Stage == 1 ? "#tool.hint.slider.stage1" : "#tool.hint.slider.stage0";
+	public override string PrimaryAction => Stage == 1 ? "#tool.hint.slider.finish" : "#tool.hint.slider.source";
+	public override string ReloadAction => "#tool.hint.slider.remove";
+
+	protected override IEnumerable<GameObject> FindConstraints( GameObject linked, GameObject target )
+	{
+		foreach ( var joint in linked.GetComponentsInChildren<SliderJoint>( true ) )
+			if ( linked == target || joint.Body?.Root == target )
+				yield return joint.GameObject;
+	}
+
 	protected override void CreateConstraint( SelectionPoint point1, SelectionPoint point2 )
 	{
 		if ( point1.GameObject == point2.GameObject )

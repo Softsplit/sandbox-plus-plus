@@ -1,0 +1,77 @@
+@import "/UI/Theme.scss";
+
+ToolInfoPanel
+{
+	position: absolute;
+	left: 2vw;
+	top: 2vw;
+	justify-content: flex-start;
+	pointer-events: none;
+	opacity: 0;
+	transition: opacity 0.15s ease;
+
+	&.visible
+	{
+		opacity: 1;
+	}
+
+	.panel
+	{
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 4px;
+		font-family: $title-font;
+		padding: 16px;
+		background-color: $hud-element-bg;
+		border-radius: $hud-radius;
+	}
+
+	.actions
+	{
+		gap: 16px;
+	}
+
+	.name
+	{
+		font-size: 32px;
+		font-weight: 700;
+		color: $color-accent;
+		margin-bottom: 2px;
+	}
+
+	.description
+	{
+		font-size: 16px;
+		font-weight: 400;
+		font-family: $subtitle-font;
+		color: $hud-text;
+		margin-bottom: 4px;
+	}
+
+	.divider
+	{
+		width: 100%;
+		height: 1px;
+		background-color: rgba($color-accent, 0.15);
+		margin-bottom: 4px;
+	}
+
+	.action
+	{
+		flex-direction: row;
+		align-items: center;
+		gap: 10px;
+	}
+
+	.key
+	{
+		width: 48px;
+	}
+
+	.text
+	{
+		font-size: 16px;
+		font-weight: 500;
+		color: $hud-text;
+	}
+}

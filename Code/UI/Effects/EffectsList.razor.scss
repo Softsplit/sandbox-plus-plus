@@ -1,0 +1,229 @@
+@import "/UI/Theme.scss";
+
+EffectsList
+{
+	flex-direction: column;
+
+	.list-tabs
+	{
+		flex-direction: row;
+		margin-left: 8px;
+		flex-shrink: 0;
+
+		.list-tab
+		{
+			padding: 0.5rem 1rem;
+			cursor: pointer;
+			color: #D1D7E3AA;
+			border-radius: 8px 8px 0 0;
+			background-color: #0c202faa;
+			border-right: 1px solid $menu-surface-soft;
+			align-items: center;
+			font-family: $subtitle-font;
+			font-weight: 650;
+			font-size: 14px;
+			transition: color 0.1s ease;
+
+			&:hover
+			{
+				color: $menu-color;
+				sound-in: ui.hover;
+			}
+
+			&.active
+			{
+				color: $menu-text-strong;
+				background-color: $menu-panel-bg;
+				backdrop-filter: blur( 8px );
+				pointer-events: none;
+			}
+		}
+	}
+
+	.panel-body
+	{
+		background-color: $menu-panel-bg;
+		backdrop-filter: blur( 2px );
+		border-radius: 8px;
+		flex: 1 1 0;
+		min-height: 0;
+		flex-direction: column;
+		overflow: hidden;
+	}
+
+	.scroll-body
+	{
+		flex: 1 1 0;
+		min-height: 0;
+		flex-direction: column;
+		overflow-y: scroll;
+	}
+
+	.footer
+	{
+		flex-shrink: 0;
+		flex-direction: row;
+		padding: 6px 8px;
+		justify-content: flex-end;
+	}
+
+	.workshop-search
+	{
+		padding: 6px 8px;
+		.search-input
+		{
+			width: 100%;
+			background-color: rgba( white, 0.06 );
+			border: 1px solid rgba( white, 0.1 );
+			border-radius: 4px;
+			padding: 5px 8px;
+			font-size: 1rem;
+			font-family: $body-font;
+			color: white;
+		}
+	}
+
+	.group-header
+	{
+		font-family: $subtitle-font;
+		text-transform: uppercase;
+		letter-spacing: 1px;
+		color: rgba( white, 0.35 );
+		margin-top: 8px;
+		margin-bottom: 4px;
+		margin-left: 12px;
+		margin-right: 10px;
+		flex-shrink: 0;
+	}
+
+	.empty-state
+	{
+		font-family: $subtitle-font;
+		padding: 16px 12px;
+		text-align: center;
+		color: $menu-text;
+	}
+
+	.effect-row
+	{
+		flex-direction: row;
+		align-items: center;
+		padding: 6px 8px;
+		border-radius: 4px;
+		margin: 2px 4px;
+		transition: background-color 0.08s ease;
+		cursor: pointer;
+		flex-shrink: 0;
+
+		.thumb
+		{
+			width: 28px;
+			height: 28px;
+			border-radius: 4px;
+			background-size: cover;
+			background-position: center;
+			background-color: rgba( white, 0.05 );
+			flex-shrink: 0;
+
+			&.emoji
+			{
+				background-image: none;
+				background-color: rgba( white, 0.07 );
+				justify-content: center;
+				align-items: center;
+				font-size: 1rem;
+			}
+		}
+
+		.name
+		{
+			flex-grow: 1;
+			font-size: 1rem;
+			font-weight: 500;
+			font-family: $body-font;
+			color: $menu-text;
+			margin: 0 8px;
+		}
+
+		.info
+		{
+			flex-grow: 1;
+			flex-direction: column;
+			justify-content: center;
+			margin: 0 8px;
+
+			.name
+			{
+				flex-grow: 0;
+				margin: 0;
+			}
+
+			.author
+			{
+				flex-direction: row;
+				align-items: center;
+				font-size: 0.9rem;
+				font-family: $body-font;
+				color: rgba( white, 0.35 );
+				margin-top: 2px;
+
+				.author-avatar
+				{
+					width: 12px;
+					height: 12px;
+					border-radius: 2px;
+					background-size: cover;
+					background-position: center;
+					background-color: rgba( white, 0.1 );
+					margin-right: 4px;
+					flex-shrink: 0;
+				}
+			}
+		}
+
+		.toggle
+		{
+			width: 20px;
+			height: 20px;
+			border-radius: 4px;
+			border: 1.5px solid rgba( white, 0.2 );
+			background-color: rgba( black, 0.4 );
+			flex-shrink: 0;
+			justify-content: center;
+			align-items: center;
+
+			.checkmark { font-size: 12px; color: transparent; }
+
+			&.on
+			{
+				border-color: $color-accent;
+				background-color: rgba( $color-accent, 0.2 );
+				.checkmark { color: $color-accent; }
+			}
+
+			&.loading
+			{
+				opacity: 0.5;
+				pointer-events: none;
+				.checkmark { color: rgba( white, 0.5 ); }
+			}
+
+			&:hover { border-color: rgba( $color-accent, 0.8 ); }
+		}
+
+		&:hover
+		{
+			background-color: $menu-accent-soft;
+			.name { color: $menu-text-strong; }
+			.info .name { color: $menu-text-strong; }
+		}
+
+		&.selected
+		{
+			background-color: $menu-accent-soft;
+			.name { color: $menu-color; }
+			.info .name { color: $menu-color; }
+			.thumb { border: 1px solid rgba( $color-accent, 0.4 ); }
+		}
+	}
+}
