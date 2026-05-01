@@ -1,4 +1,4 @@
-public class SpawningProgress : Component
+﻿public class SpawningProgress : Component
 {
 	public BBox? SpawnBounds { get; internal set; }
 

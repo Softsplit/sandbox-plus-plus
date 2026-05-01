@@ -1,4 +1,4 @@
-
+﻿
 namespace Sandbox.UI;
 
 public class NoticePanel : Panel

@@ -1,4 +1,4 @@
-using Sandbox.UI;
+﻿using Sandbox.UI;
 
 /// <summary>
 /// This component has a kill icon that can be used in the killfeed, or somewhere else.
@@ -9,8 +9,8 @@ public class DupesPage : BaseSpawnMenu
 	protected override void Rebuild()
 	{
 		AddHeader( "Workshop" );
-		AddOption( "🎖️", "Popular Dupes", () => new DupesWorkshop() { SortOrder = Storage.SortOrder.RankedByVote } );
-		AddOption( "🐣", "Newest Dupes", () => new DupesWorkshop() { SortOrder = Storage.SortOrder.RankedByPublicationDate } );
+		AddOption( "🎖️", "Popular Dupes", () => new DupesWorkshop() { SortOrder = WorkshopSortMode.Popular } );
+		AddOption( "🐣", "Newest Dupes", () => new DupesWorkshop() { SortOrder = WorkshopSortMode.Newest } );
 
 		AddHeader( "Categories" );
 
@@ -18,7 +18,7 @@ public class DupesPage : BaseSpawnMenu
 		{
 			AddOption( entry.Icon, entry.Title, () => new DupesWorkshop()
 			{
-				SortOrder = Storage.SortOrder.RankedByVote,
+				SortOrder = WorkshopSortMode.Popular,
 				Category = entry.Name.ToString()
 			} );
 		}

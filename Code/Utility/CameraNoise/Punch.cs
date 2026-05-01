@@ -1,4 +1,4 @@
-namespace Sandbox.CameraNoise;
+﻿namespace Sandbox.CameraNoise;
 
 class Punch : BaseCameraNoise
 {

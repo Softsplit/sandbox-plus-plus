@@ -1,4 +1,4 @@
-using Sandbox.Rendering;
+﻿using Sandbox.Rendering;
 
 public partial class Toolgun : ScreenWeapon
 {
@@ -40,6 +40,8 @@ public partial class Toolgun : ScreenWeapon
 			Components.Create( mode, enabled );
 			enabled = false;
 		}
+
+		Network.Refresh( GameObject );
 	}
 
 	public override void OnControl( Player player )

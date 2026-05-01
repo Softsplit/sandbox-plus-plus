@@ -1,8 +1,10 @@
-public abstract partial class ToolMode
+﻿public abstract partial class ToolMode
 {
 	[Rpc.Broadcast]
 	public virtual void ShootEffects( SelectionPoint target )
 	{
+		if ( !Toolgun.IsValid() ) return;
+
 		var player = Toolgun.Owner;
 		if ( !player.IsValid() ) return;
 

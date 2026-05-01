@@ -1,4 +1,4 @@
-/// <summary>
+﻿/// <summary>
 /// A typed sort mode for finding packages.
 /// </summary>
 public enum PackageSortMode

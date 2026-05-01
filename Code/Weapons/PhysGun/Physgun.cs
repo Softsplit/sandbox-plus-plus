@@ -1,4 +1,4 @@
-using Sandbox.Physics;
+﻿using Sandbox.Physics;
 using Sandbox.Rendering;
 
 public partial class Physgun
@@ -42,11 +42,27 @@ public partial class Physgun
 		public readonly bool IsValid() => GameObject.IsValid();
 
 		public readonly Rigidbody Body => GameObject?.GetComponent<Rigidbody>();
+
+		public override readonly int GetHashCode()
+		{
+			return HashCode.Combine(
+				Active,
+				Pulling,
+				GameObject,
+				LocalOffset,
+				LocalNormal,
+				GrabOffset,
+				GrabDistance
+			);
+		}
 	}
 
 	[Sync] public GrabState _state { get; set; } = default;
 
-	public GrabState _stateHovered { get; set; } = default;
+	[Sync] public GrabState _stateHovered { get; set; } = default;
+
+	Transform _lastAimTransform;
+	Transform CurrentAimTransform => HasOwner ? AimTransform : _lastAimTransform;
 
 	bool _preventReselect = false;
 
@@ -54,6 +70,8 @@ public partial class Physgun
 	bool _isSnapping;
 	Rotation _spinRotation;
 	Rotation _snapRotation;
+
+	bool _launched;
 
 	/// <summary>
 	/// The force applied to pull objects to us.
@@ -86,7 +104,7 @@ public partial class Physgun
 
 		if ( _state.Active && !_state.Pulling )
 		{
-			var muzzle = WeaponModel?.MuzzleTransform?.WorldTransform ?? WorldTransform;
+			var muzzle = HasOwner ? MuzzleTransform.WorldTransform : CurrentAimTransform;
 			UpdateBeam( muzzle, _state.EndPoint, _stateHovered.EndNormal, _state.IsValid() );
 		}
 		else
@@ -98,6 +116,8 @@ public partial class Physgun
 	public override void OnControl( Player player )
 	{
 		base.OnControl( player );
+
+		_lastAimTransform = AimTransform;
 
 		UpdateViewmodelScreen();
 		UpdateScreenGraph();
@@ -287,6 +307,110 @@ public partial class Physgun
 		}
 	}
 
+	/// <summary>
+	/// Seat / standalone input — ShootInput grabs, SecondaryInput pulls.
+	/// </summary>
+	public void OnControl()
+	{
+		if ( HasOwner ) return;
+
+		var aim = AimTransform;
+		_lastAimTransform = aim;
+		var isPulling = SecondaryInput.Down() && !_preventReselect;
+
+		_stateHovered = default;
+
+		if ( _state.IsValid() )
+		{
+			if ( _state.Pulling )
+			{
+				// Left-click while pulling punts the object forward
+				if ( ShootInput.Pressed() )
+				{
+					var force = aim.Rotation.Forward * LaunchForce;
+					Launch( _state.Body, force );
+					_state = default;
+					_preventReselect = true;
+				}
+				// Right-click cancels the pull
+				else if ( SecondaryInput.Pressed() )
+				{
+					_state = default;
+					_preventReselect = true;
+				}
+			}
+			else
+			{
+				// Release grab when primary is let go
+				if ( !ShootInput.Down() )
+				{
+					_state = default;
+					_preventReselect = true;
+					GameObject.PlaySound( ReleasedSound );
+					return;
+				}
+
+				// Retract / extend grabbed object
+				if ( ExtendInput.Down() || RetractInput.Down() )
+				{
+					var state = _state;
+					if ( ExtendInput.Down() ) state.GrabDistance += 200.0f * Time.Delta;
+					if ( RetractInput.Down() ) state.GrabDistance -= 200.0f * Time.Delta;
+					state.GrabDistance = MathF.Max( 0.0f, state.GrabDistance );
+
+					_state = default;
+					_state = state;
+				}
+			}
+
+			return;
+		}
+		else
+		{
+			_state = default;
+		}
+
+		if ( _preventReselect )
+		{
+			if ( !ShootInput.Down() && !SecondaryInput.Down() )
+				_preventReselect = false;
+
+			return;
+		}
+
+		FindGrabbedBody( out var sh, aim, aim.Rotation.Yaw(), isPulling );
+		_stateHovered = sh;
+
+		if ( sh.IsValid() && sh.Pulling && sh.Body.MotionEnabled )
+		{
+			var closest = sh.Body.FindClosestPoint( aim.Position );
+			if ( closest.Distance( aim.Position ) <= PullDistance )
+			{
+				_state = sh with { Active = true, Pulling = true };
+			}
+		}
+
+		if ( _state.Pulling || _stateHovered.Pulling )
+			return;
+
+		if ( ShootInput.Down() )
+		{
+			_state = _stateHovered with { Active = true, Pulling = false };
+
+			if ( _state.IsValid() )
+				Unfreeze( _state.Body );
+		}
+		else if ( ShootInput.Released() )
+		{
+			GameObject.PlaySound( ReleasedSound );
+		}
+		else
+		{
+			_state = default;
+			_preventReselect = false;
+		}
+	}
+
 	private void UpdateViewModel( ViewModel model )
 	{
 		float stylus = 0;
@@ -324,6 +448,7 @@ public partial class Physgun
 
 		_state = default;
 		_stateHovered = default;
+		_launched = default;
 	}
 
 	protected override void OnFixedUpdate()
@@ -336,21 +461,24 @@ public partial class Physgun
 
 			if ( CanMove( _stateHovered ) && _stateHovered.Pulling )
 			{
-				var force = Owner.EyeTransform.Rotation.Backward * _stateHovered.Body.Mass * PullForce;
+				var force = CurrentAimTransform.Rotation.Backward * _stateHovered.Body.Mass * PullForce;
 				_stateHovered.Body.ApplyForceAt( _stateHovered.EndPoint, force );
 			}
+
+			_launched = false;
 
 			return;
 		}
 
+		// If we just launched, don't add a joint until state has let go.
+		if ( _launched ) return;
+
 		_body ??= new PhysicsBody( Scene.PhysicsWorld ) { BodyType = PhysicsBodyType.Keyframed, AutoSleep = false };
 
-		var eyeTransform = Owner.EyeTransform;
+		var eyeTransform = CurrentAimTransform;
 		var grabDistance = ClampGrabDistance( _state.Body, _state.EndPoint, eyeTransform, _state.GrabDistance );
 		var targetPosition = eyeTransform.Position + eyeTransform.Rotation.Forward * grabDistance;
-		var targetRotation = _state.Pulling
-			? eyeTransform.Rotation * _state.GrabOffset
-			: Rotation.FromYaw( Owner.Controller.EyeAngles.yaw ) * _state.GrabOffset;
+		var targetRotation = _state.Pulling ? eyeTransform.Rotation * _state.GrabOffset : Rotation.FromYaw( eyeTransform.Rotation.Yaw() ) * _state.GrabOffset;
 		_body.Transform = new Transform( targetPosition, targetRotation );
 
 		if ( _joint is null )
@@ -369,11 +497,24 @@ public partial class Physgun
 		}
 	}
 
+	/// <summary>
+	/// When true, the physgun aims where the seated player's camera looks.
+	/// </summary>
+	[Property, ClientEditable, Sync] public bool CanAim { get; set; } = true;
+
+	public override bool IsTargetedAim => CanAim;
+
+	Transform AimTransform
+	{
+		get
+		{
+			var ray = AimRay;
+			return new Transform( ray.Position, Rotation.LookAt( ray.Forward ) );
+		}
+	}
+
 	bool CanMove( GrabState state )
 	{
-		var player = Owner;
-		if ( player is null ) return false;
-
 		if ( !state.IsValid() ) return false;
 		if ( !state.Body.IsValid() ) return false;
 
@@ -404,6 +545,11 @@ public partial class Physgun
 
 		var go = tr.Body.GameObject;
 		if ( !go.IsValid() || go.IsDestroyed ) return false;
+
+		// Ask the object if it allows being grabbed (Ownable and others can reject via IPhysgunEvent)
+		var grabEvent = new IPhysgunEvent.GrabEvent { Grabber = Network.Owner };
+		go.Root.RunEvent<IPhysgunEvent>( x => x.OnPhysgunGrab( grabEvent ) );
+		if ( grabEvent.Cancelled ) return false;
 
 		// Trace hits physics, convert to local using scaled physics transform.
 		var bodyTransform = tr.Body.Transform.WithScale( go.WorldScale );
@@ -497,9 +643,16 @@ public partial class Physgun
 		if ( !body.IsValid() ) return;
 		if ( body.IsProxy ) return;
 
+		// We already launched.
+		if ( _launched ) return;
+
+		RemoveJoint();
+
 		var mass = body.Mass;
 		body.ApplyImpulse( force.Normal * (mass * force.Length) );
 		body.PhysicsBody?.ApplyAngularImpulse( Vector3.Random * (mass * force.Length) );
+
+		_launched = true;
 	}
 
 	static void GetConnectedBodies( GameObject source, HashSet<Rigidbody> result )

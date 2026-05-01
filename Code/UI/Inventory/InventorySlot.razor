@@ -1,9 +1,13 @@
-@using Sandbox;
+﻿@using Sandbox;
 @using Sandbox.UI;
+@namespace Sandbox
 @inherits Panel
 
 <root>
-    <div class="index">@(Index + 1)</div>
+    @if ( !Input.UsingController )
+    {
+        <label class="index">@(Index + 1)</label>
+    }
 
     @{
         var weapon = GetWeapon();
@@ -72,7 +76,7 @@
 
         var weapon = GetWeapon();
         if ( !Inventory.Drop( weapon ) && weapon.IsValid() )
-            weapon.DestroyGameObject();
+            Inventory.Remove( weapon );
     }
 
     BaseCarryable GetWeapon()
@@ -103,6 +107,7 @@
         SetClass("selected", Active && hasWeapon);
         SetClass("hovered", Hovered && hasWeapon);
         SetClass("switchable", hasWeapon && weapon.CanSwitch());
+        SetClass("no-tint", hasWeapon && weapon is SpawnerWeapon);
 
         if (hasWeapon && IconPanel is not null)
         {
@@ -155,5 +160,5 @@
         GameManager.GiveSpawnerWeaponAt( data.Type, data.Path, Index, data.Data as string, data.Icon, data.Title );
     }
 
-    protected override int BuildHash() => HashCode.Combine(GetWeapon(), Hovered, Active);
+    protected override int BuildHash() => HashCode.Combine(GetWeapon(), Hovered, Active, Input.UsingController);
 }

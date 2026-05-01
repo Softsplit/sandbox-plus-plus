@@ -1,4 +1,4 @@
-namespace Sandbox;
+﻿namespace Sandbox;
 
 internal static class Hud
 {

@@ -8,10 +8,7 @@
   "Resources": "/fonts/*\n/UI/*.png\n/ui/*.png\n/ui/*\n/ui/weapons/melee/*",
   "PackageReferences": [],
   "EditorReferences": null,
-  "Mounts": [
-    "quake",
-    "ns2"
-  ],
+  "Mounts": [],
   "IsStandaloneOnly": false,
   "Metadata": {
     "MaxPlayers": 32,

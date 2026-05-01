@@ -1,4 +1,4 @@
-public abstract class WeaponModel : Component
+﻿public abstract class WeaponModel : Component
 {
 	[Property] public SkinnedModelRenderer Renderer { get; set; }
 	[Property] public GameObject MuzzleTransform { get; set; }
@@ -56,5 +56,15 @@ public abstract class WeaponModel : Component
 		if ( !MuzzleTransform.IsValid() ) return;
 
 		MuzzleEffect.Clone( new CloneConfig { Parent = MuzzleTransform, Transform = global::Transform.Zero, StartEnabled = true } );
+	}
+
+	public virtual void OnAttack()
+	{
+
+	}
+
+	public virtual void CreateRangedEffects( BaseWeapon weapon, Vector3 hitPoint, Vector3? origin )
+	{
+
 	}
 }

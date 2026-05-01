@@ -1,0 +1,91 @@
+@using Sandbox;
+@using Sandbox.UI;
+@namespace Sandbox
+@inherits BaseControl
+@attribute [CustomEditor(typeof(GameResource))]
+
+<root>
+
+    <div class="preview">
+        @if ( ResourcePath != null )
+        {
+            <div class="thumb" style="background-image: url( thumb:@ResourcePath )"></div>
+        }
+        else
+        {
+            <div class="ext-badge">@Extension</div>
+        }
+    </div>
+
+    <div class="content">
+        @if ( Title == null )
+        {
+            <div class="title empty">None Selected</div>
+        }
+        else
+        {
+            <div class="title">@Title</div>
+        }
+        <div class="subtitle">@TypeName</div>
+    </div>
+
+</root>
+
+@code
+{
+    string Title;
+    string ResourcePath;
+    string Extension;
+    string TypeName;
+
+    public override void Rebuild()
+    {
+        base.Rebuild();
+
+        var typeDesc = TypeLibrary.GetType( Property.PropertyType );
+        var assetType = typeDesc?.GetAttribute<AssetTypeAttribute>();
+        Extension = assetType?.Extension?.ToUpperInvariant().Truncate( 4 ) ?? "RES";
+        TypeName = assetType?.Name ?? Property.PropertyType?.Name ?? "Resource";
+
+        OnValueChanged();
+    }
+
+    public void OnValueChanged()
+    {
+        var resource = Property.GetValue<GameResource>();
+
+        if ( resource == null || !resource.IsValid() )
+        {
+            Title = null;
+            ResourcePath = null;
+            return;
+        }
+
+        Title = resource.ResourceName;
+        ResourcePath = resource.ResourcePath;
+    }
+
+    void SelectFile( string filePath )
+    {
+        var resource = ResourceLibrary.Get<GameResource>( filePath );
+        Property.SetValue( resource );
+        OnValueChanged();
+    }
+
+    protected override void OnClick( MousePanelEvent e )
+    {
+        base.OnClick( e );
+
+        var typeDesc = TypeLibrary.GetType( Property.PropertyType );
+        var assetType = typeDesc?.GetAttribute<AssetTypeAttribute>();
+
+        var popup = new ResourceSelectPopup();
+        popup.Extension = assetType?.Extension;
+        popup.CurrentValue = Property.GetValue<GameResource>()?.ResourcePath;
+        popup.Parent = FindPopupPanel();
+        popup.OnSelectedFile = SelectFile;
+
+        if ( Property.TryGetAttribute<MetadataAttribute>( out var metadata ) )
+            popup.Category = metadata.Tag;
+    }
+}

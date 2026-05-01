@@ -248,9 +248,13 @@ public class Weld : BaseConstraintToolMode
 		go2.NetworkSpawn();
 		go1.NetworkSpawn();
 
+		Track( go1, go2 );
+
 		var undo = Player.Undo.Create();
 		undo.Name = "Weld";
 		undo.Add( go1 );
 		undo.Add( go2 );
+
+		Player.PlayerData?.AddStat( "tool.weld.create" );
 	}
 }

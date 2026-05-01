@@ -4,24 +4,35 @@
 @namespace Sandbox
 @attribute [Icon( "🧹" )]
 @attribute [Title( "Cleanup" )]
+@attribute [Group( "World" )]
 @attribute [Order( 0 )]
-@attribute [UtilityOf( typeof(CleanupFunction) )]
 
 <root class="page" style="flex-direction: column;">
     <div class="control-row" @onclick=@(() =>CleanUpMine() )>
         <label class="left">🧼 Clean Up Mine</label>
     </div>
 
-    @if ( Connection.Local.IsHost )
+    @if ( Connection.Local.HasPermission( "admin" ) )
     {
         <div class="control-row" @onclick=@(() =>CleanUpAll() )>
             <label class="left">🧹 Clean Up All</label>
         </div>
+
+        <div class="section-header">Clean Up Player</div>
+
+        @foreach ( var connection in Connection.All )
+        {
+            var c = connection;
+            <div class="control-row" @onclick=@(() => CleanUpPlayer( c ))>
+                <label class="left">🗑️ @c.DisplayName</label>
+            </div>
+        }
     }
 </root>
 
 @code
 {
-    void CleanUpMine() => CleanupFunction.CleanUpMine();
-    void CleanUpAll() => CleanupFunction.CleanUpAll();
+    void CleanUpMine() => CleanupSystem.RpcCleanUpMine();
+    void CleanUpAll() => CleanupSystem.RpcCleanUpAll();
+    void CleanUpPlayer( Connection c ) => CleanupSystem.RpcCleanUpTarget( c );
 }

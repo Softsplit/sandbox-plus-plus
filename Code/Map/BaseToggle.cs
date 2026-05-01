@@ -1,4 +1,4 @@
-public abstract class BaseToggle : Component
+﻿public abstract class BaseToggle : Component
 {
 	public delegate Task StateChangedDelegate( bool state );
 

@@ -1,9 +1,9 @@
 {
-	"Prefab": "entities/sents/lights/spotlight.prefab",
-	"Title": "Spot Light",
-	"Description": "A light that generates a spot",
-	"Category": "World",
-	"IncludeCode": false,
-	"__references": [],
-	"__version": 0
+  "Prefab": "entities/sents/lights/spotlight.prefab",
+  "Title": "Spot Light",
+  "Description": "A light that generates a spot",
+  "Category": "World",
+  "IncludeCode": false,
+  "__references": [],
+  "__version": 0
 }

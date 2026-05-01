@@ -4,10 +4,14 @@
 @namespace Sandbox
 
 <root @onmousedown=@OnMenuClicked>
-	
-    <PanelSwitcher @ref="PanelSwitcher"></PanelSwitcher>
 
-    <SpawnMenuModeBar></SpawnMenuModeBar>
+    <div class="menu-wrapper">
+        <div class="menu-backdrop"></div>
+        <SpawnMenuModeBar></SpawnMenuModeBar>
+        <div class="menu-slide">
+            <PanelSwitcher @ref="PanelSwitcher"></PanelSwitcher>
+        </div>
+    </div>
 
 </root>
 
@@ -23,6 +27,9 @@
     {
         UpdateSpawnMenuState();
         ScanForNewModes();
+
+        var activeType = GetActiveMode()?.GetType().Name;
+        SetClass( "no-backdrop", activeType is "ContextMenuHost" or "SaveMenu" or "EffectsHost" );
 
         base.OnUpdate();
     }
@@ -64,6 +71,7 @@
                     Hints.Current.Cancel("openspawnmenu");
                     SwitchMode(_lastMode, false);
                     PanelSwitcher.SkipTransitions();
+                    Sandbox.Services.Stats.Increment( "menu.spawnmenu.open", 1 );
                 }
             }
         }

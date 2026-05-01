@@ -1,9 +1,9 @@
 {
-	"Prefab": "weapons/mp5/item_mp5.prefab",
-	"Title": "MP5",
-	"Description": "Semi-automatic sub machine gun",
-	"Category": "Weapon",
-	"IncludeCode": false,
-	"__references": [],
-	"__version": 0
+  "Prefab": "weapons/mp5/mp5.prefab",
+  "Title": "MP5",
+  "Description": "Semi-automatic sub machine gun",
+  "Category": "Weapon",
+  "IncludeCode": false,
+  "__references": [],
+  "__version": 0
 }

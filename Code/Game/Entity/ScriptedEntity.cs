@@ -1,4 +1,4 @@
-
+﻿
 
 [AssetType( Name = "Sandbox Entity", Extension = "sent", Category = "Sandbox", Flags = AssetTypeFlags.NoEmbedding | AssetTypeFlags.IncludeThumbnails )]
 public class ScriptedEntity : GameResource, IDefinitionResource
@@ -24,6 +24,13 @@ public class ScriptedEntity : GameResource, IDefinitionResource
 	/// </summary>
 	[Property]
 	public bool IncludeCode { get; set; }
+
+	/// <summary>
+	/// If true, this entity only appears in the spawn menu when running in the editor.
+	/// Use for test/debug entities that shouldn't ship to players.
+	/// </summary>
+	[Property]
+	public bool Developer { get; set; }
 
 	public override Bitmap RenderThumbnail( ThumbnailOptions options )
 	{

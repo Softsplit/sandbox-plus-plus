@@ -1,4 +1,4 @@
-using Sandbox.Utility;
+﻿using Sandbox.Utility;
 
 namespace Sandbox.CameraNoise;
 

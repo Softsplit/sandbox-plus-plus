@@ -1,4 +1,4 @@
-namespace Sandbox.Npcs.Tasks;
+﻿namespace Sandbox.Npcs.Tasks;
 
 /// <summary>
 /// Tells the AnimationLayer to drop the held prop.

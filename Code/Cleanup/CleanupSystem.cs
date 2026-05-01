@@ -1,3 +1,5 @@
+using Sandbox.UI;
+
 namespace Sandbox;
 
 public interface ICleanupEvents
@@ -21,10 +23,9 @@ public sealed class CleanupSystem : GameObjectSystem<CleanupSystem>, ISceneLoadi
 	/// </summary>
 	private readonly Dictionary<Guid, string> _baselineObjectData = new();
 
-	/// <summary>
-	/// The resource path of the loaded scene, used to reload the baseline.
-	/// </summary>
-	private string _loadedScenePath;
+	private static bool _restorePersistedBaseline;
+	private static HashSet<Guid> _persistedBaselineIds;
+	private static Dictionary<Guid, string> _persistedBaselineData;
 
 	/// <summary>
 	/// Whether a baseline has been captured.
@@ -35,28 +36,49 @@ public sealed class CleanupSystem : GameObjectSystem<CleanupSystem>, ISceneLoadi
 	{
 	}
 
+	/// <summary>
+	/// Call from SaveSystem before Game.ChangeScene() to snapshot the current baseline
+	/// </summary>
+	public static void PreserveBaselineForSaveLoad()
+	{
+		if ( Current is null || !Current.HasBaseline ) return;
+
+		_restorePersistedBaseline = true;
+		_persistedBaselineIds = new HashSet<Guid>( Current._baselineObjectIds );
+		_persistedBaselineData = new Dictionary<Guid, string>( Current._baselineObjectData );
+	}
+
 	void ISceneLoadingEvents.BeforeLoad( Scene scene, SceneLoadOptions options )
 	{
 		// Clear any existing baseline when a new scene is loading
 		_baselineObjectIds.Clear();
 		_baselineObjectData.Clear();
-		_loadedScenePath = null;
 	}
 
 	async Task ISceneLoadingEvents.OnLoad( Scene scene, SceneLoadOptions options, LoadingContext context )
 	{
+		// We don't care if the game is not playing
+		if ( !Game.IsPlaying ) return;
+
 		// Wait for next frame to ensure all objects are spawned
 		await Task.Yield();
 
 		// Could be null if the scene was unloaded before this runs
 		if ( !Scene.IsValid() ) return;
 
-		CaptureBaseline();
-
-		var sceneFile = options.GetSceneFile();
-		if ( sceneFile is not null && !string.IsNullOrEmpty( sceneFile.ResourcePath ) )
+		// When loading a save, restore the baseline captured before the scene was destroyed
+		if ( _restorePersistedBaseline && _persistedBaselineIds is not null )
 		{
-			_loadedScenePath = sceneFile.ResourcePath;
+			_baselineObjectIds.UnionWith( _persistedBaselineIds );
+			foreach ( var kvp in _persistedBaselineData )
+				_baselineObjectData.TryAdd( kvp.Key, kvp.Value );
+
+			_restorePersistedBaseline = false;
+			Log.Info( $"CleanupSystem: Restored persisted baseline with {_baselineObjectIds.Count} objects." );
+		}
+		else
+		{
+			CaptureBaseline();
 		}
 	}
 
@@ -233,9 +255,27 @@ public sealed class CleanupSystem : GameObjectSystem<CleanupSystem>, ISceneLoadi
 	/// Console command to cleanup the map.
 	/// </summary>
 	[ConCmd( "cleanup" )]
-	public static void CleanupCommand()
+	public static void CleanupCommand( string targetName = null )
 	{
 		if ( !Networking.IsHost ) return;
+
+		//
+		// Targeted cleanup, doesn't use the same cleanup shit
+		//
+		if ( !string.IsNullOrEmpty( targetName ) )
+		{
+			var target = GameManager.FindPlayerWithName( targetName );
+			if ( target is not null )
+			{
+				CleanupPlayer( target );
+			}
+			else
+			{
+				Notices.AddNotice( "cleaning_services", Color.Red, $"Can't find {targetName} to clean up" );
+			}
+
+			return;
+		}
 
 		if ( Current is null )
 		{
@@ -245,4 +285,44 @@ public sealed class CleanupSystem : GameObjectSystem<CleanupSystem>, ISceneLoadi
 
 		Current.Cleanup();
 	}
+
+	[Rpc.Host]
+	public static void RpcCleanUpMine()
+	{
+		CleanupPlayer( Rpc.Caller );
+	}
+
+	[Rpc.Host]
+	public static void RpcCleanUpAll()
+	{
+		if ( !Rpc.Caller.HasPermission( "admin" ) ) return;
+
+		Current?.Cleanup();
+	}
+
+	[Rpc.Host]
+	public static void RpcCleanUpTarget( Connection target )
+	{
+		if ( !Rpc.Caller.HasPermission( "admin" ) ) return;
+
+		CleanupPlayer( target );
+	}
+
+	public static void CleanupPlayer( Connection caller )
+	{
+		Assert.True( Networking.IsHost, "Only the host may call this method!" );
+
+		var removable = Game.ActiveScene.GetAllComponents<Ownable>()
+			.Where( o => o.Owner == caller );
+
+		var count = 0;
+		foreach ( var ownable in removable.ToArray() )
+		{
+			ownable.GameObject.Destroy();
+			count++;
+		}
+
+		Notices.SendNotice( caller, "cleaning_services", Color.Green, $"Cleaned up {count} objects" );
+	}
+
 }

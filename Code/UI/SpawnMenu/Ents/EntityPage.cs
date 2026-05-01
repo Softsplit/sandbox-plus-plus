@@ -1,4 +1,4 @@
-
+﻿
 /// <summary>
 /// This component has a kill icon that can be used in the killfeed, or somewhere else.
 /// </summary>
@@ -8,6 +8,7 @@ public class EntityPage : BaseSpawnMenu
 	static Dictionary<string, string> CategoryIcons = new()
 	{
 		{ "Chair", "🪑" },
+		{ "Pickup", "🧰" },
 		{ "Weapon", "🔫" },
 		{ "Npc", "🤖" },
 		{ "Vehicle", "🚕" },
@@ -19,6 +20,7 @@ public class EntityPage : BaseSpawnMenu
 		AddHeader( "Local" );
 
 		var categories = ResourceLibrary.GetAll<ScriptedEntity>()
+			.Where( e => !e.Developer || ServerSettings.ShowDeveloperEntities )
 			.Select( e => string.IsNullOrWhiteSpace( e.Category ) ? "Other" : e.Category )
 			.Distinct()
 			.OrderBy( c => c == "Other" ? "\xFF" : c ); // sort Other last
@@ -38,8 +40,8 @@ public class EntityPage : BaseSpawnMenu
 		AddOption( "🥼", "Npc", () => new EntityListCloud() { Query = "cat:npc" } );
 		AddOption( "🎈", "Other", () => new EntityListCloud() { Query = "cat:other" } );
 		AddOption( "💪", "Showcase", () => new EntityListCloud() { Query = "cat:showcase" } );
-		AddOption( "🧸", "Toys & Fun", () => new EntityListCloud() { Query = "cat:toy" } );
+		AddOption( "🧸", "Toys & Fun", () => new EntityListCloud() { Query = "cat:toyfun" } );
 		AddOption( "🚚", "Vehicle", () => new EntityListCloud() { Query = "cat:vehicle" } );
-		AddOption( "⭐", "Favourites", () => new EntityListCloud() { Query = "sort:favourite" } );
+		// AddOption( "⭐", "Favourites", () => new EntityListCloud() { Query = "sort:favourite" } );
 	}
 }

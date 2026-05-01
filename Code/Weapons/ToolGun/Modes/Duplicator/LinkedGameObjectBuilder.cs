@@ -1,4 +1,4 @@
-
+﻿
 
 public class LinkedGameObjectBuilder
 {
@@ -56,6 +56,18 @@ public class LinkedGameObjectBuilder
 				AddConnected( joint.Object1 );
 				AddConnected( joint.Object2 );
 			}
+		}
+
+		foreach ( var link in source.GetComponentsInChildren<ManualLink>() )
+		{
+			if ( link.Body.IsValid() )
+				AddConnected( link.Body );
+		}
+
+		// If any children have a physics filter, also connect them.
+		foreach ( var filter in source.GetComponentsInChildren<PhysicsFilter>( includeSelf: false ) )
+		{
+			AddConnected( filter.GameObject );
 		}
 	}
 

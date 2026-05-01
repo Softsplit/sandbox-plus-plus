@@ -1,4 +1,4 @@
-public partial class Toolgun : ScreenWeapon
+﻿public partial class Toolgun : ScreenWeapon
 {
 	[Header( "Effects" )]
 	[Property] public GameObject SuccessImpactEffect { get; set; }

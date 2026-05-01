@@ -1,4 +1,4 @@
-using Sandbox.Citizen;
+﻿using Sandbox.Citizen;
 
 namespace Sandbox.Npcs.Layers;
 

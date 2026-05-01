@@ -1,4 +1,4 @@
-namespace Sandbox.Npcs.Tasks;
+﻿namespace Sandbox.Npcs.Tasks;
 
 /// <summary>
 /// Tells the AnimationLayer to pick up and hold a prop.

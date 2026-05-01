@@ -1,4 +1,4 @@
-namespace Sandbox;
+﻿namespace Sandbox;
 
 public interface IToolInfo : IValid
 {

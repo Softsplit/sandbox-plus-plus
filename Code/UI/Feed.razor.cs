@@ -9,6 +9,7 @@ partial class Feed : PanelComponent
 	[Property] public Texture ExplosionIcon { get; set; }
 	[Property] public Texture SuicideIcon { get; set; }
 	[Property] public Texture FallIcon { get; set; }
+	[Property] public Texture NpcIcon { get; set; }
 
 	protected override void OnUpdate()
 	{
@@ -16,18 +17,20 @@ partial class Feed : PanelComponent
 	}
 
 	[Rpc.Broadcast]
-	public void NotifyDeath( PlayerData victim, PlayerData attacker, Texture weaponIcon, TagSet tags )
+	public void NotifyKill( string victimName, string attackerName, long attackerSteamId, string damageTags, string attackerTags, string victimTags, Texture weaponIcon )
 	{
 		if ( Application.IsDedicatedServer ) return;
-		if ( !victim.IsValid() ) return;
+		if ( string.IsNullOrEmpty( victimName ) ) return;
+
+		bool isSuicide = damageTags.Contains( "suicide" );
 
 		Panel panel = new Panel();
 
-		bool isSuicide = victim == attacker;
-		if ( attacker.IsValid() && !isSuicide )
+		if ( !string.IsNullOrEmpty( attackerName ) && !isSuicide )
 		{
+			if ( attackerTags.Contains( "npc" ) ) AddIcon( panel, NpcIcon );
 			var left = panel.AddChild<Label>();
-			left.Text = attacker.DisplayName;
+			left.Text = attackerName;
 		}
 
 		Panel icons = panel.AddChild<Panel>( "icons" );
@@ -35,7 +38,7 @@ partial class Feed : PanelComponent
 		{
 			AddIcon( icons, weaponIcon );
 		}
-		else if ( tags.Contains( DamageTags.Fall ) )
+		else if ( damageTags.Contains( DamageTags.Fall ) )
 		{
 			AddIcon( icons, FallIcon );
 		}
@@ -44,13 +47,15 @@ partial class Feed : PanelComponent
 			AddIcon( icons, isSuicide ? SuicideIcon : DeathIcon );
 		}
 
-		if ( tags.Contains( DamageTags.Headshot ) ) AddIcon( icons, HeadshotIcon );
-		if ( tags.Contains( DamageTags.Explosion ) ) AddIcon( icons, ExplosionIcon );
+		if ( damageTags.Contains( DamageTags.Headshot ) ) AddIcon( icons, HeadshotIcon );
+		if ( damageTags.Contains( DamageTags.Explosion ) ) AddIcon( icons, ExplosionIcon );
 
+		if ( victimTags.Contains( "npc" ) ) AddIcon( panel, NpcIcon );
 		var right = panel.AddChild<Label>();
-		right.Text = victim.DisplayName;
+		right.Text = victimName;
 
-		if ( attacker.IsValid() && attacker.IsMe )
+		bool isMe = attackerSteamId > 0 && attackerSteamId == Connection.Local.SteamId;
+		if ( isMe )
 			panel.AddClass( "is-me" );
 
 		Panel?.AddChild( panel );

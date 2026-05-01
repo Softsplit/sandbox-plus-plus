@@ -72,7 +72,11 @@ public class SniperWeapon : BaseBulletWeapon
 		if ( _hasFired && Input.Released( "attack1" ) )
 		{
 			_hasFired = false;
-			ViewModel?.RunEvent<ViewModel>( x => x.Renderer?.Set( "b_reload_bolt", true ) );
+			ViewModel?.RunEvent<ViewModel>( x =>
+			{
+				x.Renderer?.Set( "speed_reload", 1 );
+				x.Renderer?.Set( "b_reload_bolt", true );
+			} );
 		}
 	}
 
@@ -122,7 +126,7 @@ public class SniperWeapon : BaseBulletWeapon
 			return;
 
 		var mouseBlur = _mouseDelta * 0.25f;
-		var velocityBlur = Owner.IsValid() ? (Owner.Controller.Velocity.Length / 300f).Clamp( 0f, 1f ) : 0f;
+		var velocityBlur = HasOwner ? (Owner.Controller.Velocity.Length / 300f).Clamp( 0f, 1f ) : 0f;
 
 		_scopeEffect.BlurInput = MathF.Min( mouseBlur + velocityBlur, 1f );
 	}

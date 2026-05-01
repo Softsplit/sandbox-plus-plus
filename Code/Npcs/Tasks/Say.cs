@@ -1,4 +1,4 @@
-using Sandbox.Npcs.Layers;
+﻿using Sandbox.Npcs.Layers;
 
 namespace Sandbox.Npcs.Tasks;
 

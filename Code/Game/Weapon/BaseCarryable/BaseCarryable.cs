@@ -40,12 +40,18 @@ public partial class BaseCarryable : Component, IKillIcon
 	public GameObject WorldModel { get; protected set; }
 
 	/// <summary>
+	/// Optional explicit muzzle point. Used when no WeaponModel is present (e.g. standalone/seat mode).
+	/// If unset, falls back to the WeaponModel muzzle or the weapon's own GameObject.
+	/// </summary>
+	[Property] public GameObject MuzzleGameObject { get; set; }
+
+	/// <summary>
 	/// Used for overriding the display icon
 	/// </summary>
 	public virtual string InventoryIconOverride => null;
 
 	/// <summary>
-	/// Wether this weapon should be avoided when determining an item to swap to
+	/// Whether this weapon should be avoided when determining an item to swap to
 	/// </summary>
 	public virtual bool ShouldAvoid => false;
 
@@ -71,9 +77,14 @@ public partial class BaseCarryable : Component, IKillIcon
 			if ( Scene.Camera.RenderExcludeTags.Contains( "firstperson" ) ) go = default;
 
 			if ( !go.IsValid() ) go = WorldModel;
-			if ( !go.IsValid() ) return null;
+			if ( !go.IsValid() ) go = GameObject;
 
-			return go.GetComponent<WeaponModel>();
+			var wm = go.GetComponentInChildren<WeaponModel>();
+			if ( wm.IsValid() )
+				return wm;
+
+			// Standalone weapons may have a WorldModel in their hierarchy without the stored reference
+			return GameObject.GetComponentInChildren<WeaponModel>();
 		}
 	}
 
@@ -88,6 +99,61 @@ public partial class BaseCarryable : Component, IKillIcon
 		}
 	}
 
+	public bool HasOwner => Owner.IsValid();
+
+	/// <summary>
+	/// When true, seated aim uses the scene camera direction instead of the weapon's muzzle direction.
+	/// Override in weapons that support player-directed aim (e.g. RPG tracked mode, Physgun aim mode).
+	/// </summary>
+	public virtual bool IsTargetedAim => false;
+
+	/// <summary>
+	/// Unified aim ray for all weapons. Returns the correct ray based on context:
+	/// first-person held, third-person held, seated (targeted or muzzle), or standalone.
+	/// </summary>
+	public Ray AimRay
+	{
+		get
+		{
+			if ( HasOwner )
+			{
+				var owner = Owner;
+				if ( owner.Controller.IsValid() && owner.Controller.ThirdPerson && Scene.Camera.IsValid() )
+					return Scene.Camera.Transform.World.ForwardRay;
+
+				return owner.EyeTransform.ForwardRay;
+			}
+
+			var seated = ClientInput.Current;
+			if ( seated.IsValid() && IsTargetedAim && Scene.Camera.IsValid() )
+				return Scene.Camera.Transform.World.ForwardRay;
+
+			var muzzle = MuzzleTransform.WorldTransform;
+			return new Ray( muzzle.Position, muzzle.Rotation.Forward );
+		}
+	}
+
+	/// <summary>
+	/// The root GameObject to ignore when tracing from AimRay.
+	/// </summary>
+	public GameObject AimIgnoreRoot => HasOwner ? Owner.GameObject : GameObject;
+
+	/// <summary>
+	/// The effective attacker to use in damage attribution.
+	/// Returns the owning player's GameObject if held, the seated player's GameObject if
+	/// controlled from a contraption seat, or this weapon's own GameObject as a last resort.
+	/// </summary>
+	protected GameObject EffectiveAttacker
+	{
+		get
+		{
+			if ( HasOwner ) return Owner.GameObject;
+			var seatedPlayer = ClientInput.Current;
+			if ( seatedPlayer.IsValid() ) return seatedPlayer.GameObject;
+			return GameObject;
+		}
+	}
+
 	/// <summary>
 	/// Where shoot effects come from. Either the point on the world model or the viewmodel, whichever is currently being used.
 	/// </summary>
@@ -95,7 +161,9 @@ public partial class BaseCarryable : Component, IKillIcon
 	{
 		get
 		{
-			return WeaponModel?.MuzzleTransform ?? GameObject;
+			if ( WeaponModel?.MuzzleTransform.IsValid() ?? false ) return WeaponModel.MuzzleTransform;
+			if ( MuzzleGameObject.IsValid() ) return MuzzleGameObject;
+			return GameObject;
 		}
 	}
 
@@ -104,6 +172,18 @@ public partial class BaseCarryable : Component, IKillIcon
 	/// Set at runtime when picked up.
 	/// </summary>
 	[Sync( SyncFlags.FromHost )] public int InventorySlot { get; set; } = -1;
+
+	/// <summary>
+	/// This is shite
+	/// </summary>
+	[Sync( SyncFlags.FromHost ), Change( nameof( OnItemVisibility ) )]
+	public bool IsItem { get; set; } = true;
+
+	private void OnItemVisibility( bool oldVal, bool newVal )
+	{
+		if ( DroppedGameObject.IsValid() )
+			DroppedGameObject.Enabled = newVal;
+	}
 
 	/// <summary>
 	/// Can we switch to this?
@@ -142,8 +222,8 @@ public partial class BaseCarryable : Component, IKillIcon
 
 			if ( controller.ThirdPerson )
 			{
-				var tr = Scene.Trace.Ray( controller.EyeTransform.ForwardRay, 4096 )
-									.IgnoreGameObjectHierarchy( controller.GameObject )
+				var tr = Scene.Trace.Ray( AimRay, 4096 )
+									.IgnoreGameObjectHierarchy( AimIgnoreRoot )
 									.Run();
 
 				aimPos = Scene.Camera.PointToScreenPixels( tr.EndPosition );
@@ -243,13 +323,14 @@ public partial class BaseCarryable : Component, IKillIcon
 		if ( !attack.Target.IsValid() )
 			return;
 
-		if ( !Owner.IsValid() )
-			return;
+		// Use owner as attacker when held by a player, seated player when controlled from a
+		// contraption seat, or fall back to the weapon itself (standalone/world weapon)
+		var attacker = EffectiveAttacker;
 
 		var damagable = attack.Target.GetComponentInParent<IDamageable>();
 		if ( damagable is not null )
 		{
-			var info = new DamageInfo( attack.Damage, Owner.GameObject, GameObject );
+			var info = new DamageInfo( attack.Damage, attacker, GameObject );
 			info.Position = attack.Position;
 			info.Origin = attack.Origin;
 			info.Tags = attack.Tags;
@@ -271,7 +352,7 @@ public partial class BaseCarryable : Component, IKillIcon
 		return false;
 	}
 
-	public virtual void OnPlayerDeath( IPlayerEvent.DiedParams args )
+	public virtual void OnPlayerDeath( PlayerDiedParams args )
 	{
 	}
 }

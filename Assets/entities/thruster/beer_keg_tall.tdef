@@ -1,7 +1,7 @@
 {
-	"Prefab": "entities/thruster/beer_keg_tall.prefab",
-	"Title": "Beer Keg Tall",
-	"Description": "",
-	"__references": [],
-	"__version": 0
+  "Prefab": "entities/thruster/beer_keg_tall.prefab",
+  "Title": "Beer Keg Tall",
+  "Description": "",
+  "__references": [],
+  "__version": 0
 }

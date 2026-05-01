@@ -14,7 +14,7 @@
             }
             else
             {
-                var totalMass = Target.SelectMany( go => go.GetComponentsInChildren<Rigidbody>() ).Sum( rb => rb.Mass );
+                var totalMass = Target.SelectMany( go => go.GetComponentsInChildren<Rigidbody>() ).Sum( ResolveMass );
                 var health = Target.Select( go => go.GetComponent<Prop>() ).FirstOrDefault( p => p.IsValid() );
 
                 <div class="object-info">
@@ -31,6 +31,18 @@
 
                 @if (Renderers.Count > 0)
                 {
+                    @if ( MaterialGroups.Count > 1 )
+                    {
+                        var currentGroup = Renderers[0].MaterialGroup ?? MaterialGroups[0];
+                        <div class="material-row">
+                            <label>Skin</label>
+                            <div class="material-button" @onclick="@PickMaterialGroup">
+                                <label>@currentGroup</label>
+                                <label class="material-group-arrow">▾</label>
+                            </div>
+                        </div>
+                    }
+
                     var accessor = Renderers[0].Materials;
                     @for (int i = 0; i < accessor.Count; i++)
                     {
@@ -69,17 +81,45 @@
     public bool TrySetTarget(List<GameObject> selection)
     {
         var ids = selection.Select(x => x.Id);
-        if (ids.SequenceEqual(Target?.Select(x => x.Id) ?? []))
-            return true;
+        if (!ids.SequenceEqual(Target?.Select(x => x.Id) ?? []))
+        {
+            Target = selection.Any() ? selection.ToList() : null;
+            RebuildFromTarget();
+            StateHasChanged();
+        }
 
-        Target = selection.Any() ? selection.ToList() : null;
-        RebuildFromTarget();
-        StateHasChanged();
-        return true;
+        // Hide the tab when something is selected but there's nothing to show
+        return Target == null || HasContent();
+    }
+
+    // Frozen rigidbodies report Mass = 0 from the live physics body, so fall back
+    // to PhysicalProperties.Mass and MassOverride before giving up.
+    static float ResolveMass( Rigidbody rb )
+    {
+        if ( !rb.IsValid() ) return 0f;
+        var mo = rb.GetComponent<PhysicalProperties>();
+        if ( mo.IsValid() && mo.Mass > 0f ) return mo.Mass;
+        if ( rb.MassOverride > 0f ) return rb.MassOverride;
+        return rb.Mass;
+    }
+
+    bool HasContent()
+    {
+        if ( Target == null ) return false;
+        if ( Properties.Count > 0 || Renderers.Count > 0 ) return true;
+
+        var totalMass = Target.SelectMany( go => go.GetComponentsInChildren<Rigidbody>() ).Sum( ResolveMass );
+        if ( totalMass > 0 ) return true;
+
+        var health = Target.Select( go => go.GetComponent<Prop>() ).FirstOrDefault( p => p.IsValid() );
+        if ( health.IsValid() && health.Health != 0 ) return true;
+
+        return false;
     }
 
     List<SerializedProperty> Properties = new();
     List<ModelRenderer> Renderers = new();
+    List<string> MaterialGroups = new();
 
     protected override int BuildHash()
     {
@@ -87,8 +127,9 @@
         foreach ( var go in Target ?? [] )
         {
             hc.Add( go.Id );
-            hc.Add( go.GetComponent<Rigidbody>()?.Mass ?? 0f );
+            hc.Add( ResolveMass( go.GetComponent<Rigidbody>() ) );
             hc.Add( go.GetComponent<Prop>()?.Health ?? -1f );
+            hc.Add( go.GetComponent<ModelRenderer>()?.MaterialGroup );
         }
         return hc.ToHashCode();
     }
@@ -103,6 +144,7 @@
     {
         Properties = new();
         Renderers = new();
+        MaterialGroups = new();
 
         if (Target == null) return;
 
@@ -153,6 +195,13 @@
         {
             Renderers.AddRange(components.OfType<ModelRenderer>());
 
+            var model = mr.Model;
+            if ( model is not null )
+            {
+                for ( int i = 0; i < model.MaterialGroupCount; i++ )
+                    MaterialGroups.Add( model.GetMaterialGroupName( i ) );
+            }
+
             var prop = mr.GetComponent<Prop>();
             if (prop is not null)
             {
@@ -179,6 +228,23 @@
             if (c is Component component)
                 GameManager.ChangeProperty(component, prop.Name, prop.GetValue<object>());
         }
+    }
+
+    void PickMaterialGroup()
+    {
+        var menu = MenuPanel.Open( this );
+        var current = Renderers[0].MaterialGroup ?? MaterialGroups.FirstOrDefault();
+        foreach ( var group in MaterialGroups )
+        {
+            var g = group;
+            menu.AddOption( current == g ? "check" : "", g, () => SetMaterialGroup( g ) );
+        }
+    }
+
+    void SetMaterialGroup( string group )
+    {
+        foreach ( var renderer in Renderers )
+            GameManager.ChangeProperty( renderer, nameof( ModelRenderer.MaterialGroup ), group );
     }
 
     void PickMaterial(int index)

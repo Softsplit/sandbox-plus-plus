@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
@@ -9,7 +9,12 @@ namespace Sandbox;
 /// </summary>
 public sealed class SaveSystem : GameObjectSystem<SaveSystem>, ISceneLoadingEvents
 {
-	private const int CurrentSaveVersion = 1;
+	private const int CurrentSaveVersion = 2;
+
+	/// <summary>
+	/// The current save format version. Saves with a different version are incompatible.
+	/// </summary>
+	public static int SaveVersion => CurrentSaveVersion;
 	private Dictionary<string, string> _metadata = new();
 	private readonly List<LoadedSceneEntry> _loadedScenes = new();
 	private bool _suppressSystemScene;
@@ -90,7 +95,33 @@ public sealed class SaveSystem : GameObjectSystem<SaveSystem>, ISceneLoadingEven
 	}
 
 	/// <summary>
-	/// Save the game's state to a file, capturing the differences between the current scene to the original scene file(s).
+	/// Read the save format version from a save file without loading the full save.
+	/// Returns 0 if the file doesn't exist, is invalid, or has no version field.
+	/// </summary>
+	public static int GetFileSaveVersion( string path )
+	{
+		if ( string.IsNullOrWhiteSpace( path ) )
+			return 0;
+
+		if ( !FileSystem.Data.FileExists( path ) )
+			return 0;
+
+		try
+		{
+			var text = FileSystem.Data.ReadAllText( path );
+			using var doc = JsonDocument.Parse( text );
+
+			if ( doc.RootElement.TryGetProperty( "Version", out var versionElement ) )
+				return versionElement.GetInt32();
+
+			return 0;
+		}
+		catch
+		{
+			return 0;
+		}
+	}
+
 	/// This means any changes made to the those original scenes are preserved when loading an older save.
 	/// </summary>
 	/// <returns>True if the save was successful.</returns>
@@ -114,7 +145,7 @@ public sealed class SaveSystem : GameObjectSystem<SaveSystem>, ISceneLoadingEven
 			return false;
 		}
 
-		Scene.RunEvent<ISaveEvents>( x => x.BeforeSave( path ) );
+		Scene.RunEvent<Global.ISaveEvents>( x => x.BeforeSave( path ) );
 
 		var baseline = BuildCompositeBaseline();
 		if ( baseline is null )
@@ -171,7 +202,7 @@ public sealed class SaveSystem : GameObjectSystem<SaveSystem>, ISceneLoadingEven
 			return false;
 		}
 
-		Scene.RunEvent<ISaveEvents>( x => x.AfterSave( path ) );
+		Scene.RunEvent<Global.ISaveEvents>( x => x.AfterSave( path ) );
 		return true;
 	}
 
@@ -225,9 +256,9 @@ public sealed class SaveSystem : GameObjectSystem<SaveSystem>, ISceneLoadingEven
 
 		// Validate that the save format version is compatible
 		var saveVersion = saveRoot["Version"]?.GetValue<int>() ?? 0;
-		if ( saveVersion > CurrentSaveVersion )
+		if ( saveVersion != CurrentSaveVersion )
 		{
-			Log.Warning( $"SaveSystem: Save file '{path}' uses version {saveVersion}, but this build only supports up to version {CurrentSaveVersion}. The save may have been created with a newer version of the game." );
+			Log.Warning( $"SaveSystem: Save file '{path}' uses version {saveVersion}, but this build requires version {CurrentSaveVersion}. The save is incompatible." );
 			return false;
 		}
 
@@ -273,7 +304,7 @@ public sealed class SaveSystem : GameObjectSystem<SaveSystem>, ISceneLoadingEven
 			await MountRequiredPackages( pkgArray );
 		}
 
-		Scene.RunEvent<ISaveEvents>( x => x.BeforeLoad( path ) );
+		Scene.RunEvent<Global.ISaveEvents>( x => x.BeforeLoad( path ) );
 
 		Json.Patch savedPatch = null;
 		if ( saveRoot["Patch"] is JsonObject patchNode )
@@ -300,48 +331,56 @@ public sealed class SaveSystem : GameObjectSystem<SaveSystem>, ISceneLoadingEven
 		var primarySceneFile = sceneFiles[0];
 		var savedSceneProperties = saveRoot["SceneProperties"];
 		var patchedSceneFile = BuildPatchedSceneFile( primarySceneFile, patched, savedSceneProperties );
+
+		// Show loading screen first
+		BroadcastShowLoadingScreen();
+		await Task.Delay( 50 );
+
 		_suppressSystemScene = true; // Make sure we don't load two system scenes.....
+
+		CleanupSystem.PreserveBaselineForSaveLoad();
 
 		var options = new SceneLoadOptions();
 		options.SetScene( patchedSceneFile );
+		Game.ChangeScene( options );
 
-		if ( !Scene.Load( options ) )
+		var newSystem = SaveSystem.Current;
+		if ( newSystem is null )
 		{
-			_suppressSystemScene = false;
-			Log.Warning( $"SaveSystem: Failed to load patched scene from save '{path}'." );
+			Log.Warning( "SaveSystem: Could not find new SaveSystem instance after ChangeScene." );
 			return false;
 		}
 
-		// Make sure we keep track of the original scene sources in case we re-save from this loaded state
-		_loadedScenes.Clear();
+		// Keep track of the original scene sources so any subsequent re-save diffs correctly.
+		newSystem._loadedScenes.Clear();
 		foreach ( var sf in sceneFiles )
 		{
 			if ( string.IsNullOrEmpty( sf.ResourcePath ) ) continue;
-			_loadedScenes.Add( new LoadedSceneEntry
+			newSystem._loadedScenes.Add( new LoadedSceneEntry
 			{
 				ResourcePath = sf.ResourcePath,
 				SceneFileId = sf.Id
 			} );
 		}
 
-		// Restore metadata
-		_metadata = saveRoot["Metadata"] is JsonObject metaNode
+		// Restore metadata onto the new instance so AfterLoad event handlers can read it.
+		newSystem._metadata = saveRoot["Metadata"] is JsonObject metaNode
 			? JsonSerializer.Deserialize<Dictionary<string, string>>( metaNode ) ?? new Dictionary<string, string>()
 			: new Dictionary<string, string>();
-		LoadedSavePath = path;
+		newSystem.LoadedSavePath = path;
 
 		// Restore [Sync] property values before network ownership so everything is populated BEFORE any ownership-change callbacks fire.
 		if ( saveRoot["SyncState"] is JsonObject syncNode )
 		{
-			RestoreSyncState( Scene, syncNode );
+			RestoreSyncState( newSystem.Scene, syncNode );
 		}
 
 		if ( saveRoot["NetworkOwnership"] is JsonObject ownershipNode )
 		{
-			RestoreNetworkOwnership( Scene, ownershipNode );
+			RestoreNetworkOwnership( newSystem.Scene, ownershipNode );
 		}
 
-		Scene.RunEvent<ISaveEvents>( x => x.AfterLoad( path ) );
+		newSystem.Scene.RunEvent<Global.ISaveEvents>( x => x.AfterLoad( path ) );
 		return true;
 	}
 
@@ -589,7 +628,7 @@ public sealed class SaveSystem : GameObjectSystem<SaveSystem>, ISceneLoadingEven
 	}
 
 	/// <summary>
-	/// Snapshots network ownership for all owned GameObjects in the scene, storing the Connection ID and SteamID to be used as fallback
+	/// Snapshots network ownership for all owned GameObjects in the scene, storing the owner's SteamID.
 	/// </summary>
 	private static JsonObject CollectNetworkOwnership( Scene scene )
 	{
@@ -602,47 +641,36 @@ public sealed class SaveSystem : GameObjectSystem<SaveSystem>, ISceneLoadingEven
 			var owner = go.Network.Owner;
 			if ( owner is null ) continue;
 
-			result[go.Id.ToString()] = new JsonObject
-			{
-				["ConnectionId"] = owner.Id.ToString(),
-				["SteamId"] = owner.SteamId.Value,
-			};
+			result[go.Id.ToString()] = owner.SteamId.Value;
 		}
 
 		return result;
 	}
 
 	/// <summary>
-	/// Restores network ownership, first trying to match by Connection ID (same session, also works when testing with a second instance of the same SteamID)
-	/// falling back to SteamID (for when loading a save from a previous session).
+	/// Restores network ownership by matching saved SteamIDs to connected players.
 	/// </summary>
 	private static void RestoreNetworkOwnership( Scene scene, JsonObject ownershipData )
 	{
-		// SteamId -> Connection lookup for fallback matching
 		var steamIdToConnection = new Dictionary<long, Connection>();
 		foreach ( var conn in Connection.All )
 		{
 			steamIdToConnection.TryAdd( conn.SteamId.Value, conn );
 		}
 
+		// Anything we spawn here, let's batch it
+		using var _ = scene.BatchGroup();
+
 		foreach ( var (goGuidStr, node) in ownershipData )
 		{
 			if ( !Guid.TryParse( goGuidStr, out var goGuid ) ) continue;
-			if ( node is not JsonObject entry ) continue;
 
 			var go = scene.Directory.FindByGuid( goGuid ) as GameObject;
 			if ( go is null || !go.IsValid() ) continue;
 
-			// Try matching by connection Id first (for same session)
 			Connection target = null;
 
-			if ( entry["ConnectionId"]?.GetValue<string>() is string connIdStr && Guid.TryParse( connIdStr, out var connId ) )
-			{
-				target = Connection.Find( connId );
-			}
-
-			// Fall back to SteamId (new session)
-			if ( target is null && entry["SteamId"]?.GetValue<long>() is long steamIdValue && steamIdValue != 0 )
+			if ( node?.GetValue<long>() is long steamIdValue && steamIdValue != 0 )
 			{
 				steamIdToConnection.TryGetValue( steamIdValue, out target );
 			}
@@ -792,6 +820,16 @@ public sealed class SaveSystem : GameObjectSystem<SaveSystem>, ISceneLoadingEven
 				}
 			}
 		}
+	}
+
+	/// <summary>
+	/// Tells all clients to show the loading screen immediately, before Scene.Load() fires.
+	/// </summary>
+	[Rpc.Broadcast( NetFlags.HostOnly )]
+	private static void BroadcastShowLoadingScreen()
+	{
+		LoadingScreen.Title = "Loading Save...";
+		LoadingScreen.IsVisible = true;
 	}
 
 	/// <summary>

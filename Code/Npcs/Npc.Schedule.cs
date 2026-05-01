@@ -1,4 +1,4 @@
-namespace Sandbox.Npcs;
+﻿namespace Sandbox.Npcs;
 
 public partial class Npc : Component
 {

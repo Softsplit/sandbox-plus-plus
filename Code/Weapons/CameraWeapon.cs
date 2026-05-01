@@ -1,5 +1,4 @@
-using Sandbox.Rendering;
-using Sandbox.Utility;
+﻿using Sandbox.Rendering;
 
 public class CameraWeapon : BaseWeapon
 {
@@ -12,56 +11,82 @@ public class CameraWeapon : BaseWeapon
 
 	[Property] SoundEvent CameraShoot { get; set; }
 
+	/// <summary>
+	/// The RT camera's resolution 
+	/// </summary>
+	private static int _cameraResolution = 512;
+
+	/// <summary>
+	/// The render target texture produced by this camera. Read by <see cref="TVEntity"/>.
+	/// </summary>
+	public Texture RenderTexture => _renderTexture;
+
+	private Texture _renderTexture;
+	private CameraComponent _rtCamera;
+
 	public override bool WantsHideHud => true;
 
 	protected override void OnEnabled()
 	{
 		base.OnEnabled();
 
-		if ( IsProxy )
-			return;
-
-		dof = Scene.Camera.Components.GetOrCreate<DepthOfField>();
-		dof.Flags |= ComponentFlags.NotNetworked;
-
-		focusing = false;
+		EnsureRTCamera();
+		EnsureRenderTexture();
 	}
 
 	protected override void OnDisabled()
 	{
 		base.OnDisabled();
 
-		if ( IsProxy )
-			return;
+		DestroyDepthOfField();
+		CleanupRenderTexture();
+		_rtCamera = null;
+	}
 
-		dof?.Destroy();
-		dof = default;
+	protected override void OnDestroy()
+	{
+		DestroyDepthOfField();
+		CleanupRenderTexture();
+		_rtCamera = null;
+	}
+
+	protected override void OnPreRender()
+	{
+		if ( !_rtCamera.IsValid() ) return;
+
+		EnsureRenderTexture();
+
+		if ( HasOwner && Scene.Camera.IsValid() )
+		{
+			// When held, mirror the player's camera so the TV shows their POV.
+			// TODO: network some props to the TV so they show up in the RT camera when held by a player other than the host.
+			_rtCamera.WorldPosition = Scene.Camera.WorldPosition;
+			_rtCamera.WorldRotation = Scene.Camera.WorldRotation;
+			_rtCamera.FieldOfView = Scene.Camera.FieldOfView;
+
+			if ( !_rtCamera.RenderExcludeTags.Has( "viewer" ) )
+				_rtCamera.RenderExcludeTags.Add( "viewer" );
+		}
+		else
+		{
+			_rtCamera.RenderExcludeTags.Remove( "viewer" );
+			_rtCamera.FieldOfView = 40f;
+		}
 	}
 
 	/// <summary>
-	/// We want to control the camera fov
+	/// We want to control the camera fov when held by a player.
 	/// </summary>
 	public override void OnCameraSetup( Player player, Sandbox.CameraComponent camera )
 	{
-		//Log.Info( $"{player.Network.IsOwner} {Network.IsOwner}" );
 		if ( !player.Network.IsOwner || !Network.IsOwner ) return;
 
 		camera.FieldOfView = fov;
 		camera.WorldRotation = camera.WorldRotation * new Angles( 0, 0, roll );
-
-		var t = 20.0f;
-		var s = 1.0f;
-
-		var x = Noise.Perlin( Time.Now * t, 3, 5 ).Remap( 0, 1, -1, 1 ) * s;
-		var y = Noise.Perlin( Time.Now * t * 0.8f, 3, 4 ).Remap( 0, 1, -1, 1 ) * s;
-
-		camera.WorldRotation *= new Angles( x, y, 0 );
-
 	}
 
 	public override void OnCameraMove( Player player, ref Angles angles )
 	{
-		// We're zooming
 		if ( Input.Down( "attack2" ) )
 		{
 			angles = default;
@@ -88,6 +113,8 @@ public class CameraWeapon : BaseWeapon
 			roll -= Input.AnalogLook.yaw;
 		}
 
+		EnsureDepthOfField();
+
 		if ( dof.IsValid() )
 		{
 			UpdateDepthOfField( dof );
@@ -104,25 +131,85 @@ public class CameraWeapon : BaseWeapon
 		focusing = Input.Down( "attack1" );
 	}
 
+	private void EnsureDepthOfField()
+	{
+		if ( dof.IsValid() ) return;
+
+		dof = Scene.Camera.GetOrAddComponent<DepthOfField>();
+		dof.Flags |= ComponentFlags.NotNetworked;
+		focusing = false;
+	}
+
+	private void DestroyDepthOfField()
+	{
+		dof?.Destroy();
+		dof = default;
+	}
+
 	private void UpdateDepthOfField( DepthOfField dof )
 	{
 		if ( !focusing )
 		{
-			dof.BlurSize = Scene.Camera.FieldOfView.Remap( 20, 80, 25, 5 );
-			dof.FocusRange = 1024;
+			dof.BlurSize = MathF.Pow( Scene.Camera.FieldOfView.Remap( 1, 55, 1, 0 ), 4 ) * 16;
+			dof.FocusRange = 512;
 			dof.FrontBlur = false;
 
 			var tr = Scene.Trace.Ray( Scene.Camera.Transform.World.ForwardRay, 5000 )
-								.Radius( 8 )
+								.Radius( 4 )
 								.IgnoreGameObjectHierarchy( GameObject.Root )
 								.Run();
 
 			focusPoint = tr.EndPosition;
 		}
 
-		var target = Scene.Camera.WorldPosition.Distance( focusPoint ) + 32;
+		var target = Scene.Camera.WorldPosition.Distance( focusPoint ) + 64;
 
-		dof.FocalDistance = dof.FocalDistance.LerpTo( target, Time.Delta * 10.0f );
+		dof.FocalDistance = dof.FocalDistance.LerpTo( target, Time.Delta * 2.0f );
+	}
+
+	private void EnsureRTCamera()
+	{
+		_rtCamera = GetComponentInChildren<CameraComponent>( true );
+
+		if ( _rtCamera is null )
+		{
+			var go = new GameObject( GameObject, true, "rt_camera" );
+			_rtCamera = go.AddComponent<CameraComponent>();
+		}
+
+		_rtCamera.IsMainCamera = false;
+		_rtCamera.BackgroundColor = Color.Black;
+		_rtCamera.ClearFlags = ClearFlags.Color | ClearFlags.Depth | ClearFlags.Stencil;
+		_rtCamera.FieldOfView = fov;
+		_rtCamera.RenderExcludeTags.Add( "viewmodel" );
+	}
+
+	private void EnsureRenderTexture()
+	{
+		if ( _renderTexture.IsValid() && _renderTexture.Width == _cameraResolution && _renderTexture.Height == _cameraResolution )
+			return;
+
+		CleanupRenderTexture();
+
+		_renderTexture = Texture.CreateRenderTarget()
+			.WithSize( _cameraResolution, _cameraResolution )
+			.Create();
+
+		if ( _rtCamera.IsValid() )
+		{
+			_rtCamera.RenderTarget = _renderTexture;
+		}
+	}
+
+	private void CleanupRenderTexture()
+	{
+		if ( _rtCamera.IsValid() )
+		{
+			_rtCamera.RenderTarget = null;
+		}
+
+		_renderTexture?.Dispose();
+		_renderTexture = null;
 	}
 
 	public override void DrawHud( HudPainter painter, Vector2 crosshair )

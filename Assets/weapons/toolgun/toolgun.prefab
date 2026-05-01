@@ -1,121 +1,121 @@
 {
-	"RootObject": {
-		"__guid": "3c948bf4-5353-443a-bb65-8f28584fed1b",
-		"__version": 2,
-		"Flags": 0,
-		"Name": "toolgun",
-		"Position": "0,0,0",
-		"Rotation": "0,0,0,1",
-		"Scale": "1,1,1",
-		"Tags": "",
-		"Enabled": true,
-		"NetworkMode": 1,
-		"NetworkFlags": 0,
-		"NetworkOrphaned": 1,
-		"NetworkTransmit": true,
-		"OwnerTransfer": 1,
-		"Components": [
-			{
-				"__type": "Toolgun",
-				"__guid": "45dbfc9d-3b70-4986-994e-905d4f1670ba",
-				"__enabled": true,
-				"Flags": 0,
-				"DisplayIcon": {
-					"$compiler": "texture",
-					"$source": "imagefile",
-					"data": {
-						"FilePath": "ui/weapons/toolgun_trans.png",
-						"MaxSize": 4096,
-						"ConvertHeightToNormals": false,
-						"NormalScale": 1,
-						"Rotate": 0,
-						"FlipVertical": false,
-						"FlipHorizontal": false,
-						"Cropping": {
-							"Left": 0,
-							"Top": 0,
-							"Right": 0,
-							"Bottom": 0
-						},
-						"Padding": {
-							"Left": 0,
-							"Top": 0,
-							"Right": 0,
-							"Bottom": 0
-						},
-						"InvertColor": false,
-						"Tint": "1,1,1,1",
-						"Blur": 0,
-						"Sharpen": 0,
-						"Brightness": 1,
-						"Contrast": 1,
-						"Saturation": 1,
-						"Hue": 0,
-						"Colorize": false,
-						"TargetColor": "1,1,1,1",
-						"CacheToDisk": true
-					},
-					"compiled": "textures/generated/imagefile/85d60087605f19e9.vtex"
-				},
-				"DisplayName": "Tool Gun",
-				"HoldType": "Pistol",
-				"ItemPrefab": {
-					"_type": "gameobject",
-					"prefab": "weapons/toolgun/item_toolgun.prefab"
-				},
-				"OnComponentDestroy": null,
-				"OnComponentDisabled": null,
-				"OnComponentEnabled": null,
-				"OnComponentFixedUpdate": null,
-				"OnComponentStart": null,
-				"OnComponentUpdate": null,
-				"ParentBone": "hold_r",
-				"SuccessBeamEffect": {
-					"_type": "gameobject",
-					"prefab": "weapons/toolgun/effects/beam-success.prefab"
-				},
-				"SuccessImpactEffect": {
-					"_type": "gameobject",
-					"prefab": "weapons/toolgun/effects/impact-success.prefab"
-				},
-				"Value": 2,
-				"ViewModelPrefab": {
-					"_type": "gameobject",
-					"prefab": "weapons/toolgun/toolgun_vm.prefab"
-				},
-				"WorldModelPrefab": {
-					"_type": "gameobject",
-					"prefab": "weapons/toolgun/toolgun_wm.prefab"
-				}
-			}
-		],
-		"Children": [],
-		"__properties": {
-			"NetworkInterpolation": true,
-			"TimeScale": 1,
-			"WantsSystemScene": true,
-			"Metadata": {},
-			"NavMesh": {
-				"Enabled": false,
-				"IncludeStaticBodies": true,
-				"IncludeKeyframedBodies": true,
-				"EditorAutoUpdate": false,
-				"AgentHeight": 64,
-				"AgentRadius": 16,
-				"AgentStepSize": 18,
-				"AgentMaxSlope": 40,
-				"ExcludedBodies": "",
-				"IncludedBodies": "",
-				"CustomBounds": false
-			}
-		},
-		"__variables": []
-	},
-	"ResourceVersion": 2,
-	"ShowInMenu": false,
-	"MenuPath": null,
-	"MenuIcon": null,
-	"DontBreakAsTemplate": false,
-	"__references": [],
-	"__version": 2
+  "RootObject": {
+    "__guid": "3c948bf4-5353-443a-bb65-8f28584fed1b",
+    "__version": 2,
+    "Flags": 0,
+    "Name": "toolgun",
+    "Position": "0,0,0",
+    "Rotation": "0,0,0,1",
+    "Scale": "1,1,1",
+    "Tags": "",
+    "Enabled": true,
+    "NetworkMode": 1,
+    "NetworkFlags": 0,
+    "NetworkOrphaned": 1,
+    "NetworkTransmit": true,
+    "OwnerTransfer": 1,
+    "Components": [
+      {
+        "__type": "Toolgun",
+        "__guid": "45dbfc9d-3b70-4986-994e-905d4f1670ba",
+        "__enabled": true,
+        "Flags": 0,
+        "DisplayIcon": {
+          "$compiler": "texture",
+          "$source": "imagefile",
+          "data": {
+            "FilePath": "ui/weapons/toolgun_trans.png",
+            "MaxSize": 4096,
+            "ConvertHeightToNormals": false,
+            "NormalScale": 1,
+            "Rotate": 0,
+            "FlipVertical": false,
+            "FlipHorizontal": false,
+            "Cropping": {
+              "Left": 0,
+              "Top": 0,
+              "Right": 0,
+              "Bottom": 0
+            },
+            "Padding": {
+              "Left": 0,
+              "Top": 0,
+              "Right": 0,
+              "Bottom": 0
+            },
+            "InvertColor": false,
+            "Tint": "1,1,1,1",
+            "Blur": 0,
+            "Sharpen": 0,
+            "Brightness": 1,
+            "Contrast": 1,
+            "Saturation": 1,
+            "Hue": 0,
+            "Colorize": false,
+            "TargetColor": "1,1,1,1",
+            "CacheToDisk": true
+          },
+          "compiled": null
+        },
+        "DisplayName": "Tool Gun",
+        "HoldType": "Pistol",
+        "ItemPrefab": {
+          "_type": "gameobject",
+          "prefab": "weapons/toolgun/item_toolgun.prefab"
+        },
+        "OnComponentDestroy": null,
+        "OnComponentDisabled": null,
+        "OnComponentEnabled": null,
+        "OnComponentFixedUpdate": null,
+        "OnComponentStart": null,
+        "OnComponentUpdate": null,
+        "ParentBone": "hold_r",
+        "SuccessBeamEffect": {
+          "_type": "gameobject",
+          "prefab": "weapons/toolgun/effects/beam-success.prefab"
+        },
+        "SuccessImpactEffect": {
+          "_type": "gameobject",
+          "prefab": "weapons/toolgun/effects/impact-success.prefab"
+        },
+        "Value": 2,
+        "ViewModelPrefab": {
+          "_type": "gameobject",
+          "prefab": "weapons/toolgun/toolgun_vm.prefab"
+        },
+        "WorldModelPrefab": {
+          "_type": "gameobject",
+          "prefab": "weapons/toolgun/toolgun_wm.prefab"
+        }
+      }
+    ],
+    "Children": [],
+    "__properties": {
+      "NetworkInterpolation": true,
+      "TimeScale": 1,
+      "WantsSystemScene": true,
+      "Metadata": {},
+      "NavMesh": {
+        "Enabled": false,
+        "IncludeStaticBodies": true,
+        "IncludeKeyframedBodies": true,
+        "EditorAutoUpdate": false,
+        "AgentHeight": 64,
+        "AgentRadius": 16,
+        "AgentStepSize": 18,
+        "AgentMaxSlope": 40,
+        "ExcludedBodies": "",
+        "IncludedBodies": "",
+        "CustomBounds": false
+      }
+    },
+    "__variables": []
+  },
+  "ResourceVersion": 2,
+  "ShowInMenu": false,
+  "MenuPath": null,
+  "MenuIcon": null,
+  "DontBreakAsTemplate": false,
+  "__references": [],
+  "__version": 2
 }

@@ -1,4 +1,4 @@
-﻿using Sandbox.UI;
+﻿﻿using Sandbox.UI;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
@@ -17,13 +17,62 @@ public partial class Duplicator : ToolMode
 	DuplicatorSpawner spawner;
 	LinkedGameObjectBuilder builder = new() { RejectPlayers = true };
 
+	Rotation _rotationOffset = Rotation.Identity;
+	Rotation _spinRotation = Rotation.Identity;
+	Rotation _snapRotation = Rotation.Identity;
+	bool _isSnapping;
+	bool _isRotating;
+
 	public override string Description => "#tool.hint.duplicator.description";
 	public override string PrimaryAction => spawner is not null ? "#tool.hint.duplicator.place" : null;
 	public override string SecondaryAction => "#tool.hint.duplicator.copy";
 
+	public override void OnCameraMove( Player player, ref Angles angles )
+	{
+		base.OnCameraMove( player, ref angles );
+
+		if ( _isRotating )
+			angles = default;
+	}
+
 	public override void OnControl()
 	{
 		base.OnControl();
+
+		_isRotating = spawner is not null && Input.Down( "use" );
+		Toolgun.SetIsUsingJoystick( _isRotating );
+
+		var isSnapping = Input.Down( "run" );
+		if ( !isSnapping && _isSnapping ) _spinRotation = _snapRotation;
+		_isSnapping = isSnapping;
+
+		if ( _isRotating )
+		{
+			var look = Input.AnalogLook with { pitch = 0 };
+
+			if ( _isSnapping )
+			{
+				if ( MathF.Abs( look.yaw ) > MathF.Abs( look.pitch ) ) look.pitch = 0;
+				else look.yaw = 0;
+			}
+
+			_spinRotation = Rotation.From( look ) * _spinRotation;
+			Input.Clear( "use" );
+
+			if ( _isSnapping )
+			{
+				var snapped = _spinRotation.Angles();
+				_rotationOffset = snapped.SnapToGrid( 45f );
+			}
+			else
+			{
+				_rotationOffset = _spinRotation;
+			}
+
+			_snapRotation = _rotationOffset;
+
+			Toolgun.UpdateJoystick( new Angles( look.yaw, look.pitch, 0 ) );
+		}
 
 		var select = TraceSelect();
 		IsValidState = IsValidTarget( select );
@@ -40,10 +89,12 @@ public partial class Duplicator : ToolMode
 			tx.Position = select.WorldPosition() + Vector3.Down * spawner.Bounds.Mins.z;
 
 			var relative = Player.EyeTransform.Rotation.Angles();
-			tx.Rotation = new Angles( 0, relative.yaw, 0 );
+			tx.Rotation = Rotation.From( new Angles( 0, relative.yaw, 0 ) ) * _rotationOffset;
 
 			Duplicate( tx );
 			ShootEffects( select );
+			_rotationOffset = Rotation.Identity;
+			_spinRotation = Rotation.Identity;
 			return;
 		}
 
@@ -91,6 +142,9 @@ public partial class Duplicator : ToolMode
 	{
 		base.OnUpdate();
 
+		if ( Application.IsDedicatedServer )
+			return;
+
 		// this is called on every client, so we can see what the other
 		// players are placing. It's kind of cool.
 		DrawPreview();
@@ -108,6 +162,8 @@ public partial class Duplicator : ToolMode
 		var tempDupe = DuplicationData.CreateFromObjects( builder.Objects, selectionAngle );
 
 		CopiedJson = Json.Serialize( tempDupe );
+
+		PlayerData.For( Rpc.Caller )?.AddStat( "tool.duplicator.copy" );
 	}
 
 	void JsonChanged()
@@ -132,7 +188,7 @@ public partial class Duplicator : ToolMode
 		tx.Position = select.WorldPosition() + Vector3.Down * spawner.Bounds.Mins.z;
 
 		var relative = Player.EyeTransform.Rotation.Angles();
-		tx.Rotation = new Angles( 0, relative.yaw, 0 );
+		tx.Rotation = Rotation.From( new Angles( 0, relative.yaw, 0 ) ) * _rotationOffset;
 
 		var overlayMaterial = IsProxy ? Material.Load( "materials/effects/duplicator_override_other.vmat" ) : Material.Load( "materials/effects/duplicator_override.vmat" );
 		spawner.DrawPreview( tx, overlayMaterial );
@@ -164,6 +220,18 @@ public partial class Duplicator : ToolMode
 		var player = Player.FindForConnection( Rpc.Caller );
 		if ( player is null ) return;
 
+		var spawnData = new Global.ISpawnEvents.SpawnData
+		{
+			Spawner = spawner,
+			Transform = dest,
+			Player = player.PlayerData
+		};
+
+		Scene.RunEvent<Global.ISpawnEvents>( x => x.OnSpawn( spawnData ) );
+
+		if ( spawnData.Cancelled )
+			return;
+
 		var objects = await spawner.Spawn( dest, player );
 
 		if ( objects is { Count: > 0 } )
@@ -175,17 +243,28 @@ public partial class Duplicator : ToolMode
 			{
 				undo.Add( go );
 			}
+
+			Scene.RunEvent<Global.ISpawnEvents>( x => x.OnPostSpawn( new Global.ISpawnEvents.PostSpawnData
+			{
+				Spawner = spawner,
+				Transform = dest,
+				Player = player.PlayerData,
+				Objects = objects
+			} ) );
+
+			player.PlayerData?.AddStat( "tool.duplicator.spawn" );
 		}
 	}
 
 	public static void FromStorage( Storage.Entry item )
 	{
 		var localPlayer = Player.FindLocalPlayer();
-		var toolgun = localPlayer?.GetWeapon<Toolgun>();
-		if ( !toolgun.IsValid() ) return;
+		if ( localPlayer == null ) return;
 
-		localPlayer.SwitchWeapon<Toolgun>();
-		toolgun.SetToolMode( "Duplicator" );
+		var inventory = localPlayer.GetComponent<PlayerInventory>();
+		if ( !inventory.IsValid() ) return;
+
+		inventory.SetToolMode( "Duplicator" );
 
 		var toolmode = localPlayer.GetComponentInChildren<Duplicator>( true );
 

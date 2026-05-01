@@ -22,6 +22,12 @@ public sealed partial class ViewModel : WeaponModel, ICameraSetup
 	public float IncrementalAnimationSpeed { get; set; } = 3.0f;
 
 	/// <summary>
+	/// Use fast anims?
+	/// </summary>
+	[Property] 
+	public bool UseFastAnimations { get; set; } = false;
+
+	/// <summary>
 	/// How much inertia should this weapon have?
 	/// </summary>
 	[Property, Group( "Inertia" )]
@@ -30,6 +36,9 @@ public sealed partial class ViewModel : WeaponModel, ICameraSetup
 	public bool IsAttacking { get; set; }
 
 	TimeSince AttackDuration;
+
+	bool _reloadFinishing;
+	TimeSince _reloadFinishTimer;
 
 	Vector2 lastInertia;
 	Vector2 currentInertia;
@@ -88,8 +97,8 @@ public sealed partial class ViewModel : WeaponModel, ICameraSetup
 		if ( Renderer.TryGetBoneTransformLocal( "camera", out var bone ) )
 		{
 			var scale = 0.5f;
-			cc.LocalPosition += bone.Position * scale;
-			cc.LocalRotation *= bone.Rotation * scale;
+			cc.WorldPosition += cc.WorldRotation * bone.Position * scale;
+			cc.WorldRotation *= bone.Rotation * scale;
 		}
 	}
 
@@ -101,6 +110,9 @@ public sealed partial class ViewModel : WeaponModel, ICameraSetup
 		var rot = Scene.Camera.WorldRotation.Angles();
 
 		Renderer.Set( "b_twohanded", true );
+		Renderer.Set( "deploy_type", UseFastAnimations ? 1 : 0 );
+		Renderer.Set( "reload_type", UseFastAnimations ? 1 : 0 );
+
 		Renderer.Set( "b_grounded", playerController.IsOnGround );
 		Renderer.Set( "move_bob", GamePreferences.ViewBobbing ? playerController.Velocity.Length.Remap( 0, playerController.RunSpeed * 2f ) : 0 );
 
@@ -111,6 +123,13 @@ public sealed partial class ViewModel : WeaponModel, ICameraSetup
 		Renderer.Set( "aim_yaw_inertia", currentInertia.y * InertiaScale.y );
 
 		Renderer.Set( "attack_hold", IsAttacking ? AttackDuration.Relative.Clamp( 0f, 1f ) : 0f );
+
+		if ( _reloadFinishing && _reloadFinishTimer >= 0.5f )
+		{
+			_reloadFinishing = false;
+			Renderer.Set( "speed_reload", AnimationSpeed );
+			Renderer.Set( "b_reloading", false );
+		}
 
 		var velocity = playerController.Velocity;
 
@@ -128,7 +147,7 @@ public sealed partial class ViewModel : WeaponModel, ICameraSetup
 		Renderer.Set( "move_z", velocity.z );
 	}
 
-	public void OnAttack()
+	public override void OnAttack()
 	{
 		Renderer?.Set( "b_attack", true );
 
@@ -147,7 +166,7 @@ public sealed partial class ViewModel : WeaponModel, ICameraSetup
 		}
 	}
 
-	public void CreateRangedEffects( BaseWeapon weapon, Vector3 hitPoint, Vector3? origin )
+	public override void CreateRangedEffects( BaseWeapon weapon, Vector3 hitPoint, Vector3? origin )
 	{
 		DoTracerEffect( hitPoint, origin );
 	}
@@ -157,6 +176,7 @@ public sealed partial class ViewModel : WeaponModel, ICameraSetup
 	/// </summary>
 	public void OnReloadStart()
 	{
+		_reloadFinishing = false; // cancel any pending incremental finish from a previous reload
 		Renderer?.Set( "speed_reload", AnimationSpeed );
 		Renderer?.Set( IsIncremental ? "b_reloading" : "b_reload", true );
 	}
@@ -174,14 +194,8 @@ public sealed partial class ViewModel : WeaponModel, ICameraSetup
 	{
 		if ( IsIncremental )
 		{
-			//
-			// Stops the reload after a little delay so it's not immediately cancelling the animation.
-			//
-			Invoke( 0.5f, () =>
-			{
-				Renderer?.Set( "speed_reload", AnimationSpeed );
-				Renderer?.Set( "b_reloading", false );
-			} );
+			_reloadFinishing = true;
+			_reloadFinishTimer = 0;
 		}
 		else
 		{

@@ -1,4 +1,3 @@
-using Sandbox;
 using Sandbox.Rendering;
 
 public enum ThrowType
@@ -52,13 +51,21 @@ public sealed class HandGrenadeWeapon : BaseWeapon
 		AddShootDelay( 0.5f );
 	}
 
-	public override void OnPlayerDeath( IPlayerEvent.DiedParams args )
+	public override void OnPlayerDeath( PlayerDiedParams args )
 	{
 		if ( !IsCooking ) return;
 
 		// Drop the grenade at your feet
-		if ( Owner.IsValid() )
+		if ( HasOwner )
 			Throw( Owner, Vector3.Down, 0.2f );
+	}
+
+	public override void OnControl()
+	{
+		if ( ShootInput.Pressed() )
+		{
+			DropGrenade();
+		}
 	}
 
 	public override void OnControl( Player player )
@@ -185,6 +192,30 @@ public sealed class HandGrenadeWeapon : BaseWeapon
 	}
 
 	[Rpc.Host]
+	void DropGrenade()
+	{
+		if ( !Prefab.IsValid() ) return;
+
+		var go = Prefab.Clone( WorldPosition );
+
+		var explosive = go.GetOrAddComponent<TimedExplosive>();
+		if ( explosive.IsValid() )
+		{
+			explosive.Lifetime = Lifetime;
+			explosive.Radius = Radius;
+			explosive.Damage = MaxDamage;
+			explosive.Force = Force;
+		}
+
+		// Don't collide with the weapon we dropped from
+		var filter = go.AddComponent<PhysicsFilter>();
+		filter.Body = GameObject;
+
+		// No velocity — just drops in place
+		go.NetworkSpawn();
+	}
+
+	[Rpc.Host]
 	void SpawnProjectile( Player player, Vector3 startPos, Vector3 direction, float powerScale )
 	{
 		if ( !player.IsValid() ) return;
@@ -210,6 +241,10 @@ public sealed class HandGrenadeWeapon : BaseWeapon
 			rb.AngularVelocity = go.WorldRotation.Right * 10f;
 		}
 
+		// Don't collide with the weapon we threw from
+		var filter = go.AddComponent<PhysicsFilter>();
+		filter.Body = GameObject;
+
 		go.NetworkSpawn();
 	}
 
@@ -226,21 +261,29 @@ public sealed class HandGrenadeWeapon : BaseWeapon
 	[Rpc.Host]
 	void ExplodeInHand()
 	{
-		// Spawn the prefab at our position and immediately detonate it
-		if ( !Prefab.IsValid() ) return;
+		// Spawn the explosion directly
+		var explosionPrefab = ResourceLibrary.Get<PrefabFile>( "/prefabs/engine/explosion_med.prefab" );
+		if ( !explosionPrefab.IsValid() )
+			return;
 
-		var go = Prefab.Clone( WorldPosition );
+		var explosionPos = Owner.IsValid() ? Owner.EyeTransform.Position : WorldPosition;
+		var explosion = GameObject.Clone( explosionPrefab, new CloneConfig { Transform = new Transform( explosionPos ), StartEnabled = false } );
+		if ( !explosion.IsValid() )
+			return;
 
-		var explosive = go.GetOrAddComponent<TimedExplosive>();
-		if ( explosive.IsValid() )
+		explosion.RunEvent<RadiusDamage>( x =>
 		{
-			explosive.Radius = Radius;
-			explosive.Damage = MaxDamage;
-			explosive.Force = Force;
-		}
+			x.Radius = Radius;
+			x.PhysicsForceScale = Force;
+			x.DamageAmount = MaxDamage;
+			x.Attacker = explosion;
+		}, FindMode.EverythingInSelfAndDescendants );
 
-		go.NetworkSpawn();
-		explosive?.Explode();
+		explosion.Enabled = true;
+		explosion.NetworkSpawn( true, null );
+
+		SwitchToBestWeapon();
+		DestroyGameObject();
 	}
 
 	public override void DrawCrosshair( HudPainter hud, Vector2 center )

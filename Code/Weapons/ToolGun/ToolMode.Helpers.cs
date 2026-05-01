@@ -1,4 +1,4 @@
-public abstract partial class ToolMode
+﻿public abstract partial class ToolMode
 {
 	/// <summary>
 	/// A point in the world selected by the current player's toolgun. We try to keep this as minimal as possible
@@ -49,15 +49,12 @@ public abstract partial class ToolMode
 	}
 
 	/// <summary>
-	/// Get a SelectionPoint from the tool gun owner's eyes.
+	/// Get a SelectionPoint along a ray.
 	/// </summary>
-	public SelectionPoint TraceSelect()
+	public SelectionPoint TraceFromRay( Ray ray, float distance, GameObject source )
 	{
-		var player = Toolgun?.Owner;
-		if ( !player.IsValid() ) return default;
-
-		var trace = Scene.Trace.Ray( player.EyeTransform.ForwardRay, 4096 )
-		.IgnoreGameObjectHierarchy( player.GameObject );
+		var trace = Scene.Trace.Ray( ray, distance )
+			.IgnoreGameObjectHierarchy( source );
 
 		if ( TraceIgnoreTags.Any() )
 			trace = trace.WithoutTags( TraceIgnoreTags.ToArray() );
@@ -67,11 +64,32 @@ public abstract partial class ToolMode
 
 		var tr = trace.Run();
 
-		return new SelectionPoint
+		var sp = new SelectionPoint
 		{
 			GameObject = tr.GameObject,
 			LocalTransform = tr.GameObject?.WorldTransform.ToLocal( new Transform( tr.EndPosition, Rotation.LookAt( tr.Normal ) ) ) ?? global::Transform.Zero
 		};
+
+		if ( sp.IsValid() )
+		{
+			// Ask the object if it allows toolgun interaction (Ownable and others can reject via IToolgunEvent)
+			var selectEvent = new IToolgunEvent.SelectEvent { User = Player.Network.Owner };
+			sp.GameObject.Root.RunEvent<IToolgunEvent>( x => x.OnToolgunSelect( selectEvent ) );
+			if ( selectEvent.Cancelled ) return default;
+		}
+
+		return sp;
+	}
+
+	/// <summary>
+	/// Get a SelectionPoint from the tool gun owner's eyes.
+	/// </summary>
+	public SelectionPoint TraceSelect()
+	{
+		var player = Toolgun?.Owner;
+		if ( !player.IsValid() ) return default;
+
+		return TraceFromRay( player.EyeTransform.ForwardRay, 4096, player.GameObject );
 	}
 
 	/// <summary>
@@ -110,6 +128,10 @@ public abstract partial class ToolMode
             rb.OverrideMassCenter = part.OverrideMassCenter;
             rb.MassCenterOverride = part.MassCenterOverride;
             rb.GravityScale = part.GravityScale;
+
+            var props = go.GetOrAddComponent<PhysicalProperties>();
+            props.Mass = part.Mass;
+            props.GravityScale = part.GravityScale;
         }
     }
 }

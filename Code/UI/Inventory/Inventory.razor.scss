@@ -11,11 +11,22 @@ Inventory
     color: $color-accent;
     gap: 4px;
     z-index: 1050;
+    pointer-events: none;
     transition: all 0.05s linear;
 
     &.spawnmenu-open
     {
         opacity: 0.75;
         transform: translateY( 32px );
+
+        HotbarPresetsButton
+        {
+            opacity: 1;
+        }
+
+        InventorySlot .index
+        {
+            opacity: 0;
+        }
     }
 }

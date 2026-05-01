@@ -1,0 +1,286 @@
+{
+  "RootObject": {
+    "__guid": "cd2b3e4f-5d6c-7890-bcde-f01234567801",
+    "__version": 2,
+    "Flags": 0,
+    "Name": "crowbar",
+    "Position": "0,0,0",
+    "Rotation": "0,0,0,1",
+    "Scale": "1.5,1.5,1.5",
+    "Tags": "",
+    "Enabled": true,
+    "NetworkMode": 1,
+    "NetworkFlags": 0,
+    "NetworkOrphaned": 1,
+    "NetworkTransmit": true,
+    "OwnerTransfer": 1,
+    "Components": [
+      {
+        "__type": "CrowbarWeapon",
+        "__guid": "de3c4f5a-6e7d-8901-cdef-012345678902",
+        "__enabled": true,
+        "Flags": 0,
+        "Damage": 12,
+        "DisplayIcon": {
+          "$compiler": "texture",
+          "$source": "imagefile",
+          "data": {
+            "FilePath": "ui/weapons/melee/crowbar.png",
+            "MaxSize": 4096,
+            "ConvertHeightToNormals": false,
+            "NormalScale": 1,
+            "Rotate": 0,
+            "FlipVertical": false,
+            "FlipHorizontal": false,
+            "Cropping": {
+              "Left": 0,
+              "Top": 0,
+              "Right": 0,
+              "Bottom": 0
+            },
+            "Padding": {
+              "Left": 0,
+              "Top": 0,
+              "Right": 0,
+              "Bottom": 0
+            },
+            "InvertColor": false,
+            "Tint": "1,1,1,1",
+            "Blur": 0,
+            "Sharpen": 0,
+            "Brightness": 1,
+            "Contrast": 1,
+            "Saturation": 1,
+            "Hue": 0,
+            "Colorize": false,
+            "TargetColor": "1,1,1,1",
+            "CacheToDisk": true
+          },
+          "compiled": null
+        },
+        "DisplayName": "Crowbar",
+        "DroppedGameObject": {
+          "_type": "gameobject",
+          "go": "ef4d5a6b-7f8e-9012-def0-123456789013"
+        },
+        "HitSound": "weapons/crowbar/sounds/crowbar.hit.sound",
+        "HoldType": "Swing",
+        "ItemPrefab": {
+          "_type": "gameobject",
+          "prefab": "weapons/crowbar/crowbar.prefab"
+        },
+        "MissSwingDelay": 0.75,
+        "OnComponentDestroy": null,
+        "OnComponentDisabled": null,
+        "OnComponentEnabled": null,
+        "OnComponentFixedUpdate": null,
+        "OnComponentStart": null,
+        "OnComponentUpdate": null,
+        "ParentBone": "hold_r",
+        "Range": 128,
+        "SwingDelay": 0.5,
+        "SwingForce": 1000,
+        "SwingRadius": 10,
+        "SwingSound": "weapons/crowbar/sounds/crowbar.swing.sound",
+        "Value": 1,
+        "ViewModelPrefab": {
+          "_type": "gameobject",
+          "prefab": "weapons/crowbar/crowbar_vm.prefab"
+        },
+        "WorldModelPrefab": {
+          "_type": "gameobject",
+          "prefab": "weapons/crowbar/crowbar_wm.prefab"
+        }
+      },
+      {
+        "__type": "DroppedWeapon",
+        "__guid": "f05e6b7c-8a9f-0123-ef01-234567890124",
+        "__enabled": true,
+        "Flags": 0,
+        "OnComponentDestroy": null,
+        "OnComponentDisabled": null,
+        "OnComponentEnabled": null,
+        "OnComponentFixedUpdate": null,
+        "OnComponentStart": null,
+        "OnComponentUpdate": null
+      },
+      {
+        "__type": "Sandbox.ModelCollider",
+        "__guid": "a16f7c8d-9b0a-1234-f012-345678901235",
+        "__enabled": true,
+        "Flags": 0,
+        "ColliderFlags": 0,
+        "Elasticity": null,
+        "Friction": null,
+        "IsTrigger": false,
+        "Model": "models/weapons/sbox_melee_crowbar/w_crowbar.vmdl",
+        "OnComponentDestroy": null,
+        "OnComponentDisabled": null,
+        "OnComponentEnabled": null,
+        "OnComponentFixedUpdate": null,
+        "OnComponentStart": null,
+        "OnComponentUpdate": null,
+        "OnObjectTriggerEnter": null,
+        "OnObjectTriggerExit": null,
+        "OnTriggerEnter": null,
+        "OnTriggerExit": null,
+        "RollingResistance": null,
+        "Static": false,
+        "Surface": null,
+        "SurfaceVelocity": "0,0,0"
+      },
+      {
+        "__type": "Sandbox.Rigidbody",
+        "__guid": "b27a8d9e-0c1b-2345-0123-456789012346",
+        "__enabled": true,
+        "Flags": 0,
+        "AngularDamping": 0,
+        "EnableImpactDamage": true,
+        "EnhancedCcd": false,
+        "Gravity": true,
+        "GravityScale": 1,
+        "ImpactDamage": 0,
+        "LinearDamping": 0,
+        "Locking": {
+          "X": false,
+          "Y": false,
+          "Z": false,
+          "Pitch": false,
+          "Yaw": false,
+          "Roll": false
+        },
+        "MassCenterOverride": "0,0,0",
+        "MassOverride": 0,
+        "MinImpactDamageSpeed": 500,
+        "MotionEnabled": true,
+        "OnComponentDestroy": null,
+        "OnComponentDisabled": null,
+        "OnComponentEnabled": null,
+        "OnComponentFixedUpdate": null,
+        "OnComponentStart": null,
+        "OnComponentUpdate": null,
+        "OverrideMassCenter": false,
+        "RigidbodyFlags": 0,
+        "StartAsleep": false
+      }
+    ],
+    "Children": [
+      {
+        "__guid": "ef4d5a6b-7f8e-9012-def0-123456789013",
+        "__version": 2,
+        "Flags": 0,
+        "Name": "standalone_wm",
+        "Position": "0,0,0",
+        "Rotation": "0,0,0,1",
+        "Scale": "1,1,1",
+        "Tags": "",
+        "Enabled": true,
+        "NetworkMode": 2,
+        "NetworkFlags": 0,
+        "NetworkOrphaned": 0,
+        "NetworkTransmit": true,
+        "OwnerTransfer": 1,
+        "Components": [
+          {
+            "__type": "WorldModel",
+            "__guid": "f05e6b7c-8a9f-0124-ef01-234567890125",
+            "__enabled": true,
+            "Flags": 0,
+            "EjectBrass": null,
+            "EjectTransform": null,
+            "MuzzleEffect": null,
+            "MuzzleTransform": null,
+            "OnComponentDestroy": null,
+            "OnComponentDisabled": null,
+            "OnComponentEnabled": null,
+            "OnComponentFixedUpdate": null,
+            "OnComponentStart": null,
+            "OnComponentUpdate": null,
+            "Renderer": {
+              "_type": "component",
+              "component_id": "a16f7c8d-9b0a-1235-f012-345678901236",
+              "go": "ef4d5a6b-7f8e-9012-def0-123456789013",
+              "component_type": "SkinnedModelRenderer"
+            },
+            "TracerEffect": null
+          },
+          {
+            "__type": "Sandbox.SkinnedModelRenderer",
+            "__guid": "a16f7c8d-9b0a-1235-f012-345678901236",
+            "__enabled": true,
+            "Flags": 0,
+            "AnimationGraph": null,
+            "BodyGroups": 18446744073709551615,
+            "BoneMergeTarget": null,
+            "CreateAttachments": true,
+            "CreateBoneObjects": false,
+            "LodOverride": null,
+            "MaterialGroup": null,
+            "MaterialOverride": null,
+            "Materials": null,
+            "Model": "models/weapons/sbox_melee_crowbar/w_crowbar.vmdl",
+            "Morphs": {},
+            "OnComponentDestroy": null,
+            "OnComponentDisabled": null,
+            "OnComponentEnabled": null,
+            "OnComponentFixedUpdate": null,
+            "OnComponentStart": null,
+            "OnComponentUpdate": null,
+            "Parameters": {
+              "bools": {},
+              "ints": {},
+              "floats": {},
+              "vectors": {},
+              "rotations": {}
+            },
+            "PlaybackRate": 1,
+            "RenderOptions": {
+              "GameLayer": true,
+              "OverlayLayer": false,
+              "BloomLayer": false,
+              "AfterUILayer": false
+            },
+            "RenderType": "On",
+            "Sequence": {
+              "Name": null,
+              "Looping": true,
+              "Blending": false
+            },
+            "Tint": "1,1,1,1",
+            "UseAnimGraph": false
+          }
+        ],
+        "Children": []
+      }
+    ],
+    "__properties": {
+      "NetworkInterpolation": true,
+      "TimeScale": 1,
+      "WantsSystemScene": true,
+      "Metadata": {},
+      "NavMesh": {
+        "Enabled": false,
+        "IncludeStaticBodies": true,
+        "IncludeKeyframedBodies": true,
+        "EditorAutoUpdate": false,
+        "AgentHeight": 64,
+        "AgentRadius": 16,
+        "AgentStepSize": 18,
+        "AgentMaxSlope": 40,
+        "ExcludedBodies": "",
+        "IncludedBodies": "",
+        "CustomBounds": false
+      }
+    },
+    "__variables": []
+  },
+  "ResourceVersion": 2,
+  "ShowInMenu": true,
+  "MenuPath": "Deathmatch/Items/Crowbar",
+  "MenuIcon": null,
+  "DontBreakAsTemplate": true,
+  "__references": [
+    "facepunch.w_crowbar#144899"
+  ],
+  "__version": 2
+}

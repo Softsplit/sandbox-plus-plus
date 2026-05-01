@@ -1,4 +1,4 @@
-@using Sandbox;
+﻿@using Sandbox;
 @using Sandbox.UI;
 @namespace Sandbox
 @inherits Panel
@@ -18,7 +18,7 @@
             @foreach ( var save in SaveFiles )
             {
                 var s = save;
-                <div class="save-card"
+                <div class="save-card @(!s.IsCompatible ? "outdated" : "")"
                      @onclick="@(() => ConfirmLoad( s ))"
                      @onmousedown="@((PanelEvent e) => OnCardMouseDown( s, e ))">
                     @if ( s.Thumbnail != null )
@@ -30,6 +30,10 @@
                         @if ( !string.IsNullOrEmpty( s.Timestamp ) )
                         {
                             <label class="save-timestamp">@s.Timestamp</label>
+                        }
+                        @if ( !s.IsCompatible )
+                        {
+                            <label class="save-outdated-badge">Outdated</label>
                         }
                     </div>
                     <div class="save-dots">⋮</div>
@@ -48,10 +52,10 @@
     TextEntry SaveNameEntry;
     List<SaveFileEntry> SaveFiles = new();
 
-    record SaveFileEntry( string FileName, string DisplayName, string Timestamp, Texture Thumbnail );
-	static string SavesPath => "saves";
+    record SaveFileEntry( string FileName, string DisplayName, string Timestamp, Texture Thumbnail, bool IsCompatible );
+    static string SavesPath => "saves";
 
-    protected override void OnAfterTreeRender( bool firstTime )
+    protected override void OnAfterTreeRender ( bool firstTime )
     {
         if ( firstTime )
         {
@@ -63,14 +67,14 @@
     {
         SaveFiles.Clear();
 
-		if ( !FileSystem.Data.DirectoryExists( SavesPath ) )
+        if ( !FileSystem.Data.DirectoryExists( SavesPath ) )
         {
-			FileSystem.Data.CreateDirectory( SavesPath );
+            FileSystem.Data.CreateDirectory( SavesPath );
         }
 
-		foreach ( var file in FileSystem.Data.FindFile( SavesPath, "*.sav" ) )
+        foreach ( var file in FileSystem.Data.FindFile( SavesPath, "*.sav" ) )
         {
-			var filePath = $"{SavesPath}/{file}";
+            var filePath = $"{SavesPath}/{file}";
             var displayName = file;
             string timestamp = null;
             Texture thumbnail = null;
@@ -84,13 +88,15 @@
                     timestamp = ts;
             }
 
+            var isCompatible = SaveSystem.GetFileSaveVersion( filePath ) == SaveSystem.SaveVersion;
+
             var thumbPath = $"{SavesPath}/{System.IO.Path.GetFileNameWithoutExtension( file )}.thumb.png";
             if ( FileSystem.Data.FileExists( thumbPath ) )
             {
-                thumbnail = Texture.Load( FileSystem.Data, thumbPath );
+                thumbnail = Texture.LoadFromFileSystem( thumbPath, FileSystem.Data );
             }
 
-            SaveFiles.Add( new SaveFileEntry( file, displayName, timestamp, thumbnail ) );
+            SaveFiles.Add( new SaveFileEntry( file, displayName, timestamp, thumbnail, isCompatible ) );
         }
 
         StateHasChanged();
@@ -109,7 +115,20 @@
 
     void ConfirmLoad( SaveFileEntry save )
     {
-        var popup = new StringQueryPopup
+        if ( !save.IsCompatible )
+        {
+            _ = new StringQueryPopup
+            {
+                Title = "Incompatible Save",
+                Prompt = $"\"{save.DisplayName}\" was created with an older version and cannot be loaded.",
+                ConfirmLabel = "OK",
+                ShowInput = false,
+                Parent = FindPopupPanel()
+            };
+            return;
+        }
+
+        _ = new StringQueryPopup
         {
             Title = "Load Save",
             Prompt = $"Load \"{save.DisplayName}\"? Unsaved changes will be lost.",
@@ -142,7 +161,7 @@
         var now = DateTime.Now;
         var timeString = now.ToString( "yyyy-MM-dd HH:mm:ss" );
         var baseName = now.ToString( "yyyy-MM-dd-HH-mm-ss" );
-		var fileName = $"{SavesPath}/{baseName}.sav";
+        var fileName = $"{SavesPath}/{baseName}.sav";
 
         // Capture a 256x144 (16:9) thumbnail from the scene camera
         var camera = Game.ActiveScene?.Camera;
@@ -163,12 +182,12 @@
 
     void LoadSave( string fileName )
     {
-		_ = SaveSystem.Current.Load( $"{SavesPath}/{fileName}" );
+        _ = SaveSystem.Current.Load( $"{SavesPath}/{fileName}" );
     }
 
     void DeleteSave( string fileName )
     {
-		FileSystem.Data.DeleteFile( $"{SavesPath}/{fileName}" );
+        FileSystem.Data.DeleteFile( $"{SavesPath}/{fileName}" );
         var thumbPath = $"{SavesPath}/{System.IO.Path.GetFileNameWithoutExtension( fileName )}.thumb.png";
         if ( FileSystem.Data.FileExists( thumbPath ) )
             FileSystem.Data.DeleteFile( thumbPath );

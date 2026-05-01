@@ -1,6 +1,6 @@
-using Sandbox.Rendering;
+﻿using Sandbox.Rendering;
 
-public class ShotgunWeapon : BaseBulletWeapon
+public class ShotgunWeapon : IronSightsWeapon
 {
 	[Property] public float PrimaryFireRate { get; set; } = 0.8f;
 	[Property] public int PelletCount { get; set; } = 8;
@@ -14,13 +14,16 @@ public class ShotgunWeapon : BaseBulletWeapon
 
 	public override void PrimaryAttack()
 	{
-		if ( !HasAmmo() || IsReloading() || TimeUntilNextShotAllowed > 0 )
+		if ( HasOwner && ( !HasAmmo() || IsReloading() ) )
 		{
 			TryAutoReload();
 			return;
 		}
 
-		if ( !TakeAmmo( 1 ) )
+		if ( TimeUntilNextShotAllowed > 0 )
+			return;
+
+		if ( HasOwner && !TakeAmmo( 1 ) )
 		{
 			AddShootDelay( 0.2f );
 			return;
@@ -28,17 +31,20 @@ public class ShotgunWeapon : BaseBulletWeapon
 
 		AddShootDelay( PrimaryFireRate );
 
+		var eyeForward = AimRay.Forward;
+		var eyeRay = AimRay;
+
 		for ( var i = 0; i < PelletCount; i++ )
 		{
 			var aimConeAmount = GetAimConeAmount();
-			var forward = Owner.EyeTransform.Rotation.Forward
+			var forward = eyeForward
 				.WithAimCone(
 					Bullet.AimConeBase.x + aimConeAmount * Bullet.AimConeSpread.x,
 					Bullet.AimConeBase.y + aimConeAmount * Bullet.AimConeSpread.y
 				);
 
-			var tr = Scene.Trace.Ray( Owner.EyeTransform.ForwardRay with { Forward = forward }, Bullet.Range )
-				.IgnoreGameObjectHierarchy( Owner.GameObject )
+			var tr = Scene.Trace.Ray( eyeRay with { Forward = forward }, Bullet.Range )
+				.IgnoreGameObjectHierarchy( AimIgnoreRoot )
 				.WithoutTags( "playercontroller" )
 				.Radius( Bullet.BulletRadius )
 				.UseHitboxes()
@@ -50,7 +56,15 @@ public class ShotgunWeapon : BaseBulletWeapon
 
 		TimeSinceShoot = 0;
 
-		if ( !Owner.IsValid() ) return;
+		if ( !HasOwner )
+		{
+			if ( ShootForce > 0f && GetComponent<Rigidbody>( true ) is var rb )
+			{
+				var muzzle = WeaponModel?.MuzzleTransform?.WorldTransform ?? WorldTransform;
+				rb.ApplyForce( muzzle.Rotation.Up * ShootForce );
+			}
+			return;
+		}
 
 		Owner.Controller.EyeAngles += new Angles(
 			Random.Shared.Float( Bullet.RecoilPitch.x, Bullet.RecoilPitch.y ),

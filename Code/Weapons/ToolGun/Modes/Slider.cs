@@ -1,4 +1,4 @@
-﻿
+﻿﻿
 [Icon( "➖" )]
 [ClassName( "slider" )]
 [Group( "Constraints" )]
@@ -6,6 +6,7 @@ public class Slider : BaseConstraintToolMode
 {
 	public override string Description => Stage == 1 ? "#tool.hint.slider.stage1" : "#tool.hint.slider.stage0";
 	public override string PrimaryAction => Stage == 1 ? "#tool.hint.slider.finish" : "#tool.hint.slider.source";
+	public override string SecondaryAction => Stage == 1 ? "#tool.hint.slider.secondary.stage1" : "#tool.hint.slider.secondary";
 	public override string ReloadAction => "#tool.hint.slider.remove";
 
 	protected override IEnumerable<GameObject> FindConstraints( GameObject linked, GameObject target )
@@ -13,6 +14,11 @@ public class Slider : BaseConstraintToolMode
 		foreach ( var joint in linked.GetComponentsInChildren<SliderJoint>( true ) )
 			if ( linked == target || joint.Body?.Root == target )
 				yield return joint.GameObject;
+	}
+
+	protected override SelectionPoint? GetSecondaryPoint( SelectionPoint select )
+	{
+		return TraceFromRay( select.WorldTransform().ForwardRay, 4096, select.GameObject );
 	}
 
 	protected override void CreateConstraint( SelectionPoint point1, SelectionPoint point2 )
@@ -52,6 +58,8 @@ public class Slider : BaseConstraintToolMode
 
 		go2.NetworkSpawn();
 		go1.NetworkSpawn();
+
+		Track( go1, go2 );
 
 		var undo = Player.Undo.Create();
 		undo.Name = "Slider";

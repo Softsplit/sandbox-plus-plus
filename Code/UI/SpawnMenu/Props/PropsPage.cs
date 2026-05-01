@@ -1,4 +1,4 @@
-
+﻿
 /// <summary>
 /// This component has a kill icon that can be used in the killfeed, or somewhere else.
 /// </summary>
@@ -7,10 +7,6 @@ public class PropsPage : BaseSpawnMenu
 {
 	protected override void Rebuild()
 	{
-		// spawnlists should do this
-		// AddHeader( "You" );
-		// AddOption( "⭐", "Favourites", () => new SpawnPageFavourites() );
-
 		AddHeader( "Workshop" );
 		AddOption( "🧠", "All", () => new SpawnPageCloud() );
 		AddOption( "🥸", "Humans", () => new SpawnPageCloud() { Category = "human" } );
@@ -21,5 +17,10 @@ public class PropsPage : BaseSpawnMenu
 		AddOption( "🪀", "Toy", () => new SpawnPageCloud() { Category = "toy" } );
 		AddOption( "🍦", "Food", () => new SpawnPageCloud() { Category = "food" } );
 		AddOption( "🔫", "Guns", () => new SpawnPageCloud() { Category = "weapon" } );
+
+		AddHeader( "Local" );
+		AddOption( "🧍", "All", () => new SpawnPageLocal() );
+		AddOption( "🙎", "Characters", () => new SpawnPageLocal() { Category = "characters" } );
+		AddOption( "📦", "Props", () => new SpawnPageLocal() { Category = "props" } );
 	}
 }

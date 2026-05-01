@@ -1,4 +1,4 @@
-using Sandbox.Rendering;
+﻿using Sandbox.Rendering;
 
 public partial class ScreenWeapon : BaseCarryable
 {
