@@ -301,8 +301,6 @@ public sealed partial class Player : Component, Component.IDamageable, PlayerCon
 		OnControl();
 	}
 
-	private RealTimeSince _timeSinceJumpPressed;
-
 	void OnControl()
 	{
 		if ( Input.UsingController )
@@ -318,19 +316,6 @@ public sealed partial class Player : Component, Component.IDamageable, PlayerCon
 		{
 			KillSelf();
 			return;
-		}
-
-		if ( Input.Pressed( "jump" ) )
-		{
-			if ( _timeSinceJumpPressed < 0.3f )
-			{
-				if ( GetComponent<NoclipMoveMode>( true ) is { } noclip )
-				{
-					noclip.Enabled = !noclip.Enabled;
-				}
-			}
-
-			_timeSinceJumpPressed = 0;
 		}
 
 		if ( Input.Pressed( "undo" ) )
@@ -356,8 +341,6 @@ public sealed partial class Player : Component, Component.IDamageable, PlayerCon
 	{
 		Local.IPlayerEvents.PostToGameObject( GameObject, x => x.OnDamage( args ) );
 		Global.IPlayerEvents.Post( x => x.OnPlayerDamage( this, args ) );
-
-		Effects.Current.SpawnBlood( args.Position, (args.Origin - args.Position).Normal, args.Damage );
 
 		if ( IsLocalPlayer )
 		{
@@ -431,28 +414,6 @@ public sealed partial class Player : Component, Component.IDamageable, PlayerCon
 
 		Health = 0;
 		Kill( dmg );
-	}
-
-	[Rpc.Broadcast( NetFlags.HostOnly )]
-	private void Gib( Vector3 hitPos, Vector3 origin )
-	{
-		var gibList = new List<PlayerGib>( GetComponentsInChildren<PlayerGib>( true ) );
-
-		DeathCameraTarget target = null;
-		foreach ( var g in gibList )
-		{
-			// Death camera target is the first gib
-			if ( !target.IsValid() )
-			{
-				target = g.AddComponent<DeathCameraTarget>();
-				target.Connection = Network.Owner;
-				target.Created = DateTime.Now;
-			}
-
-			g.Gib( origin, hitPos, noShrink: true );
-		}
-
-		Effects.Current.SpawnBlood( WorldPosition, Vector3.Up, 500.0f );
 	}
 
 	void PlayerController.IEvents.OnLanded( float distance, Vector3 impactVelocity )
