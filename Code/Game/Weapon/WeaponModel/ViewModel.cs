@@ -27,22 +27,12 @@ public sealed partial class ViewModel : WeaponModel, ICameraSetup
 	[Property] 
 	public bool UseFastAnimations { get; set; } = false;
 
-	/// <summary>
-	/// How much inertia should this weapon have?
-	/// </summary>
-	[Property, Group( "Inertia" )]
-	Vector2 InertiaScale { get; set; } = new Vector2( 2, 2 );
-
 	public bool IsAttacking { get; set; }
 
 	TimeSince AttackDuration;
 
 	bool _reloadFinishing;
 	TimeSince _reloadFinishTimer;
-
-	Vector2 lastInertia;
-	Vector2 currentInertia;
-	bool isFirstUpdate = true;
 
 	protected override void OnStart()
 	{
@@ -58,27 +48,6 @@ public sealed partial class ViewModel : WeaponModel, ICameraSetup
 		UpdateAnimation();
 	}
 
-	void ApplyInertia()
-	{
-		var rot = Scene.Camera.WorldRotation.Angles();
-
-		// Need to fetch data from the camera for the first frame
-		if ( isFirstUpdate )
-		{
-
-
-			lastInertia = new Vector2( rot.pitch, rot.yaw );
-			currentInertia = Vector2.Zero;
-			isFirstUpdate = false;
-		}
-
-		var newPitch = rot.pitch;
-		var newYaw = rot.yaw;
-
-		currentInertia = new Vector2( Angles.NormalizeAngle( newPitch - lastInertia.x ), Angles.NormalizeAngle( lastInertia.y - newYaw ) );
-		lastInertia = new( newPitch, newYaw );
-	}
-
 	void ICameraSetup.Setup( CameraComponent cc )
 	{
 		Renderer.Enabled = !HideViewModel;
@@ -86,7 +55,7 @@ public sealed partial class ViewModel : WeaponModel, ICameraSetup
 		WorldPosition = cc.WorldPosition;
 		WorldRotation = cc.WorldRotation;
 
-		ApplyInertia();
+		CalcViewModelView( cc );
 		ApplyAnimationTransform( cc );
 	}
 
@@ -114,13 +83,13 @@ public sealed partial class ViewModel : WeaponModel, ICameraSetup
 		Renderer.Set( "reload_type", UseFastAnimations ? 1 : 0 );
 
 		Renderer.Set( "b_grounded", playerController.IsOnGround );
-		Renderer.Set( "move_bob", GamePreferences.ViewBobbing ? playerController.Velocity.Length.Remap( 0, playerController.RunSpeed * 2f ) : 0 );
+		Renderer.Set( "move_bob", 0.0f );
 
 		Renderer.Set( "aim_pitch", rot.pitch );
-		Renderer.Set( "aim_pitch_inertia", currentInertia.x * InertiaScale.x );
+		Renderer.Set( "aim_pitch_inertia", 0.0f );
 
 		Renderer.Set( "aim_yaw", rot.yaw );
-		Renderer.Set( "aim_yaw_inertia", currentInertia.y * InertiaScale.y );
+		Renderer.Set( "aim_yaw_inertia", 0.0f );
 
 		Renderer.Set( "attack_hold", IsAttacking ? AttackDuration.Relative.Clamp( 0f, 1f ) : 0f );
 

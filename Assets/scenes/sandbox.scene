@@ -24,7 +24,7 @@
           "Flags": 0,
           "__version": 1,
           "EnableCollision": true,
-          "MapName": "facepunch.flatgrass",
+          "MapName": "softsplit.gm_bigcity",
           "NoOrigin": false,
           "OnComponentDestroy": null,
           "OnComponentDisabled": null,

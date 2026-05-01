@@ -15,8 +15,6 @@ public sealed partial class Player
 	private Vector3 _lastSeatWorldPos;
 	private List<BaseCarryable> _seatedWeapons;
 
-	private float roll;
-
 	void PlayerController.IEvents.OnEyeAngles( ref Angles ang )
 	{
 		var angles = ang;
@@ -31,23 +29,11 @@ public sealed partial class Player
 
 		Local.IPlayerEvents.Post( x => x.OnCameraSetup( camera ) );
 
-		ApplyMovementCameraEffects( camera );
 		UpdateSeatedWeapons();
 		ApplySeatedCameraSetup( camera );
 		DrawSeatedWeaponHud();
 
 		Local.IPlayerEvents.Post( x => x.OnCameraPostSetup( camera ) );
-	}
-
-	private void ApplyMovementCameraEffects( CameraComponent camera )
-	{
-		if ( Controller.ThirdPerson ) return;
-		if ( !GamePreferences.ViewBobbing ) return;
-
-		var r = Controller.WishVelocity.Dot( EyeTransform.Left ) / -250.0f;
-		roll = MathX.Lerp( roll, r, Time.Delta * 10.0f, true );
-
-		camera.WorldRotation *= new Angles( 0, 0, roll );
 	}
 
 	private void UpdateSeatedWeapons()
