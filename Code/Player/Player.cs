@@ -312,10 +312,12 @@ public sealed partial class Player : Component, Component.IDamageable, PlayerCon
 			Controller.UseInputControls = true;
 		}
 
-		if ( Input.Pressed( "die" ) )
+		if ( Input.Pressed( "noclip" ) )
 		{
-			KillSelf();
-			return;
+			if ( GetComponent<NoclipMoveMode>( true ) is { } noclip )
+			{
+				noclip.Enabled = !noclip.Enabled;
+			}
 		}
 
 		if ( Input.Pressed( "undo" ) )
