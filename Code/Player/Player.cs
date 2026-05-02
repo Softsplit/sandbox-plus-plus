@@ -428,7 +428,11 @@ public sealed partial class Player : Component, Component.IDamageable, PlayerCon
 
 		if ( Controller.ThirdPerson || !player.IsLocalPlayer ) return;
 
-		new Punch( new Vector3( 0.3f * distance, Random.Shared.Float( -1, 1 ), Random.Shared.Float( -1, 1 ) ), 1.0f, 1.5f, 0.7f );
+		var fallSpeed = MathF.Abs( impactVelocity.z );
+		var punch = fallSpeed.Remap( 150.0f, 1000.0f, 0.0f, 48.0f, true );
+		if ( punch <= 0.0f ) return;
+
+		new Punch( new Vector3( punch, Random.Shared.Float( -1, 1 ), Random.Shared.Float( -1, 1 ) ), 1.0f, 1.5f, 0.7f );
 	}
 
 	void PlayerController.IEvents.OnJumped()
