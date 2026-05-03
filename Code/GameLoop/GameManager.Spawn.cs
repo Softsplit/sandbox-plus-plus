@@ -124,6 +124,21 @@ public sealed partial class GameManager
 				undo.Add( go );
 			}
 
+			// Auto-pickup weapons into the player's inventory
+			var inventory = player.GetComponent<PlayerInventory>();
+			foreach ( var go in objects )
+			{
+				var weapon = go.GetComponent<BaseCarryable>( true );
+				if ( weapon is not null )
+				{
+					var isNew = !inventory.HasWeapon( go );
+					inventory.Take( weapon, true );
+
+					if ( isNew )
+						inventory.SwitchWeapon( weapon );
+				}
+			}
+
 			Game.ActiveScene.RunEvent<Global.ISpawnEvents>( x => x.OnPostSpawn( new Global.ISpawnEvents.PostSpawnData
 			{
 				Spawner = spawner,
