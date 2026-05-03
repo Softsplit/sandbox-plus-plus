@@ -14,6 +14,8 @@ public sealed class PlayerInventory : Component, Local.IPlayerEvents
 
 	[Sync( SyncFlags.FromHost ), Change] public BaseCarryable ActiveWeapon { get; private set; }
 
+	public bool IsWeaponSwitchingLocked => Player.Pickup.IsValid() && Player.Pickup.IsBlockingWeaponInput;
+
 	public void OnActiveWeaponChanged( BaseCarryable oldWeapon, BaseCarryable newWeapon )
 	{
 		if ( oldWeapon.IsValid() )
@@ -283,6 +285,9 @@ public sealed class PlayerInventory : Component, Local.IPlayerEvents
 	/// </summary>
 	public bool Drop( BaseCarryable weapon )
 	{
+		if ( IsWeaponSwitchingLocked )
+			return false;
+
 		if ( !Networking.IsHost )
 		{
 			HostDrop( weapon );
@@ -401,6 +406,9 @@ public sealed class PlayerInventory : Component, Local.IPlayerEvents
 	{
 		Assert.True( item.IsValid(), "item invalid" );
 
+		if ( IsWeaponSwitchingLocked )
+			return false;
+
 		if ( !ActiveWeapon.IsValid() )
 			return true;
 
@@ -468,6 +476,9 @@ public sealed class PlayerInventory : Component, Local.IPlayerEvents
 
 	public void SwitchWeapon( BaseCarryable weapon, bool allowHolster = false )
 	{
+		if ( IsWeaponSwitchingLocked )
+			return;
+
 		if ( !Networking.IsHost )
 		{
 			HostSwitchWeapon( weapon, allowHolster );
@@ -523,6 +534,9 @@ public sealed class PlayerInventory : Component, Local.IPlayerEvents
 
 	public void OnControl()
 	{
+		if ( IsWeaponSwitchingLocked )
+			return;
+
 		if ( Input.Pressed( "drop" ) )
 		{
 			if ( ActiveWeapon.IsValid() )
