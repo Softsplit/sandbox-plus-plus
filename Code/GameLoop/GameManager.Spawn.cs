@@ -11,7 +11,7 @@ public sealed partial class GameManager
 	/// Optional metadata string is passed through to the spawner for type-specific use (e.g. mount bounds/title).
 	/// </summary>
 	[Rpc.Broadcast]
-	public static async void Spawn( string ident, string metadata = null )
+	public static async void Spawn( string ident, string metadata = null, bool forceWorld = false )
 	{
 		// if we're the person calling this, then we don't do anything but add the spawn stat
 		if ( Rpc.Caller == Connection.Local )
@@ -32,7 +32,7 @@ public sealed partial class GameManager
 
 		var eyes = player.EyeTransform;
 
-		var trace = Game.SceneTrace.Ray( eyes.Position, eyes.Position + eyes.Forward * 200 )
+		var trace = Game.SceneTrace.Ray( eyes.Position, eyes.Position + eyes.Forward * 2048 )
 			.IgnoreGameObject( player.GameObject )
 			.WithoutTags( "player" )
 			.Run();
@@ -50,55 +50,18 @@ public sealed partial class GameManager
 
 		var (type, path, source) = SpawnlistItem.ParseIdent( ident );
 
-		ISpawner spawner = type switch
-		{
-			"prop" => new PropSpawner( path ),
-			"mount" => new MountSpawner( path, metadata ),
-			"entity" or "sent" => new EntitySpawner( path ),
-			"dupe" => await FindDupe( path, source ),
-			_ => null
-		};
+		var spawner = ISpawner.Create( type, path, source, metadata );
 
 		if ( spawner is not null && await spawner.Loading )
 		{
-			await SpawnAndUndo( spawner, spawnTransform, player );
+			await SpawnAndUndo( spawner, spawnTransform, player, forceWorld );
 			return;
 		}
 
-		Log.Warning( $"Couldn't resolve '{ident}' — spawner={(spawner is null ? "null" : "not ready")}" );
+		Log.Warning( $"Couldn't resolve '{ident}'" );
 	}
 
-	/// <summary>
-	/// Resolve a dupe ident to a <see cref="DuplicatorSpawner"/>, this sucks a bit but okay, the DuplicatorSpawner should handle this
-	/// </summary>
-	private static async Task<DuplicatorSpawner> FindDupe( string id, string source )
-	{
-		if ( !ulong.TryParse( id, out var fileId ) )
-			return null;
-
-		if ( source == "workshop" )
-		{
-			var query = new Storage.Query { FileIds = [fileId] };
-
-			var result = await query.Run();
-			var item = result.Items?.FirstOrDefault();
-			if ( item is null ) return null;
-
-			var installed = await item.Install();
-			if ( installed is null ) return null;
-
-			var json = await installed.Files.ReadAllTextAsync( "/dupe.json" );
-			return DuplicatorSpawner.FromJson( json, item.Title );
-		}
-
-		var entry = Storage.GetAll( "dupe" ).FirstOrDefault( x => x.Id.ToString() == fileId.ToString() );
-		if ( entry is null ) return null;
-
-		var dupeJson = await entry.Files.ReadAllTextAsync( "/dupe.json" );
-		return DuplicatorSpawner.FromJson( dupeJson, entry.GetMeta<string>( "name" ) );
-	}
-
-	private static async Task SpawnAndUndo( ISpawner spawner, Transform transform, Player player )
+	private static async Task SpawnAndUndo( ISpawner spawner, Transform transform, Player player, bool forceWorld = false )
 	{
 		var spawnData = new Global.ISpawnEvents.SpawnData
 		{
@@ -112,6 +75,18 @@ public sealed partial class GameManager
 		if ( spawnData.Cancelled )
 			return;
 
+		// If the prefab is a weapon, pick it up directly instead of spawning into the world
+		if ( !forceWorld )
+		{
+			var prefab = spawner.Prefab;
+			if ( prefab is not null && prefab.GetComponent<BaseCarryable>( true ) is not null )
+			{
+				var inventory = player.GetComponent<PlayerInventory>();
+				inventory.Pickup( prefab );
+				return;
+			}
+		}
+
 		var objects = await spawner.Spawn( transform, player );
 
 		if ( objects is { Count: > 0 } )
@@ -122,21 +97,6 @@ public sealed partial class GameManager
 			foreach ( var go in objects )
 			{
 				undo.Add( go );
-			}
-
-			// Auto-pickup weapons into the player's inventory
-			var inventory = player.GetComponent<PlayerInventory>();
-			foreach ( var go in objects )
-			{
-				var weapon = go.GetComponent<BaseCarryable>( true );
-				if ( weapon is not null )
-				{
-					var isNew = !inventory.HasWeapon( go );
-					inventory.Take( weapon, true );
-
-					if ( isNew )
-						inventory.SwitchWeapon( weapon );
-				}
 			}
 
 			Game.ActiveScene.RunEvent<Global.ISpawnEvents>( x => x.OnPostSpawn( new Global.ISpawnEvents.PostSpawnData

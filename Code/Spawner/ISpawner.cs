@@ -35,6 +35,18 @@ public interface ISpawner
 	string Data { get; }
 
 	/// <summary>
+	/// The unspawned prefab GameObject, if available. Allows inspecting components before spawning.
+	/// Returns null for spawners that don't use prefabs (e.g. props, duplicator).
+	/// </summary>
+	GameObject Prefab => null;
+
+	/// <summary>
+	/// Populate a right-click context menu with spawner-specific options.
+	/// Override in spawner implementations to add custom menu items.
+	/// </summary>
+	void PopulateContextMenu( MenuPanel menu, string ident, string metadata ) { }
+
+	/// <summary>
 	/// Draw a ghost preview at the given world transform.
 	/// </summary>
 	void DrawPreview( Transform transform, Material overrideMaterial );
