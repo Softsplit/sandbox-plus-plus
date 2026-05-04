@@ -2,12 +2,10 @@
 
 public class CameraWeapon : BaseWeapon
 {
-	float fov = 50;
+	float fov;
 	float roll = 0;
 
-	DepthOfField dof;
 	bool focusing;
-	Vector3 focusPoint;
 
 	[Property] SoundEvent CameraShoot { get; set; }
 
@@ -38,14 +36,12 @@ public class CameraWeapon : BaseWeapon
 	{
 		base.OnDisabled();
 
-		DestroyDepthOfField();
 		CleanupRenderTexture();
 		_rtCamera = null;
 	}
 
 	protected override void OnDestroy()
 	{
-		DestroyDepthOfField();
 		CleanupRenderTexture();
 		_rtCamera = null;
 	}
@@ -81,7 +77,9 @@ public class CameraWeapon : BaseWeapon
 	{
 		if ( !player.Network.IsOwner || !Network.IsOwner ) return;
 
-		camera.FieldOfView = fov;
+		if ( fov > 0 )
+			camera.FieldOfView = fov;
+
 		camera.WorldRotation = camera.WorldRotation * new Angles( 0, 0, roll );
 	}
 
@@ -92,7 +90,8 @@ public class CameraWeapon : BaseWeapon
 			angles = default;
 		}
 
-		float sensitivity = fov.Remap( 1, 70, 0.01f, 1 );
+		var currentFov = fov > 0 ? fov : Scene.Camera.FieldOfView;
+		float sensitivity = currentFov.Remap( 1, 70, 0.01f, 1 );
 		angles *= sensitivity;
 	}
 
@@ -102,22 +101,14 @@ public class CameraWeapon : BaseWeapon
 
 		if ( Input.Pressed( "reload" ) )
 		{
-			fov = 50;
+			fov = 0;
 			roll = 0;
 		}
 
 		if ( Input.Down( "attack2" ) )
 		{
-			fov += Input.AnalogLook.pitch;
-			fov = fov.Clamp( 1, 150 );
+			fov = ((fov > 0 ? fov : Scene.Camera.FieldOfView) + Input.AnalogLook.pitch).Clamp( 1, 150 );
 			roll -= Input.AnalogLook.yaw;
-		}
-
-		EnsureDepthOfField();
-
-		if ( dof.IsValid() )
-		{
-			UpdateDepthOfField( dof );
 		}
 
 		if ( focusing && Input.Released( "attack1" ) )
@@ -129,42 +120,6 @@ public class CameraWeapon : BaseWeapon
 		}
 
 		focusing = Input.Down( "attack1" );
-	}
-
-	private void EnsureDepthOfField()
-	{
-		if ( dof.IsValid() ) return;
-
-		dof = Scene.Camera.GetOrAddComponent<DepthOfField>();
-		dof.Flags |= ComponentFlags.NotNetworked;
-		focusing = false;
-	}
-
-	private void DestroyDepthOfField()
-	{
-		dof?.Destroy();
-		dof = default;
-	}
-
-	private void UpdateDepthOfField( DepthOfField dof )
-	{
-		if ( !focusing )
-		{
-			dof.BlurSize = MathF.Pow( Scene.Camera.FieldOfView.Remap( 1, 55, 1, 0 ), 4 ) * 16;
-			dof.FocusRange = 512;
-			dof.FrontBlur = false;
-
-			var tr = Scene.Trace.Ray( Scene.Camera.Transform.World.ForwardRay, 5000 )
-								.Radius( 4 )
-								.IgnoreGameObjectHierarchy( GameObject.Root )
-								.Run();
-
-			focusPoint = tr.EndPosition;
-		}
-
-		var target = Scene.Camera.WorldPosition.Distance( focusPoint ) + 64;
-
-		dof.FocalDistance = dof.FocalDistance.LerpTo( target, Time.Delta * 2.0f );
 	}
 
 	private void EnsureRTCamera()
@@ -180,7 +135,7 @@ public class CameraWeapon : BaseWeapon
 		_rtCamera.IsMainCamera = false;
 		_rtCamera.BackgroundColor = Color.Black;
 		_rtCamera.ClearFlags = ClearFlags.Color | ClearFlags.Depth | ClearFlags.Stencil;
-		_rtCamera.FieldOfView = fov;
+		_rtCamera.FieldOfView = Scene.Camera.FieldOfView;
 		_rtCamera.RenderExcludeTags.Add( "viewmodel" );
 	}
 
