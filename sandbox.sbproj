@@ -5,7 +5,7 @@
   "Ident": "sandbox",
   "Schema": 1,
   "IncludeSourceFiles": false,
-  "Resources": "/fonts/*\n/UI/*.png\n/ui/*.png\n/ui/*\n/ui/weapons/melee/*",
+  "Resources": "/fonts/*\n/UI/*.png\n/ui/*.png\n/ui/*\n/ui/weapons/melee/*\n/backgrounds/*",
   "PackageReferences": [],
   "EditorReferences": null,
   "Mounts": [],

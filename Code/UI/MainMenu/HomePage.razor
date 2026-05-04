@@ -1,0 +1,95 @@
+@using Sandbox.UI;
+@using Sandbox.UI.Navigation;
+@using Sandbox;
+@namespace Sandbox
+@inherits Panel
+@page "/"
+
+<root>
+
+	<div class="options">
+		<div class="logo"><img src="/ui/logo.png" /></div>
+		<div class="spacer" />
+		<div class="item" onclick=@NavigateNewGame>Start New Game</div>
+		<div class="item" onclick=@NavigateMultiplayer>Find Multiplayer Game</div>
+		<div class="spacer" />
+		<div class="item" onclick=@OpenOptions>Options</div>
+		<div class="spacer" />
+		<div class="item" onclick=@Quit>Quit</div>
+	</div>
+
+	@if (NewsList.Count > 0)
+	{
+		<div class="news">
+			@if (!HideNews)
+			{
+				<div class="news-item" style="background-image: url('@CurrentNews.Media')">
+					<div class="news-footer">
+						<span class="news-title" onclick=@OpenNewsUrl>@CurrentNews.Title</span>
+						<span class="news-summary">@CurrentNews.Summary</span>
+					</div>
+				</div>
+			}
+			<div class="news-dots">
+				@for (int i = 0; i < NewsList.Count; i++)
+				{
+					var idx = i;
+					<div class='dot @(idx == NewsIndex ? "selected" : "")' onclick=@(() => SelectNews(idx)) />
+				}
+				@if (!HideNews)
+				{
+					<div class="close-btn" onclick=@ToggleNews />
+				}
+			</div>
+		</div>
+	}
+
+</root>
+
+@code
+{
+	List<Sandbox.Services.News> NewsList { get; set; } = new();
+	int NewsIndex { get; set; } = 0;
+	bool HideNews { get; set; } = false;
+	Sandbox.Services.News CurrentNews => NewsList.Count > 0 ? NewsList[NewsIndex] : null;
+
+	protected override void OnAfterTreeRender( bool firstTime )
+	{
+		base.OnAfterTreeRender( firstTime );
+		Style.Set( "position", "absolute" );
+		Style.Set( "left",     "0px" );
+		Style.Set( "top",      "0px" );
+		Style.Set( "right",    "0px" );
+		Style.Set( "bottom",   "0px" );
+
+		if ( firstTime )
+			_ = LoadNews();
+	}
+
+	async System.Threading.Tasks.Task LoadNews()
+	{
+		try
+		{
+			var posts = await Sandbox.Services.News.GetPackageNews( "softsplit.sandbox", 5 );
+			if ( posts is null || posts.Length == 0 ) return;
+			NewsList = posts.ToList();
+			NewsIndex = 0;
+			StateHasChanged();
+		}
+		catch { }
+	}
+
+	void SelectNews( int idx ) { HideNews = false; NewsIndex = idx; StateHasChanged(); }
+	void ToggleNews() { HideNews = !HideNews; StateHasChanged(); }
+
+	void OpenNewsUrl()
+	{
+		if ( CurrentNews is not null )
+			Game.Overlay.ShowNewsModal( CurrentNews );
+	}
+
+	void NavigateNewGame()     => this.GetNavigator()?.Navigate( "/newgame" );
+	void NavigateMultiplayer() => Game.Overlay.ShowServerList( new Sandbox.Modals.ServerListConfig( "softsplit.sandbox" ) );
+	void OpenOptions()         => Game.Overlay.ShowSettingsModal();
+	void Quit()                => Game.Close();
+}

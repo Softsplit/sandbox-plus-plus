@@ -2,12 +2,16 @@ using Sandbox.UI;
 
 public sealed partial class GameManager : GameObjectSystem<GameManager>, Component.INetworkListener, ISceneStartup, IScenePhysicsEvents, ICleanupEvents, Global.ISaveEvents
 {
+	private bool IsMenu() => Scene.GetAllComponents<MainMenuHost>().Any();
+
 	public GameManager( Scene scene ) : base( scene )
 	{
 	}
 
 	void ISceneStartup.OnHostInitialize()
 	{
+		if ( IsMenu() ) return;
+
 		if ( !Networking.IsActive )
 		{
 			Networking.CreateLobby( new Sandbox.Network.LobbyConfig() { Privacy = Sandbox.Network.LobbyPrivacy.Public, MaxPlayers = 32, Name = "Sandbox", DestroyWhenHostLeaves = true } );
@@ -16,6 +20,8 @@ public sealed partial class GameManager : GameObjectSystem<GameManager>, Compone
 
 	void Component.INetworkListener.OnActive( Connection channel )
 	{
+		if ( IsMenu() ) return;
+
 		channel.CanSpawnObjects = false;
 
 		var playerData = CreatePlayerInfo( channel );

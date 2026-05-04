@@ -1,0 +1,42 @@
+@using Sandbox.UI;
+@using Sandbox.UI.Navigation;
+@using Sandbox;
+@namespace Sandbox
+@inherits Panel
+
+<root class="navbar">
+
+	<div class="group left">
+		@if ( ShowBack )
+		{
+			<div class="button back" onclick=@GoBack>
+				<img src="/ui/back_to_main_menu.png" />
+				<span>Back to Main Menu</span>
+			</div>
+		}
+	</div>
+
+
+</root>
+
+@code
+{
+	bool ShowBack => this.GetNavigator()?.CurrentUrl != "/";
+
+	string _lastUrl;
+
+	public override void Tick()
+	{
+		var url = this.GetNavigator()?.CurrentUrl;
+		if ( url != _lastUrl )
+		{
+			_lastUrl = url;
+			StateHasChanged();
+		}
+	}
+
+	void GoBack()
+	{
+		this.GetNavigator()?.Navigate( "/" );
+	}
+}

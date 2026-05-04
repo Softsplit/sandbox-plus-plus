@@ -1,0 +1,134 @@
+@using Sandbox.UI;
+@using Sandbox.UI.Navigation;
+@using Sandbox;
+@namespace Sandbox
+@inherits PanelComponent
+
+<root class="mainmenu">
+
+	<div class="bg" style="@BgImage(SlotA)" @ref=BgPanelA />
+	<div class="bg" style="@BgImage(SlotB)" @ref=BgPanelB />
+
+	<div class="gradient" />
+
+	<NavigationHost DefaultUrl="/" @ref=Navigator>
+		<ChildContent>
+			<div class="navigator-canvas" slot="navigator-canvas"></div>
+			<NavBar />
+		</ChildContent>
+	</NavigationHost>
+
+</root>
+
+@code
+{
+	public NavigationHost Navigator { get; protected set; }
+	public static MainMenuHost Instance { get; private set; }
+
+	List<string> Backgrounds { get; set; } = new();
+	int BgIndex { get; set; } = 0;
+	int SlotA { get; set; } = 0;
+	int SlotB { get; set; } = 1;
+	TimeSince BgTimer { get; set; } = 0;
+
+	Panel BgPanelA { get; set; }
+	Panel BgPanelB { get; set; }
+
+	const float SizeVel = 0.3f / 30f;
+	const float AngleVel = -5f / 30f;
+
+	float SizeA = 1f; float AngleA = 0f; float AlphaA = 255f; float AlphaVelA = 0f;
+	float SizeB = 1f; float AngleB = 0f; float AlphaB = 0f;  float AlphaVelB = 0f;
+
+	bool _bgLoaded = false;
+
+	string BgUrl( int idx ) => Backgrounds.Count > 0 ? Backgrounds[idx % Backgrounds.Count] : "/ui/bg.jpg";
+	string BgImage( int slot ) => $"background-image: url('{BgUrl( slot )}');";
+
+	protected override void OnEnabled()
+	{
+		base.OnEnabled();
+		Instance = this;
+	}
+
+	protected override void OnDisabled()
+	{
+		base.OnDisabled();
+		if ( Instance == this )
+			Instance = null!;
+	}
+
+	void LoadBackgrounds()
+	{
+		var files = FileSystem.Mounted.FindFile( "backgrounds", "*", false );
+		Backgrounds = files
+			.Where( f => f.EndsWith( ".jpg", System.StringComparison.OrdinalIgnoreCase ) ||
+			             f.EndsWith( ".png", System.StringComparison.OrdinalIgnoreCase ) )
+			.Select( f => "/backgrounds/" + f )
+			.OrderBy( _ => Guid.NewGuid() )
+			.ToList();
+		if ( Backgrounds.Count == 0 )
+			Backgrounds = new List<string> { "/ui/bg.jpg" };
+
+		BgIndex = 0; SlotA = 0; SlotB = Backgrounds.Count > 1 ? 1 : 0;
+		SizeA = 1f; AngleA = 0f; AlphaA = 255f; AlphaVelA = 0f;
+		SizeB = 1f; AngleB = 0f; AlphaB = 0f;   AlphaVelB = 0f;
+		StateHasChanged();
+	}
+
+	void ApplyPanelStyle( Panel p, float size, float angle, float alpha, bool isOutgoing )
+	{
+		if ( p is null ) return;
+		p.Style.Set( "transform", $"scale({size:F4}) rotate({angle:F4}deg)" );
+		p.Style.Set( "opacity",   $"{alpha / 255f:F4}" );
+		p.Style.Set( "z-index",   isOutgoing ? "2" : "1" );
+	}
+
+	protected override void OnUpdate()
+	{
+		Input.EscapePressed = false;
+
+		if ( !_bgLoaded && BgPanelA is not null )
+		{
+			_bgLoaded = true;
+			LoadBackgrounds();
+		}
+
+		if ( Backgrounds.Count == 0 ) return;
+
+		float dt = Time.Delta;
+
+		SizeA  += ( SizeVel / SizeA ) * dt;
+		AngleA += AngleVel * dt;
+		if ( AlphaVelA > 0f ) AlphaA = MathF.Max( 0f, AlphaA - AlphaVelA * dt );
+
+		SizeB  += ( SizeVel / SizeB ) * dt;
+		AngleB += AngleVel * dt;
+		if ( AlphaVelB > 0f ) AlphaB = MathF.Max( 0f, AlphaB - AlphaVelB * dt );
+
+		ApplyPanelStyle( BgPanelA, SizeA, AngleA, AlphaA, AlphaVelA > 0f );
+		ApplyPanelStyle( BgPanelB, SizeB, AngleB, AlphaB, AlphaVelB > 0f );
+
+		if ( BgTimer > 30f && Backgrounds.Count > 1 )
+		{
+			BgTimer = 0;
+			var nextIdx = ( BgIndex + 1 ) % Backgrounds.Count;
+
+			if ( BgIndex == SlotA )
+			{
+				AlphaVelA = 255f;
+				SlotB = nextIdx;
+				BgIndex = SlotB;
+				SizeB = 1f; AngleB = 0f; AlphaB = 255f; AlphaVelB = 0f;
+			}
+			else
+			{
+				AlphaVelB = 255f;
+				SlotA = nextIdx;
+				BgIndex = SlotA;
+				SizeA = 1f; AngleA = 0f; AlphaA = 255f; AlphaVelA = 0f;
+			}
+			StateHasChanged();
+		}
+	}
+}

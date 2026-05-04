@@ -1,0 +1,78 @@
+MainMenuHost
+{
+	pointer-events: all;
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	overflow: hidden;
+	flex-direction: column;
+}
+
+MainMenuHost root
+{
+	width: 100%;
+	height: 100%;
+	position: relative;
+	font-family: Poppins;
+}
+
+MainMenuHost .bg
+{
+	position: absolute;
+	left: 0px;
+	top: 0px;
+	right: 0px;
+	bottom: 0px;
+	background-size: cover;
+	background-repeat: no-repeat;
+	background-position: center;
+	opacity: 0;
+	z-index: 1;
+}
+
+MainMenuHost .gradient
+{
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 512px;
+	height: 100%;
+	background: linear-gradient( to right, rgba(0,0,0,0.85) 0%, transparent 100% );
+	z-index: 5;
+}
+
+MainMenuHost NavigationHost
+{
+	flex-direction: column;
+	flex-grow: 1;
+	pointer-events: all;
+	z-index: 10;
+}
+
+MainMenuHost .navigator-canvas
+{
+	flex-grow: 1;
+}
+
+MainMenuHost .navigator-body
+{
+	width: 100%;
+	height: 100%;
+	flex-grow: 1;
+	pointer-events: all;
+}
+
+MainMenuHost .navigator-body.hidden
+{
+	display: none;
+	pointer-events: none;
+}
+
+MainMenuHost NavBar
+{
+	flex-shrink: 0;
+	height: 50px;
+	z-index: 100;
+}
