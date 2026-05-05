@@ -2,7 +2,7 @@ using Sandbox.UI;
 
 public sealed partial class GameManager : GameObjectSystem<GameManager>, Component.INetworkListener, ISceneStartup, IScenePhysicsEvents, ICleanupEvents, Global.ISaveEvents
 {
-	private bool IsMenu() => Scene.GetAllComponents<MainMenuHost>().Any();
+	private bool IsMenu() => Scene.GetAllComponents<MainMenuHost>().Any( x => x.IsMainMenuScene );
 
 	public GameManager( Scene scene ) : base( scene )
 	{

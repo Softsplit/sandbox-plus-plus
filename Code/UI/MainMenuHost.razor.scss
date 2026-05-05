@@ -6,8 +6,20 @@ MainMenuHost
 	left: 0;
 	right: 0;
 	bottom: 0;
+	z-index: 10000001;
 	overflow: hidden;
 	flex-direction: column;
+}
+
+MainMenuHost.closed
+{
+	display: none;
+	pointer-events: none;
+}
+
+MainMenuHost.in-game
+{
+	background-color: transparent;
 }
 
 MainMenuHost root
@@ -16,6 +28,17 @@ MainMenuHost root
 	height: 100%;
 	position: relative;
 	font-family: Poppins;
+}
+
+MainMenuHost root.in-game
+{
+	background-color: transparent;
+}
+
+MainMenuHost root.in-game.closed
+{
+	display: none;
+	pointer-events: none;
 }
 
 MainMenuHost .bg

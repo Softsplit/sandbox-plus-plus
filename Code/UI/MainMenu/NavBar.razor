@@ -9,28 +9,46 @@
 	<div class="group left">
 		@if ( ShowBack )
 		{
-			<div class="button back" onclick=@GoBack>
+			<div id="BackToMenu" class="button" onclick=@GoBack>
 				<img src="/ui/back_to_main_menu.png" />
 				<span>Back to Main Menu</span>
 			</div>
 		}
 	</div>
 
+	<div class="group center">
+		@if ( ShowBackToGame )
+		{
+			<div class="button bigicon" onclick=@BackToGame>
+				<img src="/ui/back_to_game.png" />
+				<span>Back to Game</span>
+			</div>
+		}
+	</div>
+
+	<div class="group right">
+	</div>
 
 </root>
 
 @code
 {
+	[Parameter] public MainMenuHost Host { get; set; }
+
+	bool ShowBackToGame => Host?.IsInGameMenu ?? false;
 	bool ShowBack => this.GetNavigator()?.CurrentUrl != "/";
 
 	string _lastUrl;
+	bool _lastShowBackToGame;
 
 	public override void Tick()
 	{
 		var url = this.GetNavigator()?.CurrentUrl;
-		if ( url != _lastUrl )
+		var showBackToGame = ShowBackToGame;
+		if ( url != _lastUrl || showBackToGame != _lastShowBackToGame )
 		{
 			_lastUrl = url;
+			_lastShowBackToGame = showBackToGame;
 			StateHasChanged();
 		}
 	}
@@ -38,5 +56,10 @@
 	void GoBack()
 	{
 		this.GetNavigator()?.Navigate( "/" );
+	}
+
+	void BackToGame()
+	{
+		Host?.ResumeGame();
 	}
 }

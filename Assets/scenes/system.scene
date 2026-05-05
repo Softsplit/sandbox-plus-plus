@@ -574,6 +574,38 @@
             }
           ],
           "Children": []
+        },
+        {
+          "__guid": "e7137b0f-1f3b-43a7-9118-14e439d4e4d4",
+          "__version": 2,
+          "Flags": 0,
+          "Name": "Pause Menu",
+          "Position": "0,0,0",
+          "Rotation": "0,0,0,1",
+          "Scale": "1,1,1",
+          "Tags": "",
+          "Enabled": true,
+          "NetworkMode": 2,
+          "NetworkFlags": 0,
+          "NetworkOrphaned": 0,
+          "NetworkTransmit": true,
+          "OwnerTransfer": 1,
+          "Components": [
+            {
+              "__type": "Sandbox.MainMenuHost",
+              "__guid": "ddf65a9f-85d2-4b97-b0ce-c55f615bdf18",
+              "__enabled": true,
+              "Flags": 0,
+              "IsInGameMenu": true,
+              "OnComponentDestroy": null,
+              "OnComponentDisabled": null,
+              "OnComponentEnabled": null,
+              "OnComponentFixedUpdate": null,
+              "OnComponentStart": null,
+              "OnComponentUpdate": null
+            }
+          ],
+          "Children": []
         }
       ]
     },

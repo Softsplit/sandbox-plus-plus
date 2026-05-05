@@ -4,17 +4,20 @@
 @namespace Sandbox
 @inherits PanelComponent
 
-<root class="mainmenu">
+<root class="mainmenu @(IsInGameMenu ? "in-game" : "front-end") @(IsMenuOpen ? "open" : "closed")">
 
-	<div class="bg" style="@BgImage(SlotA)" @ref=BgPanelA />
-	<div class="bg" style="@BgImage(SlotB)" @ref=BgPanelB />
+	@if ( !IsInGameMenu )
+	{
+		<div class="bg" style="@BgImage(SlotA)" @ref=BgPanelA />
+		<div class="bg" style="@BgImage(SlotB)" @ref=BgPanelB />
+	}
 
 	<div class="gradient" />
 
-	<NavigationHost DefaultUrl="/" @ref=Navigator>
+	<NavigationHost DefaultUrl="/" @ref=MenuNavigator>
 		<ChildContent>
 			<div class="navigator-canvas" slot="navigator-canvas"></div>
-			<NavBar />
+			<NavBar Host=@this />
 		</ChildContent>
 	</NavigationHost>
 
@@ -22,8 +25,13 @@
 
 @code
 {
-	public NavigationHost Navigator { get; protected set; }
-	public static MainMenuHost Instance { get; private set; }
+	const string MainMenuScenePath = "/scenes/menu.scene";
+
+	public NavigationHost MenuNavigator { get; protected set; }
+	public static MainMenuHost Current { get; private set; }
+	[Property] public bool IsInGameMenu { get; set; }
+	public bool IsMainMenuScene => !IsInGameMenu;
+	public bool IsMenuOpen { get; private set; } = true;
 
 	List<string> Backgrounds { get; set; } = new();
 	int BgIndex { get; set; } = 0;
@@ -48,14 +56,16 @@
 	protected override void OnEnabled()
 	{
 		base.OnEnabled();
-		Instance = this;
+		Current = this;
+		IsMenuOpen = !IsInGameMenu;
+		ApplyHostClasses();
 	}
 
 	protected override void OnDisabled()
 	{
 		base.OnDisabled();
-		if ( Instance == this )
-			Instance = null!;
+		if ( Current == this )
+			Current = null!;
 	}
 
 	void LoadBackgrounds()
@@ -86,6 +96,17 @@
 
 	protected override void OnUpdate()
 	{
+		if ( IsInGameMenu )
+		{
+			if ( Input.EscapePressed )
+			{
+				TogglePauseMenu();
+				Input.EscapePressed = false;
+			}
+
+			return;
+		}
+
 		Input.EscapePressed = false;
 
 		if ( !_bgLoaded && BgPanelA is not null )
@@ -130,5 +151,72 @@
 			}
 			StateHasChanged();
 		}
+	}
+
+	public void ResumeGame()
+	{
+		if ( !IsInGameMenu ) return;
+
+		IsMenuOpen = false;
+		ApplyHostClasses();
+		StateHasChanged();
+	}
+
+	public void TogglePauseMenu()
+	{
+		if ( !IsInGameMenu ) return;
+
+		IsMenuOpen = !IsMenuOpen;
+		if ( IsMenuOpen )
+			MenuNavigator?.Navigate( "/" );
+
+		ApplyHostClasses();
+		StateHasChanged();
+	}
+
+	public void DisconnectToMainMenu()
+	{
+		Networking.Disconnect();
+		ClearLaunchArguments();
+
+		var options = new SceneLoadOptions
+		{
+			ShowLoadingScreen = true
+		};
+
+		if ( !options.SetScene( MainMenuScenePath ) )
+			return;
+
+		var sceneFile = options.GetSceneFile();
+		Game.ActiveScene.RunEvent<ISceneStartup>( x => x.OnHostPreInitialize( sceneFile ) );
+
+		if ( !Game.ActiveScene.Load( options ) )
+			return;
+
+		Game.ActiveScene.RunEvent<ISceneStartup>( x => x.OnHostInitialize() );
+
+		if ( !Application.IsDedicatedServer )
+		{
+			Game.ActiveScene.RunEvent<ISceneStartup>( x => x.OnClientInitialize() );
+		}
+	}
+
+	void ClearLaunchArguments()
+	{
+		LaunchArguments.Map = null;
+		LaunchArguments.MaxPlayers = 0;
+		LaunchArguments.ServerName = null;
+		LaunchArguments.Privacy = Sandbox.Network.LobbyPrivacy.Public;
+		LaunchArguments.GameSettings = null;
+	}
+
+	void ApplyHostClasses()
+	{
+		if ( Panel is null ) return;
+
+		Panel.SetClass( "front-end", !IsInGameMenu );
+		Panel.SetClass( "in-game", IsInGameMenu );
+		Panel.SetClass( "open", IsMenuOpen );
+		Panel.SetClass( "closed", !IsMenuOpen );
 	}
 }
