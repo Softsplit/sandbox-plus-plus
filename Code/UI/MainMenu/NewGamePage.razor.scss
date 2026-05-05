@@ -1,0 +1,720 @@
+NewGamePage,
+NewGamePage root.page
+{
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	pointer-events: all;
+}
+
+NewGamePage .maplist
+{
+	position: absolute;
+	top: 16px;
+	left: 16px;
+	right: 256px;
+	bottom: 66px;
+	background-color: white;
+	border-radius: 5px;
+	padding: 10px;
+}
+
+NewGamePage .maplist .controls
+{
+	position: absolute;
+	left: 10px;
+	top: 10px;
+	bottom: 10px;
+	width: 190px;
+}
+
+NewGamePage .controls ul
+{
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: 0;
+	bottom: 32px;
+	margin: 0;
+	padding: 0;
+	overflow-x: hidden;
+	overflow-y: scroll;
+	flex-direction: column;
+}
+
+NewGamePage .controls li.category
+{
+	height: 26px;
+	min-height: 26px;
+	margin: 0 0 5px 0;
+	background-color: #dddddd;
+	border-radius: 3px;
+	color: #555555;
+	cursor: pointer;
+	font-size: 11px;
+	font-weight: bold;
+	font-family: "Inter";
+	flex-direction: row;
+	align-items: center;
+	flex-shrink: 0;
+}
+
+NewGamePage .controls li.filter-header
+{
+	height: 20px;
+	min-height: 20px;
+	margin: 10px 0 4px 0;
+	padding-left: 6px;
+	color: #777777;
+	font-size: 11px;
+	font-weight: bold;
+	font-family: "Inter";
+	text-transform: uppercase;
+	flex-shrink: 0;
+}
+
+NewGamePage .controls li.filter-header:first-child
+{
+	margin-top: 0;
+}
+
+NewGamePage .controls li.category:hover
+{
+	background-color: #cccccc;
+}
+
+NewGamePage .controls li.category.active
+{
+	background-color: #99ccff;
+	color: #333333;
+}
+
+NewGamePage .controls li.category.child
+{
+	margin-left: 10px;
+	width: 180px;
+}
+
+NewGamePage .controls li.category .name
+{
+	left: 6px;
+	right: 32px;
+	padding-left: 6px;
+	flex-grow: 1;
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	color: #555555;
+}
+
+NewGamePage .controls li.category.active .name
+{
+	color: #333333;
+}
+
+NewGamePage .controls li.category .count
+{
+	margin: 5px;
+	padding: 2px 5px;
+	background-color: white;
+	border-radius: 3px;
+	color: #aaaaaa;
+	font-size: 10px;
+	font-family: "Inter";
+	white-space: nowrap;
+	flex-shrink: 0;
+}
+
+NewGamePage .controls li.category .count:empty
+{
+	display: none;
+}
+
+NewGamePage .controls > .search
+{
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	height: 24px;
+}
+
+NewGamePage .controls TextEntry.search
+{
+	width: 100%;
+	height: 24px;
+	padding: 1px 4px;
+	background-color: white;
+	border: 1px solid #abadb3;
+	border-radius: 3px;
+	color: black;
+	font-size: 12px;
+	font-family: "Inter";
+}
+
+NewGamePage .controls TextEntry.search .placeholder
+{
+	color: #888888;
+	opacity: 1;
+}
+
+NewGamePage .controls TextEntry.search:focus
+{
+	border-color: #3399ff;
+	box-shadow: none;
+}
+
+NewGamePage .maplist > .scrollable
+{
+	position: absolute;
+	left: 200px;
+	right: 0;
+	top: 0;
+	bottom: 0;
+	overflow: hidden;
+	pointer-events: all;
+	flex-direction: column;
+}
+
+NewGamePage .maplist > .scrollable > .category
+{
+	position: absolute;
+	left: 10px;
+	right: 10px;
+	top: 10px;
+	bottom: 10px;
+	margin: 0;
+	padding: 0;
+	flex-direction: column;
+}
+
+NewGamePage .category .header
+{
+	width: 100%;
+	padding: 5px;
+	font-size: 32px;
+	font-family: "Inter";
+	color: #444444;
+	flex-direction: row;
+	align-items: flex-end;
+	flex-shrink: 0;
+}
+
+NewGamePage .category .header span
+{
+	color: #444444;
+	font-size: 32px;
+	font-family: "Inter";
+}
+
+NewGamePage .category .header small
+{
+	margin-left: 8px;
+	padding-bottom: 5px;
+	font-size: 14px;
+	font-family: "Inter";
+	color: #999999;
+}
+
+NewGamePage .map-grid
+{
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: 54px;
+	bottom: 0;
+	width: 100%;
+	padding-bottom: 12px;
+	overflow-x: hidden;
+	overflow-y: scroll;
+	flex-direction: row;
+	flex-wrap: wrap;
+	align-items: flex-start;
+	align-content: flex-start;
+}
+
+NewGamePage .category .loading
+{
+	width: 100%;
+	padding: 20px;
+	font-size: 14px;
+	font-family: "Inter";
+	color: #999999;
+	text-align: center;
+}
+
+NewGamePage .category .mapicon
+{
+	position: relative;
+	width: 140px;
+	min-width: 140px;
+	margin: 2px;
+	padding: 6px;
+	cursor: pointer;
+	font-size: 10px;
+	font-family: "Inter";
+	flex-direction: column;
+	align-items: center;
+	justify-content: flex-start;
+	flex-shrink: 0;
+}
+
+NewGamePage .category .mapicon.selected
+{
+	background-color: #97c5ff;
+	border-radius: 3px;
+}
+
+NewGamePage .category .mapicon .thumbnail
+{
+	width: 128px;
+	height: 128px;
+	min-width: 128px;
+	min-height: 128px;
+	max-width: 128px;
+	max-height: 128px;
+	background-color: #777777;
+	background-size: cover;
+	background-position: center;
+	flex-shrink: 0;
+}
+
+NewGamePage .category .mapicon span.map-title
+{
+	width: 128px;
+	margin-top: 2px;
+	color: #333333;
+	font-size: 10px;
+	font-family: "Inter";
+	text-align: center;
+	justify-content: center;
+	align-items: flex-start;
+	overflow: visible;
+	white-space: normal;
+	word-break: break-all;
+	flex-shrink: 0;
+}
+
+NewGamePage .options-panel
+{
+	position: absolute;
+	top: 16px;
+	right: 16px;
+	bottom: 66px;
+	width: 226px;
+	background-color: white;
+	border-radius: 5px;
+	overflow: visible;
+}
+
+NewGamePage .dropdown
+{
+	position: relative;
+	z-index: 100;
+	margin: 10px;
+	width: 206px;
+	height: 28px;
+}
+
+NewGamePage .dropdown > .dropdown-label
+{
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: 0;
+	height: 28px;
+	padding-left: 10px;
+	border-radius: 3px;
+	cursor: pointer;
+	font-weight: bold;
+	font-size: 13px;
+	font-family: "Inter";
+	color: white;
+	background-image: linear-gradient( to bottom, #55cc55, #22bd22 );
+	border: 1px solid #22aa22;
+	border-bottom-color: #118811;
+	box-shadow: 0 1px 2px rgba( 0, 0, 0, 0.05 );
+	align-items: center;
+}
+
+NewGamePage .dropdown > .dropdown-label label,
+NewGamePage .dropdown > .dropdown-label Label
+{
+	color: white;
+	font-weight: bold;
+	font-size: 13px;
+	font-family: "Inter";
+	background-color: transparent;
+	background-image: none;
+	border: none;
+	box-shadow: none;
+	white-space: nowrap;
+}
+
+NewGamePage .dropdown > .dropdown-label .dropdown-chevron
+{
+	position: absolute;
+	right: 5px;
+	top: 0;
+	width: 22px;
+	height: 28px;
+	color: white;
+	font-size: 20px;
+	font-family: "Material Icons";
+	font-weight: normal;
+	background-color: transparent;
+	background-image: none;
+	border: none;
+	box-shadow: none;
+	align-items: center;
+	justify-content: center;
+	text-align: center;
+	flex-shrink: 0;
+}
+
+NewGamePage .dropdown > .dropdown-label:hover
+{
+	background-image: linear-gradient( to bottom, #66dd66, #33cc33 );
+}
+
+NewGamePage .dropdown .contents
+{
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: 31px;
+	background-color: white;
+	border-radius: 4px;
+	border: 1px solid #aaaaaa;
+	box-shadow: 2px 2px 8px rgba( 0, 0, 0, 0.5 );
+	cursor: pointer;
+	font-size: 13px;
+	font-family: "Inter";
+	flex-direction: column;
+}
+
+NewGamePage .dropdown .contents div
+{
+	width: 206px;
+	height: 25px;
+	padding: 0;
+	color: #333333;
+	font-size: 13px;
+	font-family: "Inter";
+	background-color: transparent;
+	background-image: none;
+	border: none;
+	border-radius: 0;
+	box-shadow: none;
+	flex-direction: row;
+	align-items: center;
+	justify-content: flex-start;
+	text-align: left;
+	flex-shrink: 0;
+}
+
+NewGamePage .dropdown .contents div label,
+NewGamePage .dropdown .contents div Label
+{
+	margin-left: 15px;
+	margin-right: 15px;
+	color: #333333;
+	font-size: 13px;
+	font-family: "Inter";
+	font-weight: normal;
+	background-color: transparent;
+	background-image: none;
+	border: none;
+	box-shadow: none;
+	white-space: nowrap;
+}
+
+NewGamePage .dropdown .contents div.active
+{
+	background-color: transparent;
+}
+
+NewGamePage .dropdown .contents div:hover
+{
+	background-color: #aaccff;
+}
+
+NewGamePage .options-panel > .scrollable
+{
+	position: absolute;
+	top: 42px;
+	left: 10px;
+	right: 0;
+	bottom: 90px;
+	margin: 0;
+	padding-top: 0;
+	padding-left: 0;
+	padding-right: 2px;
+	padding-bottom: 0;
+	width: 216px;
+	max-width: 216px;
+	overflow-x: hidden;
+	overflow-y: scroll;
+	flex-direction: column;
+}
+
+NewGamePage .options-panel .control
+{
+	margin-top: 8px;
+	margin-right: 0;
+	width: 206px;
+	max-width: 206px;
+	flex-direction: row;
+	align-items: center;
+	flex-shrink: 0;
+}
+
+NewGamePage .options-panel .control:first-child,
+NewGamePage .options-panel .control-text:first-child
+{
+	margin-top: 6px;
+}
+
+NewGamePage .options-panel .control-sub
+{
+	margin-top: 4px;
+	margin-left: 18px;
+	width: 188px;
+	max-width: 188px;
+}
+
+NewGamePage .options-panel .control.disabled
+{
+	opacity: 0.55;
+}
+
+NewGamePage .options-panel label,
+NewGamePage .options-panel Label
+{
+	font-size: 11px;
+	font-family: "Inter";
+	color: #666666;
+}
+
+NewGamePage .options-panel .control-checkbox
+{
+	height: 18px;
+	min-height: 18px;
+	align-items: flex-start;
+	justify-content: flex-start;
+	overflow: visible;
+}
+
+NewGamePage .options-panel .control-checkbox > label,
+NewGamePage .options-panel .control-checkbox > Label
+{
+	position: relative;
+	top: 3px;
+	margin: 0 0 0 3px;
+	padding: 0;
+	font-size: 11px;
+	font-family: "Inter";
+	color: #666666;
+}
+
+NewGamePage .options-panel .control-text
+{
+	flex-direction: column;
+	align-items: flex-start;
+}
+
+NewGamePage .options-panel .control-text TextEntry
+{
+	width: 100%;
+	max-width: 100%;
+}
+
+NewGamePage .options-panel .control-text > label,
+NewGamePage .options-panel .control-text > Label
+{
+	margin-bottom: 2px;
+}
+
+NewGamePage .options-panel .control-numeric
+{
+	margin-top: 4px;
+	flex-direction: row;
+	align-items: center;
+	justify-content: space-between;
+	overflow: hidden;
+}
+
+NewGamePage .options-panel .control-numeric > label,
+NewGamePage .options-panel .control-numeric > Label
+{
+	width: 152px;
+	max-width: 152px;
+	white-space: nowrap;
+	flex-grow: 0;
+	flex-shrink: 0;
+}
+
+NewGamePage .options-panel .checkbox
+{
+	width: 13px;
+	height: 13px;
+	min-width: 13px;
+	min-height: 13px;
+	margin: 3px 3px 0 4px;
+	background-color: white;
+	background-repeat: no-repeat;
+	background-size: contain;
+	background-position: center;
+	border: 1px solid #767676;
+	border-radius: 2px;
+	cursor: pointer;
+	flex-shrink: 0;
+}
+
+NewGamePage .options-panel .checkbox.checked
+{
+	background-color: #0075ff;
+	background-image: url( '/ui/checkbox-check.png' );
+	border-color: #0075ff;
+}
+
+NewGamePage .options-panel .checkbox:hover
+{
+	border-color: #4f4f4f;
+}
+
+NewGamePage .options-panel .checkbox.checked:hover
+{
+	background-color: #005cc8;
+	border-color: #005cc8;
+}
+
+NewGamePage .options-panel .checkbox:active
+{
+	background-color: #3793ff;
+	border-color: #3793ff;
+}
+
+NewGamePage .options-panel .checkbox.disabled
+{
+	background-color: #f7f7f7;
+	border-color: #d0d0d0;
+}
+
+NewGamePage .options-panel .checkbox.disabled.checked
+{
+	background-color: #d0d0d0;
+	border-color: #d0d0d0;
+}
+
+NewGamePage .options-panel TextEntry
+{
+	width: 100%;
+	height: 24px;
+	padding: 4px;
+	background-color: white;
+	border: 1px solid #abadb3;
+	border-radius: 2px;
+	color: black;
+	font-size: 12px;
+	font-family: "Inter";
+	box-shadow: none;
+}
+
+NewGamePage .options-panel TextEntry label,
+NewGamePage .options-panel TextEntry Label,
+NewGamePage .options-panel TextEntry .content-label,
+NewGamePage .options-panel TextEntry .placeholder
+{
+	color: black;
+	font-size: 12px;
+	font-family: "Inter";
+	background-color: transparent;
+	background-image: none;
+	border: none;
+	box-shadow: none;
+}
+
+NewGamePage .options-panel TextEntry:focus
+{
+	border-color: #3399ff;
+	box-shadow: none;
+}
+
+NewGamePage .options-panel .control-numeric TextEntry
+{
+	width: 44px;
+	max-width: 44px;
+	height: 20px;
+	padding: 2px;
+	margin-left: 0;
+	flex-shrink: 0;
+}
+
+NewGamePage .options-panel .control-numeric TextEntry label,
+NewGamePage .options-panel .control-numeric TextEntry Label,
+NewGamePage .options-panel .control-numeric TextEntry .content-label,
+NewGamePage .options-panel .control-numeric TextEntry .placeholder
+{
+	font-size: 12px;
+	color: black;
+}
+
+NewGamePage .options-panel > .bottom
+{
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 0;
+}
+
+NewGamePage .options-panel > .bottom > button
+{
+	position: absolute;
+	left: 8px;
+	right: 8px;
+	bottom: 8px;
+	width: 190px;
+	height: 44px;
+	margin: 10px;
+	padding: 10px;
+	border-radius: 6px;
+	cursor: pointer;
+	font-size: 20px;
+	font-family: "Inter";
+	font-weight: normal;
+	justify-content: center;
+	align-items: center;
+	color: white;
+}
+
+NewGamePage .options-panel > .bottom > button label,
+NewGamePage .options-panel > .bottom > button Label
+{
+	color: white;
+	font-size: 20px;
+	font-family: "Inter";
+	font-weight: normal;
+	text-align: center;
+	background-color: transparent;
+	background-image: none;
+	border: none;
+	box-shadow: none;
+}
+
+NewGamePage .options-panel > .bottom > button.btn-primary
+{
+	background-image: linear-gradient( to bottom, #0088cc, #0055cc );
+	border: 1px solid #0055cc;
+	border-bottom-color: #003580;
+	color: white;
+	text-shadow: 0 -1px 1px rgba( 0, 0, 0, 0.25 );
+	box-shadow: 0 1px 2px rgba( 0, 0, 0, 0.05 );
+}
+
+NewGamePage .options-panel > .bottom > button.btn-primary:hover
+{
+	background-image: linear-gradient( to bottom, #22aaee, #2277ee );
+}
