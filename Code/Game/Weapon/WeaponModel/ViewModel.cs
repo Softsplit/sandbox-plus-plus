@@ -1,7 +1,52 @@
+using System.Threading;
+
 public sealed partial class ViewModel : WeaponModel, ICameraSetup
 {
 	[ConVar( "sbdm.hideviewmodel", ConVarFlags.Cheat )]
 	private static bool HideViewModel { get; set; } = false;
+
+	/// <summary>
+	/// A sound to play at a specific time during reload.
+	/// </summary>
+	public record struct ReloadSoundEntry
+	{
+		/// <summary>
+		/// Seconds after reload starts to play this sound.
+		/// </summary>
+		[KeyProperty] public float Time { get; set; }
+
+		/// <summary>
+		/// The sound to play.
+		/// </summary>
+		[Property, KeyProperty] public SoundEvent Sound { get; set; }
+	}
+
+	/// <summary>
+	/// Timed sound events to play during reload.
+	/// </summary>
+	[Property, Group( "Reload Sounds" )]
+	public List<ReloadSoundEntry> ReloadSoundEvents { get; set; } = new();
+
+	/// <summary>
+	/// Timed sound events to play during each incremental reload cycle.
+	/// </summary>
+	[Property, Group( "Reload Sounds" )]
+	public List<ReloadSoundEntry> IncrementalReloadSoundEvents { get; set; } = new();
+
+	/// <summary>
+	/// Timed sound events played when starting an incremental reload sequence.
+	/// </summary>
+	[Property, Group( "Reload Sounds" )]
+	public List<ReloadSoundEntry> IncrementalReloadStartSounds { get; set; } = new();
+
+	/// <summary>
+	/// Timed sound events played when finishing an incremental reload sequence.
+	/// </summary>
+	[Property, Group( "Reload Sounds" )]
+	public List<ReloadSoundEntry> IncrementalReloadFinishSounds { get; set; } = new();
+
+	private CancellationTokenSource _reloadSoundCts;
+	private CancellationTokenSource _reloadFinishSoundCts;
 
 	/// <summary>
 	/// Turns on incremental reloading parameters.
@@ -22,48 +67,17 @@ public sealed partial class ViewModel : WeaponModel, ICameraSetup
 	public float IncrementalAnimationSpeed { get; set; } = 3.0f;
 
 	/// <summary>
-	/// How much sway/lag the viewmodel has when looking around.
+	/// Use fast anims?
 	/// </summary>
-	[Property, Group( "Sway" )]
-	public float SwayScale { get; set; } = 1.0f;
-
-	/// <summary>
-	/// How fast the viewmodel catches up to your view rotation.
-	/// </summary>
-	[Property, Group( "Sway" )]
-	public float SwaySpeed { get; set; } = 10.0f;
-
-	/// <summary>
-	/// Maximum sway offset in degrees.
-	/// </summary>
-	[Property, Group( "Sway" )]
-	public float MaxSwayDegrees { get; set; } = 3.0f;
-
-	/// <summary>
-	/// Scale for the bob effect.
-	/// </summary>
-	[Property, Group( "Bob" )]
-	public float BobScale { get; set; } = 1.0f;
+	[Property] 
+	public bool UseFastAnimations { get; set; } = false;
 
 	public bool IsAttacking { get; set; }
 
 	TimeSince AttackDuration;
 
-	// Sway tracking
-	Angles lastAngles;
-	Vector3 swayOffset;
-	Angles swayAngles;
-	bool isFirstUpdate = true;
-
-	// Bob state
-	float bobTime;
-	float lastBobTime;
-	float verticalBob;
-	float lateralBob;
-
-	// Bob constants
-	const float BOB_CYCLE_MAX = 0.45f;
-	const float BOB_UP = 0.5f;
+	bool _reloadFinishing;
+	TimeSince _reloadFinishTimer;
 
 	protected override void OnStart()
 	{
@@ -79,94 +93,6 @@ public sealed partial class ViewModel : WeaponModel, ICameraSetup
 		UpdateAnimation();
 	}
 
-	void CalcBob( PlayerController controller )
-	{
-		if ( !GamePreferences.ViewBobbing )
-		{
-			verticalBob = 0;
-			lateralBob = 0;
-			return;
-		}
-
-		var speed = controller.Velocity.WithZ( 0 ).Length;
-		speed = Math.Clamp( speed, -320f, 320f );
-
-		var bobOffset = speed.Remap( 0, 320, 0f, 1f );
-		bobTime += (Time.Now - lastBobTime) * bobOffset;
-		lastBobTime = Time.Now;
-
-		var cycle = bobTime - MathF.Floor( bobTime / BOB_CYCLE_MAX ) * BOB_CYCLE_MAX;
-		cycle /= BOB_CYCLE_MAX;
-
-		if ( cycle < BOB_UP )
-		{
-			cycle = MathF.PI * cycle / BOB_UP;
-		}
-		else
-		{
-			cycle = MathF.PI + MathF.PI * (cycle - BOB_UP) / (1.0f - BOB_UP);
-		}
-
-		verticalBob = speed * 0.005f;
-		verticalBob = verticalBob * 0.3f + verticalBob * 0.7f * MathF.Sin( cycle );
-		verticalBob = Math.Clamp( verticalBob, -7.0f, 4.0f );
-
-		cycle = bobTime - MathF.Floor( bobTime / (BOB_CYCLE_MAX * 2) ) * BOB_CYCLE_MAX * 2;
-		cycle /= BOB_CYCLE_MAX * 2;
-
-		if ( cycle < BOB_UP )
-		{
-			cycle = MathF.PI * cycle / BOB_UP;
-		}
-		else
-		{
-			cycle = MathF.PI + MathF.PI * (cycle - BOB_UP) / (1.0f - BOB_UP);
-		}
-
-		lateralBob = speed * 0.005f;
-		lateralBob = lateralBob * 0.3f + lateralBob * 0.7f * MathF.Sin( cycle );
-		lateralBob = Math.Clamp( lateralBob, -7.0f, 4.0f );
-	}
-
-	void CalcSway( Rotation cameraRotation )
-	{
-		var currentAngles = cameraRotation.Angles();
-
-		if ( isFirstUpdate )
-		{
-			lastAngles = currentAngles;
-			swayOffset = Vector3.Zero;
-			swayAngles = Angles.Zero;
-			isFirstUpdate = false;
-		}
-
-		var deltaYaw = Angles.NormalizeAngle( currentAngles.yaw - lastAngles.yaw );
-		var deltaPitch = Angles.NormalizeAngle( currentAngles.pitch - lastAngles.pitch );
-
-		var targetSwayAngles = new Angles(
-			Math.Clamp( -deltaPitch * SwayScale * 2f, -MaxSwayDegrees, MaxSwayDegrees ),
-			Math.Clamp( -deltaYaw * SwayScale * 2f, -MaxSwayDegrees, MaxSwayDegrees ),
-			Math.Clamp( deltaYaw * SwayScale * 0.5f, -MaxSwayDegrees * 0.5f, MaxSwayDegrees * 0.5f ) // slight roll
-		);
-
-		swayAngles = Angles.Lerp( swayAngles, targetSwayAngles, Time.Delta * SwaySpeed );
-		swayAngles = new Angles(
-			MathX.Lerp( swayAngles.pitch, 0, Time.Delta * SwaySpeed * 0.5f ),
-			MathX.Lerp( swayAngles.yaw, 0, Time.Delta * SwaySpeed * 0.5f ),
-			MathX.Lerp( swayAngles.roll, 0, Time.Delta * SwaySpeed * 0.5f )
-		);
-
-		var right = cameraRotation.Right;
-		var up = cameraRotation.Up;
-
-		swayOffset = Vector3.Lerp( swayOffset, Vector3.Zero, Time.Delta * SwaySpeed );
-		swayOffset += right * -deltaYaw * 0.02f * SwayScale;
-		swayOffset += up * deltaPitch * 0.02f * SwayScale;
-		swayOffset = swayOffset.ClampLength( 1.0f );
-
-		lastAngles = currentAngles;
-	}
-
 	void ICameraSetup.Setup( CameraComponent cc )
 	{
 		Renderer.Enabled = !HideViewModel;
@@ -174,35 +100,7 @@ public sealed partial class ViewModel : WeaponModel, ICameraSetup
 		WorldPosition = cc.WorldPosition;
 		WorldRotation = cc.WorldRotation;
 
-		var playerController = GetComponentInParent<PlayerController>();
-		if ( playerController.IsValid() )
-		{
-			CalcBob( playerController );
-			CalcSway( cc.WorldRotation );
-
-			var forward = cc.WorldRotation.Forward;
-			var right = cc.WorldRotation.Right;
-			var up = cc.WorldRotation.Up;
-
-			var bobPosition = Vector3.Zero;
-			var bobAngles = Angles.Zero;
-
-			bobPosition += forward * verticalBob * 0.1f * BobScale;
-			bobPosition += up * verticalBob * 0.1f * BobScale;
-
-			bobPosition += right * lateralBob * 0.8f * BobScale;
-
-			bobAngles.roll = verticalBob * 0.5f * BobScale;
-			bobAngles.pitch = -verticalBob * 0.4f * BobScale;
-			bobAngles.yaw = -lateralBob * 0.3f * BobScale;
-
-			bobPosition += swayOffset;
-			bobAngles += swayAngles;
-
-			WorldPosition += bobPosition;
-			WorldRotation *= Rotation.From( bobAngles );
-		}
-
+		CalcViewModelView( cc );
 		ApplyAnimationTransform( cc );
 	}
 
@@ -213,8 +111,8 @@ public sealed partial class ViewModel : WeaponModel, ICameraSetup
 		if ( Renderer.TryGetBoneTransformLocal( "camera", out var bone ) )
 		{
 			var scale = 0.5f;
-			cc.LocalPosition += bone.Position * scale;
-			cc.LocalRotation *= bone.Rotation * scale;
+			cc.WorldPosition += cc.WorldRotation * bone.Position * scale;
+			cc.WorldRotation *= bone.Rotation * scale;
 		}
 	}
 
@@ -222,19 +120,49 @@ public sealed partial class ViewModel : WeaponModel, ICameraSetup
 	{
 		var playerController = GetComponentInParent<PlayerController>();
 		if ( !playerController.IsValid() ) return;
+		if ( IsHolstered ) return;
 
 		var rot = Scene.Camera.WorldRotation.Angles();
 
 		Renderer.Set( "b_twohanded", true );
+		Renderer.Set( "deploy_type", UseFastAnimations ? 1 : 0 );
+		Renderer.Set( "reload_type", UseFastAnimations ? 1 : 0 );
+
 		Renderer.Set( "b_grounded", playerController.IsOnGround );
+		Renderer.Set( "move_bob", 0.0f );
 
 		Renderer.Set( "aim_pitch", rot.pitch );
+		Renderer.Set( "aim_pitch_inertia", 0.0f );
+
 		Renderer.Set( "aim_yaw", rot.yaw );
+		Renderer.Set( "aim_yaw_inertia", 0.0f );
 
 		Renderer.Set( "attack_hold", IsAttacking ? AttackDuration.Relative.Clamp( 0f, 1f ) : 0f );
+
+		if ( _reloadFinishing && _reloadFinishTimer >= 0.5f )
+		{
+			_reloadFinishing = false;
+			Renderer.Set( "speed_reload", AnimationSpeed );
+			Renderer.Set( "b_reloading", false );
+		}
+
+		var velocity = playerController.Velocity;
+
+		var dir = velocity;
+		var forward = Scene.Camera.WorldRotation.Forward.Dot( dir );
+		var sideward = Scene.Camera.WorldRotation.Right.Dot( dir );
+
+		var angle = MathF.Atan2( sideward, forward ).RadianToDegree().NormalizeDegrees();
+
+		Renderer.Set( "move_direction", angle );
+		Renderer.Set( "move_speed", velocity.Length );
+		Renderer.Set( "move_groundspeed", velocity.WithZ( 0 ).Length );
+		Renderer.Set( "move_y", sideward );
+		Renderer.Set( "move_x", forward );
+		Renderer.Set( "move_z", velocity.z );
 	}
 
-	public void OnAttack()
+	public override void OnAttack()
 	{
 		Renderer?.Set( "b_attack", true );
 
@@ -253,7 +181,7 @@ public sealed partial class ViewModel : WeaponModel, ICameraSetup
 		}
 	}
 
-	public void CreateRangedEffects( BaseWeapon weapon, Vector3 hitPoint, Vector3? origin )
+	public override void CreateRangedEffects( BaseWeapon weapon, Vector3 hitPoint, Vector3? origin )
 	{
 		DoTracerEffect( hitPoint, origin );
 	}
@@ -263,8 +191,14 @@ public sealed partial class ViewModel : WeaponModel, ICameraSetup
 	/// </summary>
 	public void OnReloadStart()
 	{
+		_reloadFinishing = false; // cancel any pending incremental finish from a previous reload
 		Renderer?.Set( "speed_reload", AnimationSpeed );
 		Renderer?.Set( IsIncremental ? "b_reloading" : "b_reload", true );
+
+		if ( IsIncremental )
+			StartSounds( IncrementalReloadStartSounds, ref _reloadFinishSoundCts );
+
+		StartSounds( ReloadSoundEvents, ref _reloadSoundCts );
 	}
 
 	/// <summary>
@@ -274,24 +208,72 @@ public sealed partial class ViewModel : WeaponModel, ICameraSetup
 	{
 		Renderer?.Set( "speed_reload", IncrementalAnimationSpeed );
 		Renderer?.Set( "b_reloading_shell", true );
+
+		StartSounds( IncrementalReloadSoundEvents, ref _reloadSoundCts );
 	}
 
 	public void OnReloadFinish()
 	{
+		CancelSounds( ref _reloadSoundCts );
+
 		if ( IsIncremental )
 		{
-			//
-			// Stops the reload after a little delay so it's not immediately cancelling the animation.
-			//
-			Invoke( 0.5f, () =>
-			{
-				Renderer?.Set( "speed_reload", AnimationSpeed );
-				Renderer?.Set( "b_reloading", false );
-			} );
+			StartSounds( IncrementalReloadFinishSounds, ref _reloadFinishSoundCts );
+
+			_reloadFinishing = true;
+			_reloadFinishTimer = 0;
 		}
 		else
 		{
 			Renderer?.Set( "b_reload", false );
+		}
+	}
+
+	public void OnReloadCancel()
+	{
+		CancelSounds( ref _reloadSoundCts );
+		CancelSounds( ref _reloadFinishSoundCts );
+	}
+
+	private void StartSounds( List<ReloadSoundEntry> events, ref CancellationTokenSource cts )
+	{
+		CancelSounds( ref cts );
+
+		if ( events.Count == 0 )
+			return;
+
+		cts = new CancellationTokenSource();
+		_ = PlaySoundsAsync( events, cts.Token );
+	}
+
+	private void CancelSounds( ref CancellationTokenSource cts )
+	{
+		if ( cts is null ) return;
+
+		cts.Cancel();
+		cts.Dispose();
+		cts = null;
+	}
+
+	private async Task PlaySoundsAsync( List<ReloadSoundEntry> events, CancellationToken ct )
+	{
+		var sorted = events.OrderBy( e => e.Time ).ToList();
+		var elapsed = 0f;
+
+		foreach ( var entry in sorted )
+		{
+			var delay = entry.Time - elapsed;
+
+			if ( delay > 0f )
+				await Task.DelaySeconds( delay, ct );
+
+			if ( ct.IsCancellationRequested )
+				return;
+
+			if ( entry.Sound is not null )
+				GameObject.PlaySound( entry.Sound );
+
+			elapsed = entry.Time;
 		}
 	}
 }

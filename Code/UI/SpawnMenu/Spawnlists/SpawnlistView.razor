@@ -1,0 +1,129 @@
+@using Sandbox;
+@using Sandbox.UI;
+@inherits Panel
+@namespace Sandbox
+
+@{
+    var data = GetData();
+}
+
+<SpawnMenuContent>
+
+    <Header>
+        <SpawnMenuToolbar>
+            <Left>
+                <h2>@data.Name</h2>
+            </Left>
+            <Right>
+                @{
+                    var workshopId = Entry.GetMeta( "_workshopId", 0u );
+                    var isPublished = workshopId > 0;
+                }
+                <div class="menu-icon-toggle-group">
+                    @if ( isPublished )
+                    {
+                        <IconPanel Tooltip="#spawnmenu.spawnlist.copy_url" Text="link" @onclick=@( () => Clipboard.SetText( $"https://steamcommunity.com/sharedfiles/filedetails/?id={workshopId}" ) ) />
+                        <IconPanel Tooltip="#spawnmenu.spawnlist.sync" Text="sync" @onclick=@( () => OnPublish() ) />
+                    }
+                    else
+                    {
+                        <IconPanel Tooltip="#spawnmenu.spawnlist.publish" Text="cloud_upload" @onclick=@( () => OnPublish() ) />
+                    }
+                    @if ( !Entry.Files.IsReadOnly )
+                    {
+                        <IconPanel Tooltip="#spawnmenu.spawnlist.delete" Text="delete" @onclick=@( () => OnDelete() ) />
+                    }
+                    else
+                    {
+                        <IconPanel Tooltip="#spawnmenu.spawnlist.remove" Text="delete" @onclick=@( () => OnUninstall() ) />
+                    }
+                </div>
+            </Right>
+        </SpawnMenuToolbar>
+    </Header>
+
+    <Body>
+        @if ( data.Items.Count == 0 )
+        {
+            <div class="empty-state">
+                <p>#spawnmenu.spawnlist.empty_title</p>
+                <p>#spawnmenu.spawnlist.empty_instructions</p>
+            </div>
+        }
+        else
+        {
+            <VirtualGrid Items=@data.Items ItemSize=@(120)>
+                <Item Context="item">
+                    @if ( item is SpawnlistItem spawnItem )
+                    {
+                        <SpawnMenuIcon Ident="@spawnItem.Ident" Title="@spawnItem.Title" Icon="@spawnItem.Icon" />
+                    }
+                </Item>
+            </VirtualGrid>
+        }
+    </Body>
+
+</SpawnMenuContent>
+
+@code
+{
+    public Storage.Entry Entry { get; set; }
+
+    SpawnlistData _cachedData;
+    RealTimeSince _lastRefresh;
+
+    SpawnlistData GetData()
+    {
+        if ( _cachedData == null )
+            RefreshCache();
+
+        return _cachedData;
+    }
+
+    public void RefreshCache()
+    {
+        _cachedData = SpawnlistData.Load( Entry );
+        _lastRefresh = 0;
+    }
+
+    public override void Tick()
+    {
+        base.Tick();
+
+        // Periodically check for changes from other tabs
+        if ( _lastRefresh > 1f )
+        {
+            var fresh = SpawnlistData.Load( Entry );
+            if ( fresh.Items.Count != _cachedData?.Items?.Count )
+            {
+                _cachedData = fresh;
+                StateHasChanged();
+            }
+            _lastRefresh = 0;
+        }
+    }
+
+    protected override int BuildHash() => HashCode.Combine( _cachedData?.Items?.Count );
+
+    void OnPublish()
+    {
+        if ( Entry is null ) return;
+        SpawnlistData.Publish( Entry );
+    }
+
+    void OnDelete()
+    {
+        if ( Entry is null ) return;
+        var page = Ancestors.OfType<SpawnlistsPage>().FirstOrDefault();
+        page?.Collection.Delete( Entry );
+    }
+
+    void OnUninstall()
+    {
+        if ( Entry is null ) return;
+        var workshopId = Entry.GetMeta( "_workshopId", 0ul );
+        var page = Ancestors.OfType<SpawnlistsPage>().FirstOrDefault();
+        page?.Collection.Uninstall( workshopId );
+    }
+}
+

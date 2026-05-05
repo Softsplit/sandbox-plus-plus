@@ -1,5 +1,8 @@
 public class ControlSystem : GameObjectSystem<ControlSystem>
 {
+	// When each chair first became occupied. Used to sort seats so the earliest occupant is in charge
+	private readonly Dictionary<BaseChair, RealTimeSince> _occupiedSince = new();
+
 	public ControlSystem( Scene scene ) : base( scene )
 	{
 		Listen( Stage.StartFixedUpdate, 10, OnTick, "ControlSystem" );
@@ -8,22 +11,45 @@ public class ControlSystem : GameObjectSystem<ControlSystem>
 	void OnTick()
 	{
 		// TODO this should be more generic, some kind of interface?
-		foreach ( var chair in Scene.GetAll<BaseChair>() )
+		var driven = new HashSet<GameObject>();
+
+		foreach ( var chair in GetSortedSeats() )
 		{
-			if ( !chair.IsValid() ) continue;
-			RunControl( chair );
+			var builder = new LinkedGameObjectBuilder();
+			builder.AddConnected( chair.GameObject );
+
+			// Skip if a seat occupied earlier already claimed this
+			if ( builder.Objects.Any( driven.Contains ) ) continue;
+			driven.UnionWith( builder.Objects );
+
+			RunControl( chair, builder );
 		}
 	}
 
-	void RunControl( BaseChair chair )
+	IEnumerable<BaseChair> GetSortedSeats()
 	{
-		if ( !chair.IsOccupied ) return;
+		var chairs = Scene.GetAll<BaseChair>();
 
-		var player = chair.GetOccupant();
+		foreach ( var chair in chairs )
+		{
+			if ( !chair.IsValid() || !chair.IsOccupied )
+				_occupiedSince.Remove( chair );
+			else
+				_occupiedSince.TryAdd( chair, 0 );
+		}
+
+		return chairs
+			.Where( c => c.IsValid() && c.IsOccupied )
+			.OrderBy( c => (float)_occupiedSince.GetValueOrDefault( c, default ) );
+	}
+
+	void RunControl( BaseChair chair, LinkedGameObjectBuilder builder )
+	{
+		var controller = chair.GetOccupant();
+		if ( !controller.IsValid() ) return;
+
+		var player = controller.GetComponent<Player>();
 		if ( !player.IsValid() ) return;
-
-		var builder = new LinkedGameObjectBuilder();
-		builder.AddConnected( chair.GameObject );
 
 		using var scope = ClientInput.PushScope( player );
 
@@ -32,10 +58,10 @@ public class ControlSystem : GameObjectSystem<ControlSystem>
 			foreach ( var controllable in o.GetComponentsInChildren<IPlayerControllable>() )
 			{
 				if ( controllable is null ) continue;
+				if ( !controllable.CanControl( player ) ) continue;
 
 				controllable.OnControl();
 			}
 		}
-
 	}
 }

@@ -7,12 +7,30 @@ public sealed class PhygunViewmodel : Component, Component.ExecuteInEditor
 	[Property] public Material BottleMaterial { get; set; }
 
 	[Property] public bool BeamActive { get; set; }
+	[Property] public Color GravTint { get; set; }
+	[Property] public Color PhysTint { get; set; }
+
+	float _tintFrac;
+	Color _effectsTint;
 
 	protected override void OnUpdate()
 	{
 		if ( GetComponentInParent<Physgun>() is Physgun physgun )
 		{
 			BeamActive = physgun.BeamActive;
+
+			_tintFrac = MathX.Approach( _tintFrac, physgun.PullActive ? 1 : 0, Time.Delta * 5 );
+			// Steep ease-in-out so the transition rushes through the midpoint
+			var t = _tintFrac < 0.5f
+				? 8f * _tintFrac * _tintFrac * _tintFrac * _tintFrac
+				: 1f - 8f * (1f - _tintFrac) * (1f - _tintFrac) * (1f - _tintFrac) * (1f - _tintFrac);
+
+			_effectsTint = Color.Lerp( PhysTint, GravTint, t );
+		}
+		else
+		{
+			_tintFrac = 0.0f;
+			_effectsTint = PhysTint;
 		}
 
 		UpdateGlowEffect();
@@ -38,6 +56,7 @@ public sealed class PhygunViewmodel : Component, Component.ExecuteInEditor
 
 		TubeFxMaterial.Set( "g_vSelfIllumOffset", new Vector2( _scroll % 1, 0 ) );
 		TubeFxMaterial.Set( "g_flSelfIllumBrightness", 3 * (_scrollSpeed + 1.5) );
+		TubeFxMaterial.Set( "g_vSelfIllumTint", _effectsTint );
 	}
 
 	void UpdateBottleGlow()
@@ -46,7 +65,7 @@ public sealed class PhygunViewmodel : Component, Component.ExecuteInEditor
 
 		float bounce = MathF.Sin( Time.Now * (BeamActive ? 45.0f : 3.0f) ) * 0.5f;
 
-
+		BottleMaterial.Set( "g_vSelfIllumTint", _effectsTint );
 		BottleMaterial.Set( "g_flSelfIllumBrightness", (BeamActive ? 6.0f : 1.5f) + bounce );
 	}
 
@@ -57,7 +76,7 @@ public sealed class PhygunViewmodel : Component, Component.ExecuteInEditor
 		foreach ( var sprite in TipSprites )
 		{
 			sprite.Enabled = true;
-			sprite.Color = sprite.Color.WithAlpha( mul * Random.Shared.Float( 0.4f, 0.9f ) );
+			sprite.Color = _effectsTint.WithAlpha( mul * Random.Shared.Float( 0.4f, 0.9f ) );
 			sprite.Size = Random.Shared.Float( 6, 7 ) * mul;
 		}
 	}
@@ -66,6 +85,7 @@ public sealed class PhygunViewmodel : Component, Component.ExecuteInEditor
 	{
 		if ( GlowEffect is null ) return;
 
+		GlowEffect.Tint = _effectsTint;
 		GlowEffect.Alpha = BeamActive ? 1.0f : 0.2f;
 	}
 

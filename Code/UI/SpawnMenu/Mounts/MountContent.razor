@@ -1,4 +1,4 @@
-@using Sandbox;
+﻿@using Sandbox;
 @using Sandbox.UI;
 @using Sandbox.Mounting;
 @namespace Sandbox
@@ -7,7 +7,7 @@
 @if ( mount is null )
 {
     <root>
-        Error getting mount.
+        #spawnmenu.mounts.error
     </root>
     return;
 }
@@ -28,7 +28,7 @@
 				<SpawnMenuPath Path=@CurrentPath></SpawnMenuPath>
 				*@
 
-				<label>@( $"{mount.Title}, {@GetData().Count()} items" )</label>
+				<label>@( $"{mount.Title}, {GetData().Count()}" ) </label><label>#spawnmenu.common.items</label>
 			</Body>
 			<Right>
 				<SpawnMenuFilter Query:bind="@Filter"></SpawnMenuFilter>
@@ -53,7 +53,7 @@
                 @if (item is ResourceLoader loader)
                 {
                     var nameWithoutExt = System.IO.Path.GetFileNameWithoutExtension(loader.Name);
-                    <SpawnMenuIcon Type="mount" Title="@nameWithoutExt" Path="@loader.Path"></SpawnMenuIcon>
+                    <SpawnMenuIcon HideText=@(ItemSize <= 60) Ident=@($"mount:{loader.Path}") Title="@nameWithoutExt" Metadata=@MountSpawner.SerializeMetadata( mount.Title )></SpawnMenuIcon>
                 }
 
             </Item>

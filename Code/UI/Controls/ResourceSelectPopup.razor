@@ -1,23 +1,35 @@
-@using Sandbox;
+﻿@using Sandbox;
 @using Sandbox.UI;
 @namespace Sandbox
 @inherits BasePopup
 
-<root>
+<root class="popup">
 
     <div class="inner" onclick:preventDefault=@true>
         
-        <h2>@Title</h2>
+        <div class="popup-header">
+            <h2>@Title</h2>
+            @if (AllowPackages)
+            {
+                <div class="sort-buttons">
+                    @foreach ( var mode in Enum.GetValues<PackageSortMode>() )
+                    {
+                        var m = mode;
+                        <div class="sort-button @(SortMode == m ? "active" : "")" @onclick=@(() => SetSort(m))>@m.ToString()</div>
+                    }
+                </div>
+            }
+        </div>
 
-        <VirtualGrid Items=@(_localResources) ItemSize=@(new Vector2( 180, 200 )) class="grid">
+        <VirtualGrid Items=@(_filteredItems) ItemSize=@(new Vector2( 180, 200 )) class="grid">
             <Item Context="item">
                 @if (item is Resource res)
                 {
-                    bool selected = res.ResourcePath.Equals(CurrentValue, StringComparison.OrdinalIgnoreCase);
+                    bool selected = res.ResourcePath.Equals(_pendingValue ?? CurrentValue, StringComparison.OrdinalIgnoreCase);
                     string itemClass = selected ? "item active" : "item";
                     string thumbUrl = $"thumb:{res.ResourcePath}";
 
-                    <div class="@itemClass" @onclick=@(() => { SelectResource(res); })>
+                    <div @key=@res.ResourcePath class="@itemClass" @onclick=@(() => { OnItemClicked(res); })>
 
                         <div class="icon" style="background-image: url( @thumbUrl )"></div>
 
@@ -28,14 +40,32 @@
                         }
                         else
                         {
-                            <div class="title">@res.ResourcePath</div>
+                            <div class="title">@res.ResourceName</div>
                             <div class="desc"></div>
                         }
                         
                     </div>
                 }
+                else if ( item is Package pkg )
+                {
+                    bool selected = pkg.FullIdent.Equals(CurrentValue, StringComparison.OrdinalIgnoreCase);
+                    string itemClass = selected ? "item active" : "item";
+
+                    <div @key=@pkg.FullIdent class="@itemClass" @onclick=@(() => { SelectPackage(pkg); })>
+
+                        <div class="icon" style="background-image: url( @pkg.Thumb )"></div>
+                        <div class="title">@pkg.Title</div>
+                        <div class="desc">@pkg.Org.Title</div>
+                        
+                    </div>
+                }
             </Item>
         </VirtualGrid>
+
+        <div class="popup-footer">
+            <div class="clear-button" @onclick=@ClearSelection>Clear</div>
+            <div class="select-button" @onclick=@ConfirmSelection>Select</div>
+        </div>
 
     </div>
 
@@ -46,20 +76,68 @@
     public string Title { get; set; } = "Select Resource";
     public string Extension { get; set; } = "vmdl";
     public string CurrentValue { get; set; }
+    public bool AllowPackages { get; set; }
     public Action<string> OnSelectedFile;
 
+    string _pendingValue;
+    IResourcePreview _previewingResource;
+
+    public string Category { get; set; }
+
+    PackageSortMode SortMode { get; set; } = PackageSortMode.Popular;
+
+    void SetSort( PackageSortMode mode )
+    {
+        if ( SortMode == mode ) return;
+        SortMode = mode;
+        if ( AllowPackages )
+            _ = LoadCloudPackages();
+    }
+
     readonly List<Resource> _localResources = new();
+    readonly List<Package> _cloudPackages = new();
+    List<object> _filteredItems = new();
 
     protected override void OnParametersSet()
     {
         _localResources.Clear();
+        _cloudPackages.Clear();
 
-        var resources = ResourceLibrary.GetAll<Resource>().Where(Filter);
+        _localResources.AddRange( ResourceLibrary.GetAll<Resource>().Where( FilterExtension ).Where( FilterCategory ) );
 
-        _localResources.AddRange(resources);
+        RebuildFilteredItems();
+
+        if ( AllowPackages )
+        {
+            _ = LoadCloudPackages();
+        }
     }
 
-    bool Filter(Resource res)
+    void RebuildFilteredItems()
+    {
+        var items = new List<object>();
+        items.AddRange( _localResources );
+        items.AddRange( _cloudPackages );
+        _filteredItems = items;
+    }
+
+    async Task LoadCloudPackages()
+    {
+        var query = $"sort:{SortMode.ToIdentifier()} type:{Extension}";
+
+        var result = await Package.FindAsync( query );
+
+        _cloudPackages.Clear();
+        if ( result?.Packages != null )
+        {
+            _cloudPackages.AddRange( result.Packages );
+        }
+
+        RebuildFilteredItems();
+        StateHasChanged();
+    }
+
+    bool FilterExtension(Resource res)
     {
         if (res == null) return false;
         if (string.IsNullOrEmpty(Extension)) return true;
@@ -70,17 +148,81 @@
         return ext.TrimStart('.').Equals(Extension, StringComparison.OrdinalIgnoreCase);
     }
 
+    bool FilterCategory(Resource res)
+    {
+        if (string.IsNullOrEmpty(Category)) return true;
+        if (res is not SoundDefinition soundDef) return true;
+
+        return string.Equals(soundDef.Category, Category, StringComparison.OrdinalIgnoreCase);
+    }
+
+    void OnItemClicked( Resource res )
+    {
+        StopPreview();
+
+        _pendingValue = res.ResourcePath;
+
+        var gameRes = ResourceLibrary.Get<GameResource>( res.ResourcePath );
+        if ( gameRes is IResourcePreview preview )
+        {
+            _previewingResource = preview;
+            preview.OnPreview();
+        }
+
+        StateHasChanged();
+    }
+
+    void StopPreview()
+    {
+        _previewingResource?.OnPreviewStop();
+        _previewingResource = null;
+    }
+
+    public override void OnDeleted()
+    {
+        StopPreview();
+        base.OnDeleted();
+    }
+
+    void ClearSelection()
+    {
+        StopPreview();
+        _pendingValue = null;
+        OnSelectedFile?.Invoke( null );
+        StateHasChanged();
+    }
+
+    void ConfirmSelection()
+    {
+        StopPreview();
+
+        if ( _pendingValue != null )
+        {
+            OnSelectedFile?.Invoke( _pendingValue );
+            Delete();
+        }
+    }
+
     protected override void OnMouseDown(MousePanelEvent e)
     {
         base.OnMouseDown(e);
 
         if (e.Target == this)
+        {
+            StopPreview();
             Delete();
+        }
     }
 
     void SelectResource(Resource res)
     {
         OnSelectedFile?.Invoke(res.ResourcePath);
+        Delete();
+    }
+
+    void SelectPackage(Package pkg)
+    {
+        OnSelectedFile?.Invoke(pkg.FullIdent);
         Delete();
     }
 

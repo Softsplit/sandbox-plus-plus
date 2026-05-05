@@ -6,32 +6,71 @@ public partial class BaseWeapon
 	[Property, FeatureEnabled( "Ammo" )] public bool UsesAmmo { get; set; } = true;
 
 	/// <summary>
-	/// Is this weapon ammo for itself? eg tripmine, grenades
-	/// </summary>
-	[Property, Feature( "Ammo" )] public bool IsSelfAmmo { get; set; } = false;
-
-	/// <summary>
-	/// The <see cref="AmmoResource"/> for this weapon
-	/// </summary>
-	[Property, Feature( "Ammo" )] public AmmoResource AmmoResource { get; set; }
-	
-	/// <summary>
 	/// Does this weapon use clips?
 	/// </summary>
 	[Property, Feature( "Ammo" )] public bool UsesClips { get; set; } = true;
 
 	/// <summary>
-	/// When reloading, we'll take ammo from the player as much as we can to fill to this amount.
+	/// When reloading, we'll take ammo from the reserve as much as we can to fill to this amount.
 	/// </summary>
 	[Property, Feature( "Ammo" ), ShowIf( nameof( UsesClips ), true )] public int ClipMaxSize { get; set; } = 30;
 
 	/// <summary>
-	/// The default amount of bullets in a weapon's magazine on pickup. This can differ to the max size.
+	/// The default amount of bullets in a weapon's magazine on pickup.
 	/// </summary>
 	[Property, Feature( "Ammo" ), ShowIf( nameof( UsesClips ), true )] public int ClipContents { get; set; } = 20;
 
 	/// <summary>
-	/// StartingAmmo defines how much ammo we'll give to the player on pickup.
+	/// The ammo resource this weapon uses for its reserve pool.
+	/// When set, reserve ammo is shared with all weapons using the same resource.
+	/// When null, ammo is tracked per-weapon (tied to this weapon instance).
+	/// </summary>
+	[Property, Feature( "Ammo" )] public AmmoResource AmmoType { get; set; }
+
+	/// <summary>
+	/// The maximum reserve ammo this weapon can hold (used only when <see cref="AmmoType"/> is null).
+	/// When <see cref="AmmoType"/> is set, the resource's <see cref="AmmoResource.MaxReserve"/> is used instead.
+	/// </summary>
+	[Property, Feature( "Ammo" )] public int MaxReserveAmmo
+	{
+		get => AmmoType?.MaxReserve ?? _maxReserveAmmo;
+		set => _maxReserveAmmo = value;
+	}
+	private int _maxReserveAmmo = 120;
+
+	/// <summary>
+	/// The current reserve ammo. When <see cref="AmmoType"/> is set this proxies to the player's
+	/// <see cref="AmmoInventory"/>; otherwise it is stored directly on the weapon.
+	/// </summary>
+	[Property, Feature( "Ammo" )] public int ReserveAmmo
+	{
+		get
+		{
+			if ( AmmoType is not null )
+				return GetAmmoInventory()?.GetAmmo( AmmoType ) ?? 0;
+
+			return _reserveAmmo;
+		}
+		set
+		{
+			if ( AmmoType is not null )
+			{
+				GetAmmoInventory()?.SetAmmo( AmmoType, value );
+				return;
+			}
+
+			_reserveAmmo = value;
+		}
+	}
+
+	/// <summary>
+	/// Backing field for per-weapon reserve ammo (used when <see cref="AmmoType"/> is null).
+	/// </summary>
+	[Sync] private int _reserveAmmo { get; set; } = 0;
+
+	/// <summary>
+	/// How much reserve ammo this weapon starts with on pickup.
+	/// When <see cref="AmmoType"/> is set, this seeds the shared pool only if the pool is empty.
 	/// </summary>
 	[Property, Feature( "Ammo" )] public int StartingAmmo { get; set; } = 0;
 
@@ -39,24 +78,27 @@ public partial class BaseWeapon
 	/// How long does it take to reload?
 	/// </summary>
 	[Property, Feature( "Ammo" )] public float ReloadTime { get; set; } = 2.5f;
-	
+
+	/// <summary>
+	/// Returns the player's <see cref="AmmoInventory"/>, or null if unavailable.
+	/// </summary>
+	private AmmoInventory GetAmmoInventory() => Owner?.GetComponent<AmmoInventory>();
+
 	/// <summary>
 	/// Can we switch to this gun?
 	/// </summary>
-	/// <returns></returns>
 	public override bool CanSwitch()
 	{
-		return HasAmmo() || CanReload();
+		return true;
 	}
 
 	/// <summary>
-	/// Takes ammo from the player's inventory
+	/// Takes ammo from the clip, or from reserve if not using clips.
 	/// </summary>
-	/// <param name="count"></param>
-	/// <returns></returns>
 	public bool TakeAmmo( int count )
 	{
 		if ( !UsesAmmo ) return true;
+		if ( WeaponConVars.UnlimitedAmmo ) return true;
 
 		if ( UsesClips )
 		{
@@ -67,59 +109,54 @@ public partial class BaseWeapon
 			return true;
 		}
 
-		return TakeAmmo( count, AmmoResource );
-	}
+		// No clips — take directly from reserve
+		if ( WeaponConVars.InfiniteReserves ) return true;
 
-	/// <summary>
-	/// Takes ammo from the player's inventory
-	/// </summary>
-	/// <param name="count"></param>
-	/// <param name="ammoType"></param>
-	/// <returns></returns>
-	public bool TakeAmmo( int count, AmmoResource ammoType )
-	{
-		if ( !UsesAmmo ) return true;
+		if ( AmmoType is not null )
+		{
+			var inv = GetAmmoInventory();
+			if ( inv is null ) return false;
+			return inv.TakeAmmo( AmmoType, count );
+		}
 
-		var owner = Owner;
-
-		if ( owner is null )
+		if ( _reserveAmmo < count )
 			return false;
 
-		if ( owner.GetAmmoCount( ammoType ) < count )
-			return false;
-
-		owner.SubtractAmmoCount( ammoType, count );
+		_reserveAmmo -= count;
 		return true;
 	}
 
 	/// <summary>
-	/// Do we have ammo for the weapon's ammo type?
+	/// Do we have ammo?
 	/// </summary>
-	/// <returns></returns>
 	public bool HasAmmo()
 	{
 		if ( !UsesAmmo ) return true;
+		if ( WeaponConVars.UnlimitedAmmo ) return true;
 
 		if ( UsesClips )
 			return ClipContents > 0;
 
-		return HasAmmo( AmmoResource );
+		if ( WeaponConVars.InfiniteReserves ) return true;
+
+		return ReserveAmmo > 0;
 	}
 
 	/// <summary>
-	/// Do we have ammo for a specific ammo type? Useful if a weapon has an alt fire.
+	/// Adds reserve ammo to this weapon (or the shared pool), clamped to max.
+	/// Returns the actual amount added.
 	/// </summary>
-	/// <param name="ammoType"></param>
-	/// <returns></returns>
-	public bool HasAmmo( AmmoResource ammoType )
+	public int AddReserveAmmo( int count )
 	{
-		if ( !UsesAmmo ) return true;
+		if ( AmmoType is not null )
+		{
+			var inv = GetAmmoInventory();
+			return inv?.AddAmmo( AmmoType, count ) ?? 0;
+		}
 
-		var owner = Owner;
-
-		if ( owner is null )
-			return false;
-
-		return owner.GetAmmoCount( ammoType ) > 0;
+		var space = _maxReserveAmmo - _reserveAmmo;
+		var toAdd = Math.Min( count, space );
+		_reserveAmmo += toAdd;
+		return toAdd;
 	}
 }

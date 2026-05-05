@@ -1,0 +1,82 @@
+﻿@using Sandbox;
+@using Sandbox.UI;
+@inherits PanelComponent
+@namespace Sandbox
+
+@if ( Player.IsValid() && Player.WantsHideHud )
+    return;
+
+@if ( !HasAnyAction )
+    return;
+
+<root>
+ <div class="panel">
+
+  <div class="name">@Info?.Name</div>
+
+  @if ( !string.IsNullOrEmpty( Info?.Description ) )
+  {
+   <div class="description">@Info.Description</div>
+  }
+
+  <div class="divider"></div>
+
+        <div class="actions">
+            @if (!string.IsNullOrEmpty(Info?.PrimaryAction))
+            {
+                <div class="action">
+                    <InputHint Action="attack1" class="key" />
+                    <span class="text">@Info.PrimaryAction</span>
+                </div>
+            }
+            @if (!string.IsNullOrEmpty(Info?.SecondaryAction))
+            {
+                <div class="action">
+                    <InputHint Action="attack2" class="key" />
+                    <span class="text">@Info.SecondaryAction</span>
+                </div>
+            }
+            @if (!string.IsNullOrEmpty(Info?.ReloadAction))
+            {
+                <div class="action">
+                    <InputHint Action="reload" class="key" />
+                    <span class="text">@Info.ReloadAction</span>
+                </div>
+            }
+        </div>
+ </div>
+</root>
+
+@code
+{
+	IToolInfo CurrentToolInfo
+	{
+		get
+		{
+			var inv = Player?.GetComponent<PlayerInventory>();
+			
+			if ( !inv.IsValid() || !inv.ActiveWeapon.IsValid() )
+				return null;
+			
+			if ( inv.ActiveWeapon.GetComponentInChildren<IToolInfo>() is { IsValid: true } toolInfo )
+				return toolInfo;
+
+			return inv?.ActiveWeapon as IToolInfo;
+		}
+	}
+
+	Player Player => Player.FindLocalPlayer();
+
+	IToolInfo Info => CurrentToolInfo;
+
+	bool HasAnyAction => !string.IsNullOrEmpty( Info?.PrimaryAction )
+	                     || !string.IsNullOrEmpty( Info?.SecondaryAction )
+	                     || !string.IsNullOrEmpty( Info?.ReloadAction );
+
+	protected override void OnUpdate()
+	{
+		SetClass( "visible", CurrentToolInfo is not null );
+	}
+
+	protected override int BuildHash() => System.HashCode.Combine( Info?.Name, Info?.Description, Info?.PrimaryAction, Info?.SecondaryAction, Info?.ReloadAction, Player?.WantsHideHud );
+}

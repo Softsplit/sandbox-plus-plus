@@ -1,0 +1,9 @@
+{
+  "Prefab": "weapons/shotgun/shotgun.prefab",
+  "Title": "Shotgun",
+  "Description": "It goes boom",
+  "Category": "Weapon",
+  "IncludeCode": false,
+  "__references": [],
+  "__version": 0
+}

@@ -9,55 +9,75 @@ public partial class BaseCarryable : Component
 	}
 
 	[Property, Feature( "WorldModel" )] public GameObject WorldModelPrefab { get; set; }
+	[Property, Feature( "WorldModel" )] public GameObject DroppedGameObject { get; set; }
 	[Property, Feature( "WorldModel" )] public CitizenAnimationHelper.HoldTypes HoldType { get; set; } = CitizenAnimationHelper.HoldTypes.HoldItem;
 	[Property, Feature( "WorldModel" )] public string ParentBone { get; set; } = "hold_r";
 
 	protected void CreateWorldModel()
 	{
 		var player = GetComponentInParent<PlayerController>();
-		if ( player is null || player.Renderer is null ) return;
+		if ( player?.Renderer is null ) return;
 
-		CreateWorldModel( player.Renderer, ParentBone );
+		CreateWorldModel( player.Renderer );
 	}
 
-	public GameObject CreateWorldModel( SkinnedModelRenderer renderer, string boneName = "hold_r" )
+	
+	/// <summary>
+	/// Enables or disables the physics/dropped components of this carryable.
+	/// Call with <c>false</c> when picking up/holding, <c>true</c> when dropping.
+	/// </summary>
+	public void SetDropped( bool dropped )
 	{
-		DestroyWorldModel();
+		var rb = GetComponent<Rigidbody>( true );
+		if ( rb.IsValid() ) rb.Enabled = dropped;
 
-		if ( WorldModelPrefab is null )
-			return null;
+		var col = GetComponent<ModelCollider>( true );
+		if ( col.IsValid() ) col.Enabled = dropped;
 
-		if ( !renderer.IsValid() )
-			return null;
+		var droppedWeapon = GetComponent<DroppedWeapon>( true );
+		if ( droppedWeapon.IsValid() ) droppedWeapon.Enabled = dropped;
 
-		var bone = renderer.GetBoneObject( boneName ) ?? GameObject;
+		if ( DroppedGameObject.IsValid() ) DroppedGameObject.Enabled = dropped;
+	}
 
-		var worldModel = WorldModelPrefab.Clone( new CloneConfig
+	/// <summary>
+	/// Creates and attaches the world model to the given renderer's bone.
+	/// Use this overload when the weapon is held by something other than a player (e.g. an NPC).
+	/// </summary>
+	public void CreateWorldModel( SkinnedModelRenderer renderer )
+	{
+		if ( renderer is null ) return;
+
+		if ( Networking.IsHost )
 		{
-			Parent = bone,
-			StartEnabled = false,
+			IsItem = false;
+		}
+
+		SetDropped( false );
+
+		var worldModel = WorldModelPrefab?.Clone( new CloneConfig
+		{
+			Parent = renderer.GetBoneObject( ParentBone ) ?? GameObject,
+			StartEnabled = true,
 			Transform = global::Transform.Zero
 		} );
-
-		worldModel.Enabled = true;
-		worldModel.Flags |= GameObjectFlags.NotSaved | GameObjectFlags.NotNetworked;
-
-		// Track on the weapon so other systems can reference it.
-		WorldModel = worldModel;
-
-		IEvent.PostToGameObject( WorldModel, x => x.OnCreateWorldModel() );
-
-		return worldModel;
+		if ( worldModel.IsValid() )
+		{
+			worldModel.Flags |= GameObjectFlags.NotSaved | GameObjectFlags.NotNetworked;
+			WorldModel = worldModel;
+			IEvent.PostToGameObject( WorldModel, x => x.OnCreateWorldModel() );
+		}
 	}
 
 	protected void DestroyWorldModel()
 	{
 		if ( WorldModel.IsValid() )
-		{
 			IEvent.PostToGameObject( WorldModel, x => x.OnDestroyWorldModel() );
-		}
 
 		WorldModel?.Destroy();
 		WorldModel = default;
+
+		if ( Networking.IsHost )
+			IsItem = true;
 	}
 }

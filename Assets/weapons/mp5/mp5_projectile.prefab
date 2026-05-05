@@ -99,7 +99,7 @@
             "FlipVertical": false,
             "FlipHorizontal": true
           },
-          "compiled": "textures/generated/svgsource/f0780f5d11c3ff98.vtex"
+          "compiled": null
         },
         "Lifetime": 10,
         "MaxDamage": 125,

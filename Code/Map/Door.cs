@@ -1,4 +1,4 @@
-namespace Facepunch;
+﻿namespace Facepunch;
 
 public sealed class Door : Component, Component.IPressable
 {

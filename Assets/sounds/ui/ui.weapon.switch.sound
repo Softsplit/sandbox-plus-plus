@@ -5,7 +5,7 @@
   "Decibels": 70,
   "SelectionMode": "Random",
   "Sounds": [
-    "sounds/ui/ui.weapon.switch.vsnd"
+    "sounds/ui/ui.weapon.switch.1.vsnd"
   ],
   "Occlusion": true,
   "AirAbsorption": true,

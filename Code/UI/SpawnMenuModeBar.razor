@@ -5,7 +5,7 @@
 
 <root>
 
-    <div class="groupbutton">
+    <div class="menu-segmented-group">
     @{
 
         var activeMode = SpawnMenuHost.GetActiveMode();
@@ -13,9 +13,11 @@
 
         foreach ( var mode in Game.TypeLibrary.GetTypesWithAttribute<SpawnMenuHost.SpawnMenuMode>().OrderBy( x => x.Type.Order ) )
         {
+            if ( !mode.Attribute.CheckCondition() ) continue;
+
             var activeClass = mode.Type.TargetType == activeMode?.GetType() ? "active" : "";
 
-            <div class="modebutton @activeClass" @onclick="@( () => SpawnMenuHost.SwitchMode( mode.Type.Name ) )">
+            <div class="menu-mode-button @activeClass" @onclick="@( () => SpawnMenuHost.SwitchMode( mode.Type.Name ) )">
                 <div class="icon">@mode.Type.Icon</div>
                 <div class="title">@mode.Type.Title</div>                
             </div>
@@ -29,3 +31,4 @@
 {
     protected override int BuildHash() => HashCode.Combine( SpawnMenuHost.GetActiveMode(), Game.TypeLibrary.GetTypesWithAttribute<SpawnMenuHost.SpawnMenuMode>() );
 }
+

@@ -1,0 +1,47 @@
+﻿@using Sandbox;
+@using Sandbox.UI;
+@inherits PanelComponent
+@namespace Sandbox
+
+<root>
+	<div class="owner-label hud-panel">
+		<label class="name">Owned by @_ownerName</label>
+	</div>
+</root>
+
+@code
+{
+    string _ownerName;
+
+    Player Player => Player.FindLocalPlayer();
+
+	protected override void OnUpdate()
+	{
+		var camera = Scene.Camera;
+        if (camera is null || (Player.IsValid() && Player.WantsHideHud) )
+		{
+			Panel.SetClass( "visible", false );
+			return;
+		}
+
+		var tr = Scene.Trace
+			.Ray( camera.Transform.World.ForwardRay, 2048 )
+			.WithoutTags( "player", "trigger" )
+			.Run();
+
+		if ( tr.Hit && tr.GameObject.IsValid() )
+		{
+			var ownable = tr.GameObject.GetComponentInParent<Ownable>( true );
+			if ( ownable.IsValid() && ownable.Owner is not null )
+			{
+				_ownerName = ownable.Owner.DisplayName;
+				Panel.SetClass( "visible", true );
+				return;
+			}
+		}
+
+		Panel.SetClass( "visible", false );
+	}
+
+	protected override int BuildHash() => System.HashCode.Combine( _ownerName );
+}

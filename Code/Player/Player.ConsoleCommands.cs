@@ -5,7 +5,7 @@ public sealed partial class Player
 	/// </summary>
 	public static Player FindForConnection( Connection c )
 	{
-		return Game.ActiveScene.GetAll<Player>().Where( x => x.Network.Owner == c ).FirstOrDefault();
+		return Game.ActiveScene.GetAll<Player>().FirstOrDefault( x => x.Network.Owner == c );
 	}
 
 	/// <summary>
@@ -21,7 +21,7 @@ public sealed partial class Player
 	/// <summary>
 	/// Kill yourself
 	/// </summary>
-	[ConCmd( "kill", ConVarFlags.Server )]
+	[ConCmd( "kill" )]
 	public static void KillSelf( Connection source )
 	{
 		var player = Player.FindForConnection( source );
@@ -35,37 +35,12 @@ public sealed partial class Player
 	{
 		if ( Rpc.Caller != Network.Owner ) return;
 
-		this.OnDamage( new DamageInfo( 5000, GameObject, null ) );
+		this.OnDamage( new DamageInfo( float.MaxValue, GameObject, null ) );
 	}
 
-	/// <summary>
-	/// Give all items (sv_cheats should be 1)
-	/// </summary>
-	[ConCmd( "giveall", ConVarFlags.Server )]
-	public static void GiveAll( Connection source )
-	{
-		if ( !Application.CheatsEnabled )
-		{
-			source.SendLog( LogLevel.Warn, "Cheats aren't enabled!" );
-			return;
-		}
-
-		var player = Player.FindForConnection( source );
-		if ( !player.IsValid() )
-			return;
-
-		var inventory = player.GetComponent<PlayerInventory>();
-		if ( !inventory.IsValid() )
-			return;
-
-		//inventory.GiveAll();
-	}
-
-	[ConCmd( "god", ConVarFlags.Server, Help = "Toggle invulnerability" )]
+	[ConCmd( "god", ConVarFlags.Server | ConVarFlags.Cheat, Help = "Toggle invulnerability" )]
 	public static void God( Connection source )
 	{
-		if ( !Application.CheatsEnabled ) return;
-
 		var player = PlayerData.For( source );
 		if ( !player.IsValid() )
 			return;
@@ -81,7 +56,6 @@ public sealed partial class Player
 	public static void ChangeMap( string mapName )
 	{
 		LaunchArguments.Map = mapName;
-
 		Game.Load( Game.Ident, true );
 	}
 

@@ -1,4 +1,4 @@
-
+﻿
 using Sandbox.Utility;
 
 public class HydraulicEntity : Component, IPlayerControllable
@@ -42,7 +42,6 @@ public class HydraulicEntity : Component, IPlayerControllable
 
 	[Property]
 	public SliderJoint Joint { get; set; }
-
 
 	[Property, ClientEditable, ToggleGroup( "Animated" )]
 	public bool Animated { get; set; }
@@ -124,8 +123,6 @@ public class HydraulicEntity : Component, IPlayerControllable
 		{
 			_targetValue = _lastTargetValue.HasValue ? (_lastTargetValue > 0.5f ? 0.0f : 1.0f) : 1;
 			_lastTargetValue = _targetValue;
-
-			Log.Info( _targetValue );
 		}
 
 		if ( _targetValue.HasValue )
@@ -153,9 +150,6 @@ public class HydraulicEntity : Component, IPlayerControllable
 		Length = Length.Clamp( 0, 1 );
 
 		var analog = Activate.GetAnalog();
-
-		//AddThrust( analog );
-		//SetActiveState( analog > 0.1f );
 	}
 
 	float _animTime = 0;
@@ -194,9 +188,6 @@ public class HydraulicEntity : Component, IPlayerControllable
 
 		Joint.MinLength = MinLength + (Length * (MaxLength - MinLength));
 		Joint.MaxLength = MinLength + (Length * (MaxLength - MinLength));
-		//joint.RestLength = Length;
-		//joint.Damping = 1;
-		//joint.Frequency = 10;
 
 		if ( GetComponent<CapsuleCollider>() is CapsuleCollider capsule )
 		{
@@ -228,6 +219,7 @@ public class HydraulicEntity : Component, IPlayerControllable
 			renderer.GetBoneObject( 3 )?.WorldTransform = new Transform( d, line_rot ); ;
 			renderer.GetBoneObject( 3 )?.Flags |= GameObjectFlags.ProceduralBone;
 		}
+
 	}
 
 	private float GetEase( float delta, EaseType easeIn )

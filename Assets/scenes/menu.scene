@@ -1,9 +1,9 @@
 {
-  "__guid": "1637b51d-52bc-4f91-b9c8-b8f1c2fd2ac5",
+  "__guid": "3a49098b-8d6e-4d15-9f87-8ec1ca942a1f",
   "GameObjects": [
     {
-      "__guid": "03b362fe-5908-4871-a6d1-056990711966",
-      "__version": 1,
+      "__guid": "2c681afc-459d-479a-a754-de3eb2a00e1e",
+      "__version": 2,
       "Flags": 0,
       "Name": "Camera",
       "Position": "0,0,0",
@@ -12,16 +12,17 @@
       "Tags": "maincamera",
       "Enabled": true,
       "NetworkMode": 2,
-      "NetworkInterpolation": true,
+      "NetworkFlags": 0,
       "NetworkOrphaned": 0,
       "NetworkTransmit": true,
       "OwnerTransfer": 1,
       "Components": [
         {
           "__type": "Sandbox.CameraComponent",
-          "__guid": "7001dd95-7440-4073-893d-19d9b01ccfd0",
+          "__guid": "2564ffde-20ab-4de2-9d30-39ca0fb28420",
           "__enabled": true,
-          "BackgroundColor": "0.33333,0.46275,0.52157,1",
+          "Flags": 0,
+          "BackgroundColor": "0,0,0,1",
           "ClearFlags": "All",
           "EnablePostProcessing": true,
           "FieldOfView": 90,
@@ -36,87 +37,21 @@
           "Orthographic": false,
           "OrthographicHeight": 1204,
           "PostProcessAnchor": null,
-          "Priority": 0,
+          "Priority": 1,
           "RenderExcludeTags": "",
           "RenderTags": "",
           "RenderTexture": null,
           "TargetEye": "None",
           "Viewport": "0,0,1,1",
-          "ZFar": 30000,
-          "ZNear": 5
-        },
-        {
-          "__type": "Sandbox.Tonemapping",
-          "__guid": "ac2db67e-6806-43d2-bead-ebce104c38be",
-          "__enabled": true,
-          "__version": 3,
-          "AutoExposureEnabled": true,
-          "ExposureCompensation": 0,
-          "ExposureMethod": "RGB",
-          "MaximumExposure": 3,
-          "MinimumExposure": 1,
-          "Mode": "HableFilmic",
-          "OnComponentDestroy": null,
-          "OnComponentDisabled": null,
-          "OnComponentEnabled": null,
-          "OnComponentFixedUpdate": null,
-          "OnComponentStart": null,
-          "OnComponentUpdate": null,
-          "Rate": 1
-        },
-        {
-          "__type": "Sandbox.Bloom",
-          "__guid": "d8975510-37a5-4a3f-81fa-bf507c6f3cf6",
-          "__enabled": true,
-          "__version": 1,
-          "Filter": "Bilinear",
-          "Gamma": 2.2,
-          "Mode": "Additive",
-          "OnComponentDestroy": null,
-          "OnComponentDisabled": null,
-          "OnComponentEnabled": null,
-          "OnComponentFixedUpdate": null,
-          "OnComponentStart": null,
-          "OnComponentUpdate": null,
-          "Strength": 1,
-          "Threshold": 1,
-          "Tint": "1,1,1,1"
-        },
-        {
-          "__type": "Sandbox.AmbientOcclusion",
-          "__guid": "d756fe3e-1409-4104-8862-807f3ddab588",
-          "__enabled": true,
-          "__version": 1,
-          "DenoiseMode": "Temporal",
-          "FalloffRange": 1,
-          "Intensity": 1,
-          "OnComponentDestroy": null,
-          "OnComponentDisabled": null,
-          "OnComponentEnabled": null,
-          "OnComponentFixedUpdate": null,
-          "OnComponentStart": null,
-          "OnComponentUpdate": null,
-          "Radius": 128,
-          "ThinCompensation": 5
-        },
-        {
-          "__type": "Sandbox.ScreenSpaceReflections",
-          "__guid": "ca2fbc58-fb5b-4609-9b6f-2362faa69a29",
-          "__enabled": true,
-          "Denoise": true,
-          "OnComponentDestroy": null,
-          "OnComponentDisabled": null,
-          "OnComponentEnabled": null,
-          "OnComponentFixedUpdate": null,
-          "OnComponentStart": null,
-          "OnComponentUpdate": null
+          "ZFar": 100000,
+          "ZNear": 1
         }
       ],
       "Children": []
     },
     {
-      "__guid": "4f3adc5f-792f-4979-9b4d-ca8a2a76f49d",
-      "__version": 1,
+      "__guid": "79469668-1d83-4044-99c0-c3033d2e77ec",
+      "__version": 2,
       "Flags": 0,
       "Name": "Main Menu",
       "Position": "0,0,0",
@@ -125,15 +60,16 @@
       "Tags": "",
       "Enabled": true,
       "NetworkMode": 2,
-      "NetworkInterpolation": true,
+      "NetworkFlags": 0,
       "NetworkOrphaned": 0,
       "NetworkTransmit": true,
       "OwnerTransfer": 1,
       "Components": [
         {
           "__type": "Sandbox.ScreenPanel",
-          "__guid": "1caee9e9-a1ba-448b-b4dd-f6a6e4200834",
+          "__guid": "a1ee1624-67d0-4f93-b6b9-bc0fe47e5193",
           "__enabled": true,
+          "Flags": 0,
           "AutoScreenScale": true,
           "OnComponentDestroy": null,
           "OnComponentDisabled": null,
@@ -144,8 +80,25 @@
           "Opacity": 1,
           "Scale": 1,
           "ScaleStrategy": "FollowDesktopScaling",
-          "TargetCamera": null,
+          "TargetCamera": {
+            "_type": "component",
+            "component_id": "2564ffde-20ab-4de2-9d30-39ca0fb28420",
+            "go": "2c681afc-459d-479a-a754-de3eb2a00e1e",
+            "component_type": "CameraComponent"
+          },
           "ZIndex": 100
+        },
+        {
+          "__type": "Sandbox.MainMenuHost",
+          "__guid": "e8cc45d1-9426-4618-9dfe-ce5d12d3adba",
+          "__enabled": true,
+          "Flags": 0,
+          "OnComponentDestroy": null,
+          "OnComponentDisabled": null,
+          "OnComponentEnabled": null,
+          "OnComponentFixedUpdate": null,
+          "OnComponentStart": null,
+          "OnComponentUpdate": null
         }
       ],
       "Children": []
@@ -160,13 +113,30 @@
       "Enabled": false,
       "IncludeStaticBodies": true,
       "IncludeKeyframedBodies": true,
-      "EditorAutoUpdate": true,
+      "EditorAutoUpdate": false,
       "AgentHeight": 64,
       "AgentRadius": 16,
       "AgentStepSize": 18,
       "AgentMaxSlope": 40,
       "ExcludedBodies": "",
-      "IncludedBodies": ""
+      "IncludedBodies": "",
+      "DeferGeneration": false,
+      "CustomBounds": false
+    },
+    "GameObjectSystems": {
+      "Sandbox.SelectionSetsSystem": {
+        "Data": {
+          "SelectionSets": []
+        }
+      },
+      "Sandbox.MovieMaker.MovieRecorderSystem": {
+        "DisableClientRecording": false
+      },
+      "Sandbox.Clutter.ClutterGridSystem": {
+        "Storage": {
+          "$blob": "6989b1d2-6573-47c5-addc-bcc3b980c8da"
+        }
+      }
     }
   },
   "ResourceVersion": 3,

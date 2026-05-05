@@ -5,13 +5,10 @@
   "Ident": "sandbox",
   "Schema": 1,
   "IncludeSourceFiles": false,
-  "Resources": "",
+  "Resources": "/fonts/*\n/UI/*.png\n/ui/*.png\n/ui/*\n/ui/weapons/melee/*\n/backgrounds/*",
   "PackageReferences": [],
   "EditorReferences": null,
-  "Mounts": [
-    "quake",
-    "ns2"
-  ],
+  "Mounts": [],
   "IsStandaloneOnly": false,
   "Metadata": {
     "MaxPlayers": 32,

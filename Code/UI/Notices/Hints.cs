@@ -1,7 +1,8 @@
-namespace Sandbox.UI;
+﻿namespace Sandbox.UI;
 
 public class Hints : GameObjectSystem<Hints>
 {
+	[Title( "Show UI Hints" )]
 	[ConVar( "cl_showhints", ConVarFlags.Saved | ConVarFlags.GameSetting, Help = "Whether to display popup hints." )]
 	public static bool cl_showhints { get; set; } = true;
 
@@ -16,6 +17,7 @@ public class Hints : GameObjectSystem<Hints>
 	{
 		Queue( "openspawnmenu", "ℹ️", 10 );
 		Queue( "openinspectmenu", "ℹ️", 40 );
+		Queue( "openpausemenu", "ℹ️", 70 );
 
 		Listen( Stage.StartUpdate, 0, Tick, "UpdateHints" );
 	}

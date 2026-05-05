@@ -1,11 +1,11 @@
-@using Sandbox;
+﻿@using Sandbox;
 @using Sandbox.UI;
 @using Sandbox.Mounting;
 @inherits Panel
 @namespace Sandbox
 
 <root>
-
+    <div class="name">@(Content.GetMeta<string>( "name" ) ?? "Dupe")</div>
 </root>
 
 @code
@@ -23,8 +23,15 @@
         {
             var menu = MenuPanel.Open( this );
 
-            menu.AddOption( "delete", "Delete", () => Content.Delete() );
-            menu.AddOption( "publish", "Publish", Publish );
+            menu.AddOption( "delete", "#spawnmenu.common.delete", () => Content.Delete() );
+            menu.AddOption( "publish", "#spawnmenu.common.publish", Publish );
+
+            SpawnlistData.PopulateContextMenu( menu, new SpawnlistItem
+            {
+                Ident = SpawnlistItem.MakeIdent( "dupe", Content.Id.ToString(), "local" ),
+                Title = Content.GetMeta<string>( "name" ) ?? "Dupe",
+                Icon = null,
+            } );
 
             return;
         }
@@ -35,9 +42,9 @@
     void Publish()
     {
         var options = new Modals.WorkshopPublishOptions();
-        options.Title = "My Dupe";
-        options.AddCategory<DupeCategory>( "Category" );
-        options.AddCategory<DupeMovement>( "Movement");
+        options.Title = "#spawnmenu.dupes.publish_title";
+        options.AddCategory<DupeCategory>( "#spawnmenu.dupes.publish_category" );
+        options.AddCategory<DupeMovement>( "#spawnmenu.dupes.publish_movement");
 
         Content.Publish(options);
     }

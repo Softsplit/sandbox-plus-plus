@@ -1,17 +1,19 @@
 using Sandbox.CameraNoise;
-using Sandbox.Rendering;
-using Sandbox.UI.Inventory;
+using Sandbox.Movement;
+using System.Threading;
 
 /// <summary>
 /// Holds player information like health
 /// </summary>
-public sealed partial class Player : Component, Component.IDamageable, PlayerController.IEvents
+public sealed partial class Player : Component, Component.IDamageable, PlayerController.IEvents, Global.ISaveEvents, IKillSource
 {
-	public static Player FindLocalPlayer() => Game.ActiveScene.GetAllComponents<Player>().Where( x => x.IsLocalPlayer ).FirstOrDefault();
+	private static Player LocalPlayer { get; set; }
+	public static Player FindLocalPlayer() => LocalPlayer;
 	public static T FindLocalWeapon<T>() where T : BaseCarryable => FindLocalPlayer()?.GetComponentInChildren<T>( true );
 	public static T FindLocalToolMode<T>() where T : ToolMode => FindLocalPlayer()?.GetComponentInChildren<T>( true );
 
 	[RequireComponent] public PlayerController Controller { get; set; }
+	[RequireComponent] public PlayerPickup Pickup { get; set; }
 	[Property] public GameObject Body { get; set; }
 	[Property, Range( 0, 100 ), Sync( SyncFlags.FromHost )] public float Health { get; set; } = 100;
 	[Property, Range( 0, 100 ), Sync( SyncFlags.FromHost )] public float MaxHealth { get; set; } = 100;
@@ -21,23 +23,32 @@ public sealed partial class Player : Component, Component.IDamageable, PlayerCon
 
 	[Sync( SyncFlags.FromHost )] public PlayerData PlayerData { get; set; }
 
-	[Header( "Icons" )]
-	[Property] public Texture HealthIcon { get; set; }
-	[Property] public Texture ArmourIcon { get; set; }
-
-
 	public Transform EyeTransform
 	{
 		get
 		{
-			Assert.True( Controller.IsValid(), $"Player {DisplayName}'s PlayerController is invalid (IsValid: {this.IsValid()}, IsLocalPlayer: {IsLocalPlayer}, IsHost: {Networking.IsHost}, IsActive: {PlayerData?.Connection?.IsActive})" );
+			if ( !Controller.IsValid() )
+			{
+				Log.Warning( $"Invalid Controller for {this.GameObject}" );
+				return default;
+			}
 			return Controller.EyeTransform;
 		}
 	}
+
 	public bool IsLocalPlayer => !IsProxy;
-	public Guid PlayerId => PlayerData.PlayerId;
-	public long SteamId => PlayerData.SteamId;
-	public string DisplayName => PlayerData.DisplayName;
+	public Guid PlayerId => PlayerData.IsValid() ? PlayerData.PlayerId : Guid.Empty;
+	public long SteamId => PlayerData.IsValid() ? PlayerData.SteamId : 0;
+	public string DisplayName => PlayerData.IsValid() ? PlayerData.DisplayName : "Unknown";
+
+	// IKillSource
+	string IKillSource.DisplayName => DisplayName;
+	long IKillSource.SteamId => SteamId;
+	void IKillSource.OnKill( GameObject victim )
+	{
+		PlayerData.Kills++;
+		PlayerData.AddStat( victim?.GetComponent<Player>().IsValid() ?? false ? "kills" : "kills.npc" );
+	}
 
 	/// <summary>
 	/// True if the player wants the HUD not to draw right now
@@ -46,6 +57,10 @@ public sealed partial class Player : Component, Component.IDamageable, PlayerCon
 	{
 		get
 		{
+			var freeCam = Scene.Get<FreeCamGameObjectSystem>();
+			if ( freeCam.IsActive )
+				return true;
+
 			var weapon = GetComponent<PlayerInventory>()?.ActiveWeapon;
 			if ( weapon.IsValid() && weapon.WantsHideHud )
 				return true;
@@ -56,6 +71,9 @@ public sealed partial class Player : Component, Component.IDamageable, PlayerCon
 
 	protected override void OnStart()
 	{
+		if ( IsLocalPlayer )
+			LocalPlayer = this;
+
 		var targets = Scene.GetAllComponents<DeathCameraTarget>()
 			.Where( x => x.Connection == Network.Owner );
 
@@ -64,6 +82,12 @@ public sealed partial class Player : Component, Component.IDamageable, PlayerCon
 		{
 			t.GameObject.Destroy();
 		}
+	}
+
+	protected override void OnDestroy()
+	{
+		if ( LocalPlayer == this )
+			LocalPlayer = null;
 	}
 
 	/// <summary>
@@ -109,21 +133,82 @@ public sealed partial class Player : Component, Component.IDamageable, PlayerCon
 	}
 
 	/// <summary>
-	/// Creates a ragdoll but it isn't enabled
+	/// Calculates the launch velocity for a ragdoll based on the damage source.
+	/// For explosions, uses the direction from the blast origin to this NPC.
+	/// Otherwise, falls back to the attacker's physical velocity.
 	/// </summary>
-	[Rpc.Broadcast( NetFlags.HostOnly | NetFlags.Reliable )]
-	void CreateRagdoll()
+	Vector3 GetDeathLaunchVelocity( in DamageInfo damage )
 	{
-		if ( Application.IsDedicatedServer ) return;
+		if ( damage.Tags.Contains( DamageTags.Explosion ) && damage.Origin != Vector3.Zero )
+		{
 
-		var ragdoll = Controller.CreateRagdoll();
-		if ( !ragdoll.IsValid() ) return;
+			var dist = (WorldPosition - damage.Origin).Length;
+			var strength = MathX.Remap( dist, 0, 512, 1024, 2048, true );
 
-		CopyBoneScalesToRagdoll( ragdoll );
+			var dir = (WorldPosition - damage.Origin).Normal;
+			dir += Vector3.Up * 1.0f;
+			dir = dir.Normal;
 
-		var corpse = ragdoll.AddComponent<DeathCameraTarget>();
+			return dir * strength;
+		}
+
+		return 0;
+	}
+
+	[Rpc.Broadcast( NetFlags.HostOnly | NetFlags.Reliable )]
+	void CreateRagdoll( Vector3 velocity, Vector3 origin )
+	{
+		if ( !Controller.Renderer.IsValid() )
+			return;
+
+		var go = new GameObject( true, "Ragdoll" );
+		go.Tags.Add( "ragdoll" );
+		go.WorldTransform = WorldTransform;
+
+		var mainBody = go.Components.Create<SkinnedModelRenderer>();
+		mainBody.CopyFrom( Controller.Renderer );
+		mainBody.UseAnimGraph = false;
+
+		// copy the clothes
+		foreach ( var clothing in Controller.Renderer.GameObject.Children.Where( x => x.Tags.Has( "clothing" ) ).SelectMany( x => x.Components.GetAll<SkinnedModelRenderer>() ) )
+		{
+			if ( !clothing.IsValid() ) continue;
+
+			var newClothing = new GameObject( true, clothing.GameObject.Name );
+			newClothing.Parent = go;
+
+			var item = newClothing.Components.Create<SkinnedModelRenderer>();
+			item.CopyFrom( clothing );
+			item.BoneMergeTarget = mainBody;
+		}
+
+		var physics = go.Components.Create<ModelPhysics>();
+		physics.Model = mainBody.Model;
+		physics.Renderer = mainBody;
+		physics.CopyBonesFrom( Controller.Renderer, true );
+
+		ApplyRagdollForce( physics, velocity, origin );
+		
+		var corpse = go.AddComponent<DeathCameraTarget>();
 		corpse.Connection = Network.Owner;
 		corpse.Created = DateTime.Now;
+
+		CopyBoneScalesToRagdoll( go );
+	}
+
+	async void ApplyRagdollForce( ModelPhysics physics, Vector3 force, Vector3 origin )
+	{
+		await GameTask.Delay( 10 );
+
+		if ( !physics.IsValid() ) return;
+		if ( force.Length < 1 ) return;
+
+		foreach ( var body in physics.Bodies )
+		{
+			var rb = body.Component;
+			if ( !rb.IsValid() ) continue;
+			rb.ApplyImpulse( Vector3.Direction( origin, rb.WorldPosition ) * force.Length * rb.Mass );
+		}
 	}
 
 	void CreateRagdollAndGhost()
@@ -137,20 +222,22 @@ public sealed partial class Player : Component, Component.IDamageable, PlayerCon
 	/// Broadcasts death to other players
 	/// </summary>
 	[Rpc.Broadcast( NetFlags.HostOnly | NetFlags.Reliable )]
-	void NotifyDeath( IPlayerEvent.DiedParams args )
+	void NotifyDeath( PlayerDiedParams args )
 	{
-		IPlayerEvent.PostToGameObject( GameObject, x => x.OnDied( args ) );
+		Local.IPlayerEvents.PostToGameObject( GameObject, x => x.OnDied( args ) );
+		Global.IPlayerEvents.Post( x => x.OnPlayerDied( this, args ) );
 
 		if ( args.Attacker == GameObject )
 		{
-			IPlayerEvent.PostToGameObject( GameObject, x => x.OnSuicide() );
+			Local.IPlayerEvents.PostToGameObject( GameObject, x => x.OnSuicide() );
+			Global.IPlayerEvents.Post( x => x.OnPlayerSuicide( this ) );
 		}
 	}
 
 	[Rpc.Owner( NetFlags.HostOnly )]
 	private void Flatline()
 	{
-		Sound.Play( "audio/sounds/flatline.sound" );
+		Sound.Play( "sounds/flatline.sound" );
 	}
 
 	private void Ghost()
@@ -175,7 +262,7 @@ public sealed partial class Player : Component, Component.IDamageable, PlayerCon
 		// Let everyone know about the death
 		//
 
-		NotifyDeath( new IPlayerEvent.DiedParams() { Attacker = d.Attacker } );
+		NotifyDeath( new PlayerDiedParams() { Attacker = d.Attacker } );
 
 		var inventory = GetComponent<PlayerInventory>();
 		if ( inventory.IsValid() )
@@ -183,23 +270,17 @@ public sealed partial class Player : Component, Component.IDamageable, PlayerCon
 			inventory.SwitchWeapon( null );
 		}
 
-		if ( d.Tags.HasAny( DamageTags.Crush, DamageTags.Explosion, DamageTags.GibAlways ) )
-		{
-			Gib( d.Position, d.Origin );
-		}
-		else
-		{
-			CreateRagdoll();
-		}
+		CreateRagdoll( GetDeathLaunchVelocity( d ), d.Origin );
 
 		//
 		// Ghost and say goodbye to the player
 		//
+		PlayerData?.MarkForRespawn();
 		Ghost();
 		GameObject.Destroy();
 	}
 
-	[Rpc.Owner]
+	[Rpc.Host]
 	public void EquipBestWeapon()
 	{
 		var inventory = GetComponent<PlayerInventory>();
@@ -215,12 +296,13 @@ public sealed partial class Player : Component, Component.IDamageable, PlayerCon
 
 	void OnControl()
 	{
-		Scene.Get<Inventory>()?.HandleInputOpen();
-
-		if ( Input.Pressed( "die" ) )
+		if ( Input.UsingController )
 		{
-			KillSelf();
-			return;
+			Controller.UseInputControls = !(Input.Down( "SpawnMenu" ) || Input.Down( "InspectMenu" ));
+		}
+		else
+		{
+			Controller.UseInputControls = true;
 		}
 
 		if ( Input.Pressed( "noclip" ) )
@@ -236,18 +318,12 @@ public sealed partial class Player : Component, Component.IDamageable, PlayerCon
 			ConsoleSystem.Run( "undo" );
 		}
 
+		if ( Pickup.IsValid() && Pickup.OnControl() )
+			return;
+
 		GetComponent<PlayerInventory>()?.OnControl();
 
 		Scene.Get<Inventory>()?.HandleInput();
-
-		if ( Scene.Camera.RenderExcludeTags.Contains( "ui" ) )
-			return;
-
-		if ( !WantsHideHud )
-		{
-			var hud = Scene.Camera.Hud;
-			DrawVitals( hud, new Vector2( 32f * Hud.Scale, Screen.Size.y - 32f * Hud.Scale ) );
-		}
 	}
 
 	[ConCmd( "sbdm.dev.sethp", ConVarFlags.Cheat )]
@@ -259,11 +335,10 @@ public sealed partial class Player : Component, Component.IDamageable, PlayerCon
 	private SoundHandle _dmgSound;
 
 	[Rpc.Broadcast( NetFlags.HostOnly | NetFlags.Reliable )]
-	private void NotifyOnDamage( IPlayerEvent.DamageParams args )
+	private void NotifyOnDamage( PlayerDamageParams args )
 	{
-		IPlayerEvent.PostToGameObject( GameObject, x => x.OnDamage( args ) );
-
-		Effects.Current.SpawnBlood( args.Position, (args.Origin - args.Position).Normal, args.Damage );
+		Local.IPlayerEvents.PostToGameObject( GameObject, x => x.OnDamage( args ) );
+		Global.IPlayerEvents.Post( x => x.OnPlayerDamage( this, args ) );
 
 		if ( IsLocalPlayer )
 		{
@@ -283,6 +358,7 @@ public sealed partial class Player : Component, Component.IDamageable, PlayerCon
 	public void OnDamage( in DamageInfo dmg )
 	{
 		if ( Health < 1 ) return;
+		if ( !PlayerData.IsValid() ) return;
 		if ( PlayerData.IsGodMode ) return;
 
 		//
@@ -298,8 +374,15 @@ public sealed partial class Player : Component, Component.IDamageable, PlayerCon
 			// so lets take that damage.
 		}
 
+		// Fire pre-damage event — listeners can modify damage or cancel
+		var damageEvent = new PlayerDamageEvent { Player = this, DamageInfo = dmg, Damage = dmg.Damage };
+		Local.IPlayerEvents.PostToGameObject( GameObject, x => x.OnDamaging( damageEvent ) );
+		Global.IPlayerEvents.Post( x => x.OnPlayerDamaging( damageEvent ) );
 
-		var damage = dmg.Damage;
+		if ( damageEvent.Cancelled )
+			return;
+
+		var damage = damageEvent.Damage;
 		if ( dmg.Tags.Contains( DamageTags.Headshot ) )
 			damage *= 2;
 
@@ -312,7 +395,7 @@ public sealed partial class Player : Component, Component.IDamageable, PlayerCon
 
 		Health -= damage;
 
-		NotifyOnDamage( new IPlayerEvent.DamageParams()
+		NotifyOnDamage( new PlayerDamageParams()
 		{
 			Damage = damage,
 			Attacker = dmg.Attacker,
@@ -331,112 +414,33 @@ public sealed partial class Player : Component, Component.IDamageable, PlayerCon
 		Kill( dmg );
 	}
 
-	[Rpc.Broadcast( NetFlags.HostOnly )]
-	private void Gib( Vector3 hitPos, Vector3 origin )
-	{
-		var gibList = new List<PlayerGib>( GetComponentsInChildren<PlayerGib>( true ) );
-
-		DeathCameraTarget target = null;
-		foreach ( var g in gibList )
-		{
-			// Death camera target is the first gib
-			if ( !target.IsValid() )
-			{
-				target = g.AddComponent<DeathCameraTarget>();
-				target.Connection = Network.Owner;
-				target.Created = DateTime.Now;
-			}
-
-			g.Gib( origin, hitPos, noShrink: true );
-		}
-
-		Effects.Current.SpawnBlood( WorldPosition, Vector3.Up, 500.0f );
-	}
-
-	void PlayerController.IEvents.OnEyeAngles( ref Angles ang )
-	{
-		var player = Components.Get<Player>();
-		var angles = ang;
-		IPlayerEvent.Post( x => x.OnCameraMove( ref angles ) );
-		ang = angles;
-	}
-
-	void PlayerController.IEvents.PostCameraSetup( CameraComponent camera )
-	{
-		// Set up initial field of view from preferences
-		camera.FovAxis = CameraComponent.Axis.Vertical;
-		camera.FieldOfView = Screen.CreateVerticalFieldOfView( Preferences.FieldOfView, 9.0f / 16.0f );
-
-		IPlayerEvent.Post( x => x.OnCameraSetup( camera ) );
-
-		ApplyMovementCameraEffects( camera );
-
-		IPlayerEvent.Post( x => x.OnCameraPostSetup( camera ) );
-	}
-
-	float roll;
-	private void ApplyMovementCameraEffects( CameraComponent camera )
-	{
-		if ( Controller.ThirdPerson ) return;
-		if ( !GamePreferences.ViewBobbing ) return;
-
-		var scaler = Controller.WishVelocity.Length.Remap( 0, Controller.RunSpeed, 0, 1 );
-
-		// side movement
-		var r = Controller.WishVelocity.Dot( EyeTransform.Left ) / -250.0f;
-		roll = MathX.Lerp( roll, r, Time.Delta * 10.0f, true );
-
-		// camera.WorldRotation *= new Angles( 0, 0, roll );
-	}
-
 	void PlayerController.IEvents.OnLanded( float distance, Vector3 impactVelocity )
 	{
-		IPlayerEvent.PostToGameObject( GameObject, x => x.OnLand( distance, impactVelocity ) );
+		Local.IPlayerEvents.PostToGameObject( GameObject, x => x.OnLand( distance, impactVelocity ) );
+		Global.IPlayerEvents.Post( x => x.OnPlayerLanded( this, distance, impactVelocity ) );
 
 		var player = Components.Get<Player>();
 		if ( !player.IsValid() ) return;
 
 		if ( Controller.ThirdPerson || !player.IsLocalPlayer ) return;
 
-		new Punch( new Vector3( 0.3f * Math.Min( distance, 100f ), Random.Shared.Float( -1, 1 ), Random.Shared.Float( -1, 1 ) ), 1.0f, 1.5f, 0.7f );
-	}
+		var fallSpeed = MathF.Abs( impactVelocity.z );
+		var punch = fallSpeed.Remap( 150.0f, 1000.0f, 0.0f, 48.0f, true );
+		if ( punch <= 0.0f ) return;
 
-	bool noPickupNotices = false;
-	public IDisposable NoNoticeScope()
-	{
-		noPickupNotices = true;
-		return new Sandbox.Utility.DisposeAction( () => noPickupNotices = false );
-	}
-
-	public void ShowNotice( string message )
-	{
-		if ( noPickupNotices ) return;
-		NotifyNotice( message );
-	}
-
-	[Rpc.Owner]
-	public void NotifyNotice( string message )
-	{
-		if ( !IsLocalPlayer ) return;
-
-		Log.Info( $"you picked up {message}" );
-		//Scene.RunEvent<Sandbox.UI.Notices>( x => x.Display( message ) );
+		new Punch( new Vector3( punch, Random.Shared.Float( -1, 1 ), Random.Shared.Float( -1, 1 ) ), 1.0f, 1.5f, 0.7f );
 	}
 
 	void PlayerController.IEvents.OnJumped()
 	{
-		IPlayerEvent.PostToGameObject( GameObject, x => x.OnJump() );
+		Local.IPlayerEvents.PostToGameObject( GameObject, x => x.OnJump() );
+		Global.IPlayerEvents.Post( x => x.OnPlayerJumped( this ) );
 
 		var player = Components.Get<Player>();
 
 		if ( Controller.ThirdPerson || !player.IsLocalPlayer ) return;
 
 		new Punch( new Vector3( -20, 0, 0 ), 0.5f, 2.0f, 1.0f );
-	}
-
-	public void DrawVitals( HudPainter hud, Vector2 bottomleft )
-	{
-		hud.DrawHealth( Health.CeilToInt(), bottomleft );
 	}
 
 	public T GetWeapon<T>() where T : BaseCarryable
@@ -452,10 +456,26 @@ public sealed partial class Player : Component, Component.IDamageable, PlayerCon
 		GetComponent<PlayerInventory>().SwitchWeapon( weapon );
 	}
 
-
 	public override void OnParentDestroy()
 	{
 		// When parent is destroyed, unparent the player to avoid destroying it
 		GameObject.SetParent( null, true );
+	}
+
+	void Global.ISaveEvents.AfterLoad( string filename )
+	{
+		if ( !Body.IsValid() ) return;
+
+		var dresser = Body.GetComponentInChildren<Dresser>( true );
+		if ( !dresser.IsValid() ) return;
+
+		// Apply clothing after load
+		_ = ReapplyClothingAfterLoad( dresser );
+	}
+
+	private async Task ReapplyClothingAfterLoad( Dresser dresser )
+	{
+		await dresser.Apply();
+		GameObject.Network.Refresh();
 	}
 }

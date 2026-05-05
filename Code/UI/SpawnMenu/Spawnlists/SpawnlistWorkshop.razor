@@ -1,0 +1,132 @@
+@using Sandbox;
+@using Sandbox.UI;
+@inherits Panel
+@namespace Sandbox
+
+<SpawnMenuContent>
+
+    <Header>
+        <SpawnMenuToolbar>
+            <Left>
+                <TextEntry Placeholder="#spawnmenu.common.search" class="filter menu-input" Value:bind=@Filter />
+            </Left>
+            <Right>
+                <DropDown Value:bind=@SortOrder />
+            </Right>
+        </SpawnMenuToolbar>
+    </Header>
+
+    <Body>
+        <VirtualList Items=@Items.Where( x => GetItemCount( x ) > 0 ) ItemHeight=@(48) OnLastCell="@(() => { _ = QueryNext(); })">
+            <Item Context="context">
+                @if (context is Storage.QueryItem item)
+                {
+                    <div class="spawnlist-row" onclick=@( () => _ = OnInstall( item ) )>
+                        <div class="avatar" style="background-image: url('@item.Owner.Avatar');"></div>
+                        <div class="info">
+                            <div class="name">@item.Title</div>
+                            <div class="author"><label>#spawnmenu.spawnlist.by</label> @item.Owner.Name</div>
+                        </div>
+
+                        <div class="item-count">@GetItemCount( item ) <label>#spawnmenu.common.items</label></div>
+                    </div>
+                }
+            </Item>
+        </VirtualList>
+    </Body>
+
+</SpawnMenuContent>
+
+@code
+{
+    string _filter;
+    public string Filter
+    {
+        get => _filter;
+        set
+        {
+            if ( _filter == value ) return;
+            _filter = value;
+            Rebuild();
+        }
+    }
+
+    WorkshopSortMode _sortOrder = WorkshopSortMode.Popular;
+    public WorkshopSortMode SortOrder
+    {
+        get => _sortOrder;
+        set
+        {
+            if ( _sortOrder == value ) return;
+            _sortOrder = value;
+            Rebuild();
+        }
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        Items.Clear();
+        LastResult = null;
+        await QueryNext();
+    }
+
+    List<Storage.QueryItem> Items = new();
+    Storage.QueryResult LastResult;
+
+    async Task QueryNext()
+    {
+        if ( LastResult != null )
+        {
+            if ( !LastResult.HasMoreResults() )
+                return;
+
+            LastResult = await LastResult.GetNextResults();
+            if ( LastResult.Items == null ) return;
+
+            Items.AddRange( LastResult.Items );
+            StateHasChanged();
+            return;
+        }
+
+        var query = new Storage.Query();
+        query.KeyValues["package"] = "facepunch.sandbox";
+        query.KeyValues["type"] = "spawnlist";
+        query.SortOrder = SortOrder.ToSortOrder();
+
+        if ( !string.IsNullOrWhiteSpace( Filter ) )
+            query.SearchText = Filter;
+
+        LastResult = await query.Run();
+        if ( LastResult.Items == null ) return;
+
+        Items.AddRange( LastResult.Items );
+        StateHasChanged();
+    }
+
+    async void Rebuild()
+    {
+        Items.Clear();
+        LastResult = null;
+        await QueryNext();
+    }
+
+    async Task OnInstall( Storage.QueryItem item )
+    {
+        var page = Ancestors.OfType<SpawnlistsPage>().FirstOrDefault();
+        if ( page is null ) return;
+
+        await page.Collection.InstallAsync( item );
+    }
+
+    int GetItemCount( Storage.QueryItem item )
+    {
+        try
+        {
+            var doc = Json.ParseToJsonObject( item.Metadata );
+            return int.Parse( doc["Meta"]["item_count"]?.ToString()?.Trim( '"' ) ?? "0" );
+        }
+        catch { }
+
+        return 0;
+    }
+}

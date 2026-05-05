@@ -1,0 +1,544 @@
+@using Sandbox.UI;
+@using Sandbox;
+@using Sandbox.DataModel;
+@namespace Sandbox
+@inherits Panel
+@page "/newgame"
+
+<root class="page">
+
+	<div class="maplist icons">
+
+		<div class="controls">
+			<ul>
+				<li class="filter-header">Sort</li>
+				@foreach ( var order in MapSortOrders )
+				{
+					<li class="noisy category @(MapSortOrder == order.Name ? "active" : "")" onclick=@(() => SelectSortOrder( order.Name ))>
+						<div class="name">@order.Title</div>
+						<div class="count"></div>
+					</li>
+				}
+
+				@if ( MapResult is null )
+				{
+					<li class="filter-header">Filters</li>
+					<li class="noisy category">
+						<div class="name">Loading...</div>
+						<div class="count"></div>
+					</li>
+				}
+				else
+				{
+					@if ( MapResult.Properties is not null && MapResult.Properties.Length > 0 )
+					{
+						<li class="filter-header">Filters</li>
+						@foreach ( var property in MapResult.Properties.OrderByDescending( x => x.Count ).ThenBy( x => x.Name ) )
+						{
+							<li class="noisy category @(SelectedMapProperties.Contains( property.Name ) ? "active" : "")" onclick=@(() => ToggleMapProperty( property.Name ))>
+								<div class="name">@property.Title</div>
+								<div class="count">@property.Count</div>
+							</li>
+						}
+					}
+
+					@if ( MapResult.Facets is not null )
+					{
+						@foreach ( var facet in MapResult.Facets )
+						{
+							<li class="filter-header">@facet.Title</li>
+							@foreach ( var entry in facet.Entries.OrderBy( x => x.Title ) )
+							{
+								<li class="noisy category @(IsMapCategorySelected( facet.Name, entry.Name ) ? "active" : "")" onclick=@(() => ToggleMapCategory( facet.Name, entry.Name ))>
+									<div class="name">@entry.Title</div>
+									<div class="count">@entry.Count</div>
+								</li>
+
+								@if ( entry.Children is not null && entry.Children.Count > 0 )
+								{
+									@foreach ( var child in entry.Children.OrderBy( x => x.Title ) )
+									{
+										<li class="noisy category child @(IsMapCategorySelected( facet.Name, child.Name ) ? "active" : "")" onclick=@(() => ToggleMapCategory( facet.Name, child.Name ))>
+											<div class="name">@child.Title</div>
+											<div class="count">@child.Count</div>
+										</li>
+									}
+								}
+							}
+						}
+					}
+
+				}
+			</ul>
+
+			<div class="search">
+				<TextEntry @ref=SearchEntry placeholder="Search" class="search" />
+			</div>
+		</div>
+
+		<div class="scrollable map-scroll">
+			<div class="category">
+				@if ( MapPackages is null )
+				{
+					<div class="loading">Loading...</div>
+				}
+				else if ( MapPackages.Count == 0 )
+				{
+					<div class="loading">No maps found</div>
+				}
+				else
+				{
+					<div class="header">
+						<span>Maps</span>
+						<small>@MapCount @(MapCount == 1 ? "map" : "maps")</small>
+					</div>
+
+					<div class="map-grid" @ref=MapScrollPanel>
+						@foreach ( var map in MapPackages )
+						{
+							var isSelected = SelectedMap?.FullIdent == map.FullIdent;
+							<div class="icon mapicon @(isSelected ? "selected" : "")"
+								onclick=@(() => SelectMap( map ))
+								ondoubleclick=@(() => DblClickMap( map ))>
+								<div class="thumbnail" style=@MapThumbnailStyle( map )></div>
+								<span class="map-title">@map.Title</span>
+							</div>
+						}
+					</div>
+				}
+			</div>
+		</div>
+
+	</div>
+
+	<div class="options-panel">
+
+		<div class="dropdown">
+			<div class="dropdown-label" onclick=@ToggleDropdown>
+				<label class="selected-value">@SelectedPlayerOption.Label</label>
+				<IconPanel class="dropdown-chevron" Text="arrow_drop_down"></IconPanel>
+			</div>
+
+			@if ( IsPlayerDropdownOpen )
+			{
+				<div class="contents">
+					@foreach ( var option in PlayerOptions )
+					{
+						<div class="@(SelectedPlayerOption.Num == option.Num ? "active" : "")" onclick=@(() => SelectPlayerOption( option ))>
+							<label>@option.Label</label>
+						</div>
+					}
+				</div>
+			}
+		</div>
+
+		<div class="scrollable settings-scroll">
+			@if ( SelectedMaxPlayers > 1 )
+			{
+				<div class="control control-text">
+					<label>Server Name:</label>
+					<TextEntry Value:bind=@MultiplayerServerName />
+				</div>
+
+				<div class="control control-checkbox">
+					<div class="checkbox @(UseLocalServer ? "checked" : "")" onclick=@ToggleLocalServer></div>
+					<label>Local Server</label>
+				</div>
+
+				<div class="control control-checkbox">
+					<div class="checkbox @(UsePeerToPeerServer ? "checked" : "")" onclick=@TogglePeerToPeerServer></div>
+					<label>Peer-To-Peer</label>
+				</div>
+
+				<div class="control control-checkbox control-sub @(UsePeerToPeerServer ? "" : "disabled")">
+					<div class="checkbox @(PeerToPeerFriendsOnly ? "checked" : "") @(UsePeerToPeerServer ? "" : "disabled")" onclick=@TogglePeerToPeerFriendsOnly></div>
+					<label>Peer-To-Peer: Friends Only</label>
+				</div>
+			}
+
+			@foreach ( var option in SandboxOptions )
+			{
+				EnsureOptionValue( option );
+				var value = GetOptionValue( option );
+
+				@if ( option.Kind == SandboxOptionKind.Checkbox )
+				{
+					var isOn = IsTruthy( value );
+					<div class="control control-checkbox">
+						<div class="checkbox @(isOn ? "checked" : "")" onclick=@(() => ToggleSandboxOption( option.Id ))></div>
+						<label>@option.Title</label>
+					</div>
+				}
+				else
+				{
+					<div class="control control-numeric">
+						<label>@option.Title</label>
+						<TextEntry Value:bind=@SandboxOptionValues[option.Id] />
+					</div>
+				}
+			}
+		</div>
+
+		<div class="bottom">
+			<button class="btn-primary" onclick=@StartGame>
+				<label>Start Game</label>
+			</button>
+		</div>
+
+	</div>
+
+</root>
+
+@code
+{
+	record PlayerOption( int Num, string Label );
+	record SortOrderOption( string Name, string Title );
+	record SandboxOption( string Id, string Title, SandboxOptionKind Kind, string DefaultValue );
+	enum SandboxOptionKind
+	{
+		Checkbox,
+		Number
+	}
+
+	const string StartupScene = "/scenes/sandbox.scene";
+	const int MapPageSize = 200;
+	const float FetchMoreScrollThreshold = 512.0f;
+
+	static readonly PlayerOption[] PlayerOptions =
+	{
+		new( 1, "Single Player" ),
+		new( 2, "2 Players" ),
+		new( 4, "4 Players" ),
+		new( 8, "8 Players" ),
+		new( 16, "16 Players" ),
+		new( 32, "32 Players" ),
+		new( 64, "64 Players" ),
+		new( 128, "128 Players" )
+	};
+
+	static readonly SortOrderOption[] MapSortOrders =
+	{
+		new( "rankday", "Popular Today" ),
+		new( "rankweek", "Popular Week" ),
+		new( "rankmonth", "Popular Month" ),
+		new( "trending", "Trending" ),
+		new( "newest", "Newest" ),
+		new( "updated", "Updated" )
+	};
+
+	static readonly SandboxOption[] SandboxOptionDefaults =
+	{
+		new( "max-ammo", "Max Ammo:", SandboxOptionKind.Number, "9999" ),
+		new( "spawn-weapons", "Give weapons on spawn", SandboxOptionKind.Checkbox, "1" ),
+		new( "god-mode", "Players have god mode", SandboxOptionKind.Checkbox, "1" )
+	};
+
+	TextEntry SearchEntry;
+	Panel MapScrollPanel;
+	Package SelectedMap;
+	Package.FindResult MapResult;
+
+	List<Package> MapPackages;
+	IReadOnlyList<SandboxOption> SandboxOptions => SandboxOptionDefaults;
+	Dictionary<string, string> SandboxOptionValues = SandboxOptionDefaults.ToDictionary( x => x.Id, x => x.DefaultValue ?? "" );
+	List<string> SelectedMapProperties = new();
+	Dictionary<string, string> SelectedMapCategories = new();
+
+	string MultiplayerServerName = "My Sandbox++ Server";
+	string LastSearch = "";
+	string CurrentMapQuery = "";
+	string MapSortOrder = "trending";
+	int SelectedMaxPlayers = 1;
+	PlayerOption SelectedPlayerOption = PlayerOptions[0];
+	bool IsPlayerDropdownOpen;
+	bool FetchingMaps;
+	bool FetchingMoreMaps;
+	bool UseLocalServer;
+	bool UsePeerToPeerServer = true;
+	bool PeerToPeerFriendsOnly;
+
+	int MapCount => MapResult?.TotalCount ?? MapPackages?.Count ?? 0;
+	bool HasMoreMaps => MapResult is not null && MapPackages is not null && MapPackages.Count < MapResult.TotalCount;
+
+	protected override void OnAfterTreeRender( bool firstTime )
+	{
+		base.OnAfterTreeRender( firstTime );
+		if ( !firstTime ) return;
+
+		_ = RunMapQuery();
+		StateHasChanged();
+	}
+
+	string GetOptionValue( SandboxOption option )
+	{
+		return SandboxOptionValues.TryGetValue( option.Id, out var value ) ? value : (option.DefaultValue ?? "");
+	}
+
+	void EnsureOptionValue( SandboxOption option )
+	{
+		if ( SandboxOptionValues.ContainsKey( option.Id ) ) return;
+
+		SandboxOptionValues[option.Id] = option.DefaultValue ?? "";
+	}
+
+	bool IsTruthy( string value )
+	{
+		return value == "1" || string.Equals( value, "true", StringComparison.OrdinalIgnoreCase );
+	}
+
+	void ToggleSandboxOption( string id )
+	{
+		var isOn = IsTruthy( SandboxOptionValues.TryGetValue( id, out var value ) ? value : "0" );
+		SandboxOptionValues[id] = isOn ? "0" : "1";
+		StateHasChanged();
+	}
+
+	void ToggleLocalServer()
+	{
+		UseLocalServer = !UseLocalServer;
+		if ( UseLocalServer ) UsePeerToPeerServer = false;
+		StateHasChanged();
+	}
+
+	void TogglePeerToPeerServer()
+	{
+		UsePeerToPeerServer = !UsePeerToPeerServer;
+		if ( UsePeerToPeerServer ) UseLocalServer = false;
+		if ( !UsePeerToPeerServer ) PeerToPeerFriendsOnly = false;
+		StateHasChanged();
+	}
+
+	void TogglePeerToPeerFriendsOnly()
+	{
+		if ( !UsePeerToPeerServer ) return;
+		PeerToPeerFriendsOnly = !PeerToPeerFriendsOnly;
+		StateHasChanged();
+	}
+
+	void SelectSortOrder( string order )
+	{
+		if ( MapSortOrder == order ) return;
+
+		MapSortOrder = order;
+		_ = RunMapQuery();
+		StateHasChanged();
+	}
+
+	bool IsMapCategorySelected( string category, string value )
+	{
+		return SelectedMapCategories.TryGetValue( category, out var selected ) && selected == value;
+	}
+
+	void ToggleMapCategory( string category, string value )
+	{
+		if ( IsMapCategorySelected( category, value ) )
+			SelectedMapCategories.Remove( category );
+		else
+			SelectedMapCategories[category] = value;
+
+		_ = RunMapQuery();
+		StateHasChanged();
+	}
+
+	void ToggleMapProperty( string property )
+	{
+		if ( SelectedMapProperties.Contains( property ) )
+			SelectedMapProperties.Remove( property );
+		else
+			SelectedMapProperties.Add( property );
+
+		_ = RunMapQuery();
+		StateHasChanged();
+	}
+
+	void SelectMap( Package map )
+	{
+		SelectedMap = map;
+		StateHasChanged();
+	}
+
+	void DblClickMap( Package map )
+	{
+		SelectedMap = map;
+		StartGame();
+	}
+
+	string MapThumbnailStyle( Package map )
+	{
+		return $"background-image: url({map?.ThumbWide ?? map?.Thumb ?? ""})";
+	}
+
+	void ToggleDropdown()
+	{
+		IsPlayerDropdownOpen = !IsPlayerDropdownOpen;
+		StateHasChanged();
+	}
+
+	void SelectPlayerOption( PlayerOption option )
+	{
+		SelectedPlayerOption = option;
+		SelectedMaxPlayers = option.Num;
+		IsPlayerDropdownOpen = false;
+		StateHasChanged();
+	}
+
+	string GetMapFilterQuery()
+	{
+		var query = SearchEntry?.Text ?? "";
+
+		foreach ( var property in SelectedMapProperties )
+			query += $" +{property}";
+
+		foreach ( var category in SelectedMapCategories )
+			query += $" {category.Key}:{category.Value}";
+
+		return query;
+	}
+
+	string GetMapQuery() => $"type:map sort:{MapSortOrder} {GetMapFilterQuery()}";
+
+	async Task RunMapQuery()
+	{
+		var query = GetMapQuery();
+		CurrentMapQuery = query;
+		FetchingMaps = true;
+		FetchingMoreMaps = false;
+		MapPackages = null;
+		if ( MapScrollPanel is not null ) MapScrollPanel.ScrollOffset = 0;
+		StateHasChanged();
+
+		try
+		{
+			var result = await Package.FindAsync( query, MapPageSize, 0 );
+			if ( query != CurrentMapQuery ) return;
+
+			MapResult = result;
+			MapPackages = result?.Packages?.ToList() ?? new();
+			StateHasChanged();
+		}
+		finally
+		{
+			if ( query == CurrentMapQuery )
+				FetchingMaps = false;
+		}
+
+		StateHasChanged();
+	}
+
+	async Task FetchMoreMaps()
+	{
+		if ( !HasMoreMaps || FetchingMaps || FetchingMoreMaps ) return;
+
+		var query = CurrentMapQuery;
+		var skip = MapPackages.Count;
+		FetchingMoreMaps = true;
+
+		try
+		{
+			var result = await Package.FindAsync( query, MapPageSize, skip );
+
+			if ( query != CurrentMapQuery ) return;
+
+			if ( result is not null )
+			{
+				MapResult = result;
+				MapPackages.AddRange( result.Packages );
+				MapPackages = MapPackages.ToList();
+				StateHasChanged();
+			}
+		}
+		finally
+		{
+			if ( query == CurrentMapQuery )
+				FetchingMoreMaps = false;
+		}
+	}
+
+	void FetchMoreMapsNearScrollEnd()
+	{
+		if ( MapScrollPanel is null ) return;
+		if ( !HasMoreMaps || FetchingMaps || FetchingMoreMaps ) return;
+		if ( MapScrollPanel.ScrollSize.y <= 0 ) return;
+		if ( MapScrollPanel.ScrollOffset.y < MapScrollPanel.ScrollSize.y - FetchMoreScrollThreshold ) return;
+
+		_ = FetchMoreMaps();
+	}
+
+	public override void Tick()
+	{
+		var search = SearchEntry?.Text ?? "";
+		if ( search == LastSearch )
+		{
+			FetchMoreMapsNearScrollEnd();
+			return;
+		}
+
+		LastSearch = search;
+		_ = RunMapQuery();
+		StateHasChanged();
+	}
+
+	void StartGame()
+	{
+		ApplyLaunchArguments();
+		LoadStartupScene();
+	}
+
+	void LoadStartupScene()
+	{
+		var options = new SceneLoadOptions
+		{
+			ShowLoadingScreen = true
+		};
+
+		if ( !options.SetScene( StartupScene ) )
+			return;
+
+		var sceneFile = options.GetSceneFile();
+		Game.ActiveScene.RunEvent<ISceneStartup>( x => x.OnHostPreInitialize( sceneFile ) );
+
+		if ( !Game.ActiveScene.Load( options ) )
+			return;
+
+		Game.ActiveScene.RunEvent<ISceneStartup>( x => x.OnHostInitialize() );
+
+		if ( !Application.IsDedicatedServer )
+		{
+			Game.ActiveScene.RunEvent<ISceneStartup>( x => x.OnClientInitialize() );
+		}
+	}
+
+	void ApplyLaunchArguments()
+	{
+		LaunchArguments.Map = SelectedMap?.FullIdent;
+		LaunchArguments.MaxPlayers = SelectedMaxPlayers;
+		LaunchArguments.ServerName = SelectedMaxPlayers > 1 && !string.IsNullOrWhiteSpace( MultiplayerServerName ) ? MultiplayerServerName : null;
+		LaunchArguments.Privacy = GetLobbyPrivacy();
+	}
+
+	Sandbox.Network.LobbyPrivacy GetLobbyPrivacy()
+	{
+		if ( SelectedMaxPlayers <= 1 ) return Sandbox.Network.LobbyPrivacy.Private;
+		if ( PeerToPeerFriendsOnly ) return Sandbox.Network.LobbyPrivacy.FriendsOnly;
+		if ( UsePeerToPeerServer ) return Sandbox.Network.LobbyPrivacy.Public;
+		return Sandbox.Network.LobbyPrivacy.Private;
+	}
+
+	int GetSandboxOptionHash()
+	{
+		var hash = new HashCode();
+
+		foreach ( var pair in SandboxOptionValues.OrderBy( x => x.Key ) )
+		{
+			hash.Add( pair.Key );
+			hash.Add( pair.Value );
+		}
+
+		return hash.ToHashCode();
+	}
+
+	protected override int BuildHash() => System.HashCode.Combine(
+		System.HashCode.Combine( MapPackages?.Count, MapResult?.TotalCount, GetMapQuery(), MapSortOrder, SelectedMapProperties.Count, SelectedMapCategories.Count, FetchingMaps ),
+		System.HashCode.Combine( SelectedMap?.FullIdent, IsPlayerDropdownOpen, SelectedPlayerOption.Num, SelectedMaxPlayers, GetSandboxOptionHash(), UseLocalServer, UsePeerToPeerServer ),
+		PeerToPeerFriendsOnly );
+}

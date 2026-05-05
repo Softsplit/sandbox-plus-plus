@@ -1,0 +1,13 @@
+@using Sandbox;
+@using Sandbox.UI;
+@inherits Panel
+@namespace Sandbox
+@attribute [SpawnMenuHost.SpawnMenuMode]
+@attribute [Icon( "🎨" )]
+@attribute [Title( "#spawnmenu.mode.effects" )]
+@attribute [Order( -75 )]
+
+<root>
+    <EffectsList />
+    <EffectsProperties />
+</root>

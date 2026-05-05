@@ -1,4 +1,4 @@
-[Alias( "dynamite" )]
+﻿[Alias( "dynamite" )]
 public class DynamiteEntity : Component, IPlayerControllable, Component.IDamageable
 {
 	[Property, Range( 1, 500 ), Step( 1 ), ClientEditable]

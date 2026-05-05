@@ -1,11 +1,11 @@
-@using Sandbox;
+﻿@using Sandbox;
 @using Sandbox.UI;
 @inherits Panel
 @namespace Sandbox
 @attribute [SpawnMenuHost.SpawnMenuMode]
 @attribute [Icon("🔍")]
-@attribute [Title("Inspect")]
-@attribute [Order( -50 )]
+@attribute [Title("#spawnmenu.mode.inspect")]
+@attribute [Order( 500 )]
 
 <root>
 	
@@ -55,19 +55,28 @@
     {
         Sandbox.UI.InputFocus.Clear();
 
-        Inspector?.WorldMouseDown(e);
+        if ( e.MouseButton == MouseButtons.Right )
+        {
+            Inspector?.WorldMouseRightDown( e );
+            return;
+        }
+
+        Inspector?.WorldMouseDown( e );
     }
 
     protected override void OnMouseUp(MousePanelEvent e)
     {
 
-        Inspector?.WorldMouseUp(e);
+        Inspector?.WorldMouseUp( e );
     }
 
     Dictionary<Component, Panel> _handles = [];
 
     void DrawHandles()
     {
+		if ( Scene?.Camera is not { IsValid: true } )
+			return;
+
         var objects = Scene.FindInPhysics(new Sphere( Scene.Camera.WorldPosition, 1000 ));
         var rootObjects = objects.Select( x => x.Network?.RootGameObject ).Where( x => x.IsValid() ).Distinct();
 

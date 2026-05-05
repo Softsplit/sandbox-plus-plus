@@ -1,4 +1,4 @@
-public abstract partial class ToolMode
+﻿public abstract partial class ToolMode
 {
 	/// <summary>
 	/// A point in the world selected by the current player's toolgun. We try to keep this as minimal as possible
@@ -49,6 +49,39 @@ public abstract partial class ToolMode
 	}
 
 	/// <summary>
+	/// Get a SelectionPoint along a ray.
+	/// </summary>
+	public SelectionPoint TraceFromRay( Ray ray, float distance, GameObject source )
+	{
+		var trace = Scene.Trace.Ray( ray, distance )
+			.IgnoreGameObjectHierarchy( source );
+
+		if ( TraceIgnoreTags.Any() )
+			trace = trace.WithoutTags( TraceIgnoreTags.ToArray() );
+
+		if ( TraceHitboxes )
+			trace = trace.UseHitboxes();
+
+		var tr = trace.Run();
+
+		var sp = new SelectionPoint
+		{
+			GameObject = tr.GameObject,
+			LocalTransform = tr.GameObject?.WorldTransform.ToLocal( new Transform( tr.EndPosition, Rotation.LookAt( tr.Normal ) ) ) ?? global::Transform.Zero
+		};
+
+		if ( sp.IsValid() )
+		{
+			// Ask the object if it allows toolgun interaction (Ownable and others can reject via IToolgunEvent)
+			var selectEvent = new IToolgunEvent.SelectEvent { User = Player.Network.Owner };
+			sp.GameObject.Root.RunEvent<IToolgunEvent>( x => x.OnToolgunSelect( selectEvent ) );
+			if ( selectEvent.Cancelled ) return default;
+		}
+
+		return sp;
+	}
+
+	/// <summary>
 	/// Get a SelectionPoint from the tool gun owner's eyes.
 	/// </summary>
 	public SelectionPoint TraceSelect()
@@ -56,15 +89,7 @@ public abstract partial class ToolMode
 		var player = Toolgun?.Owner;
 		if ( !player.IsValid() ) return default;
 
-		var tr = Scene.Trace.Ray( player.EyeTransform.ForwardRay, 4096 )
-		.IgnoreGameObjectHierarchy( player.GameObject )
-		.Run();
-
-		return new SelectionPoint
-		{
-			GameObject = tr.GameObject,
-			LocalTransform = tr.GameObject?.WorldTransform.ToLocal( new Transform( tr.EndPosition, Rotation.LookAt( tr.Normal ) ) ) ?? global::Transform.Zero
-		};
+		return TraceFromRay( player.EyeTransform.ForwardRay, 4096, player.GameObject );
 	}
 
 	/// <summary>
@@ -81,5 +106,33 @@ public abstract partial class ToolMode
 		return tx;
 	}
 
+	/// <summary>
+	/// Helper to apply physics properties from a model to a GameObject's <see cref="Rigidbody"/>
+	/// </summary>
+	/// <param name="go"></param>
+	protected void ApplyPhysicsProperties( GameObject go )
+	{
+        var model = go.GetComponentInChildren<ModelRenderer>();
+
+        if ( !model.IsValid() ) return;
+        if ( model.Model.Physics is null ) return;
+
+        if ( model.Model.Physics.Parts.Count == 1 )
+        {
+            var part = model.Model.Physics.Parts[0];
+            var rb = go.GetComponent<Rigidbody>();
+
+            rb.MassOverride = part.Mass;
+            rb.LinearDamping = part.LinearDamping;
+            rb.AngularDamping = part.AngularDamping;
+            rb.OverrideMassCenter = part.OverrideMassCenter;
+            rb.MassCenterOverride = part.MassCenterOverride;
+            rb.GravityScale = part.GravityScale;
+
+            var props = go.GetOrAddComponent<PhysicalProperties>();
+            props.Mass = part.Mass;
+            props.GravityScale = part.GravityScale;
+        }
+    }
 }
 

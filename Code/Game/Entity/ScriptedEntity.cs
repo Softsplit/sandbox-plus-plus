@@ -1,4 +1,4 @@
-
+﻿
 
 [AssetType( Name = "Sandbox Entity", Extension = "sent", Category = "Sandbox", Flags = AssetTypeFlags.NoEmbedding | AssetTypeFlags.IncludeThumbnails )]
 public class ScriptedEntity : GameResource, IDefinitionResource
@@ -13,10 +13,24 @@ public class ScriptedEntity : GameResource, IDefinitionResource
 	public string Description { get; set; }
 
 	/// <summary>
+	/// Used to group this entity under a named category in the spawn menu (e.g. "Chair", "Weapon", "Npc", "World").
+	/// Leave blank to place it under "Other".
+	/// </summary>
+	[Property]
+	public string Category { get; set; }
+
+	/// <summary>
 	/// If this entity uses code then you should enable this so the code is included when publishing.
 	/// </summary>
 	[Property]
 	public bool IncludeCode { get; set; }
+
+	/// <summary>
+	/// If true, this entity only appears in the spawn menu when running in the editor.
+	/// Use for test/debug entities that shouldn't ship to players.
+	/// </summary>
+	[Property]
+	public bool Developer { get; set; }
 
 	public override Bitmap RenderThumbnail( ThumbnailOptions options )
 	{

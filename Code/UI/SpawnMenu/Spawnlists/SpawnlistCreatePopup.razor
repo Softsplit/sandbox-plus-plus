@@ -1,0 +1,46 @@
+@using Sandbox;
+@using Sandbox.UI;
+@inherits Panel
+@namespace Sandbox
+
+<root class="popup">
+
+    <div class="inner">
+        <div class="popup-header">
+            <h2>#spawnmenu.spawnlist.create_title</h2>
+        </div>
+
+        <h3>#spawnmenu.spawnlist.create_prompt</h3>
+
+        <TextEntry class="menu-input" Placeholder="#spawnmenu.spawnlist.name_placeholder" Value:bind=@Name />
+
+        <span class="grow">
+            <Button Text="#spawnmenu.spawnlist.create_button" Icon="add" class="menu-action primary" Disabled=@(string.IsNullOrWhiteSpace(Name)) @onclick=@OnCreate />
+            <Button Text="#spawnmenu.common.cancel" Icon="close" class="menu-action primary" @onclick=@(() => Delete() ) />
+        </span>
+    </div>
+</root>
+
+@code
+{
+
+    public SpawnlistCreatePopup() { }
+
+    public Action OnCreated { get; set; }
+
+    string Name { get; set; } = "";
+
+    void OnCreate()
+    {
+        if ( string.IsNullOrWhiteSpace( Name ) ) return;
+
+        SpawnlistData.Create( Name.Trim() );
+
+        Notices.AddNotice( "list_alt", Color.Cyan, Game.Language.GetPhrase( "spawnmenu.spawnlist.created_notice", new() { { "name", Name } } ) );
+
+        OnCreated?.Invoke();
+
+        Delete();
+    }
+}
+

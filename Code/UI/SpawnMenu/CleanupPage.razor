@@ -1,0 +1,38 @@
+@using Sandbox;
+@using Sandbox.UI;
+@inherits UtilityPage
+@namespace Sandbox
+@attribute [Icon( "🧹" )]
+@attribute [Title( "#spawnmenu.utility.cleanup" )]
+@attribute [Group( "#spawnmenu.utility.group.world" )]
+@attribute [Order( 0 )]
+
+<root class="page" style="flex-direction: column;">
+    <div class="control-row" @onclick=@(() =>CleanUpMine() )>
+        <div class="left"><label>🧼 </label><label>#spawnmenu.utility.cleanup_mine</label></div>
+    </div>
+
+    @if ( Connection.Local.HasPermission( "admin" ) )
+    {
+        <div class="control-row" @onclick=@(() =>CleanUpAll() )>
+            <div class="left"><label>🧹 </label><label>#spawnmenu.utility.cleanup_all</label></div>
+        </div>
+
+        <div class="section-header">#spawnmenu.utility.cleanup_player</div>
+
+        @foreach ( var connection in Connection.All )
+        {
+            var c = connection;
+            <div class="control-row" @onclick=@(() => CleanUpPlayer( c ))>
+                <label class="left">🗑️ @c.DisplayName</label>
+            </div>
+        }
+    }
+</root>
+
+@code
+{
+    void CleanUpMine() => CleanupSystem.RpcCleanUpMine();
+    void CleanUpAll() => CleanupSystem.RpcCleanUpAll();
+    void CleanUpPlayer( Connection c ) => CleanupSystem.RpcCleanUpTarget( c );
+}

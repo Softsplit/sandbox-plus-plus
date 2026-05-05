@@ -1,4 +1,4 @@
-/// <summary>
+﻿/// <summary>
 /// A pickup that gives the player some health.
 /// </summary>
 public sealed class HealthPickup : BasePickup

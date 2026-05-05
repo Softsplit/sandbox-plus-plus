@@ -1,15 +1,15 @@
+@import "/UI/Theme.scss";
 
 SpawnMenu
 {
     width: 100%;
     height: 100%;
-    color: #cdf;
+    color: $menu-color;
     justify-content: center;
-    font-family: Poppins;
+    font-family: $body-font;
     font-size: 14px;
     font-weight: 600;
     z-index: 1000;
-    backdrop-filter: brightness( 0.4 ) contrast( 0.7 ) saturate( 0.7 );
 }
 
 SpawnMenu .container
@@ -86,7 +86,7 @@ SpawnMenuHost.open SpawnMenu
     font-size: 14px;
     color: white;
     font-weight: 650;
-    font-family: Poppins;
+    font-family: $subtitle-font;
     margin-left: 8px;
     z-index: 10;
     flex-shrink: 0;
@@ -100,47 +100,50 @@ SpawnMenuHost.open SpawnMenu
     border-radius: 8px 8px 0 0;
     background-color: #0c202faa;
     opacity: 1;
-    border-right: 1px solid #0004;
+    border-right: 1px solid $menu-surface-soft;
     gap: 0.4rem;
+    align-items: center;
 }
 
 .tabs > *:hover
 {
-    color: #cdf;
+    color: $menu-color;
     sound-in: ui.hover;
 }
 
 .tabs > *:active
 {
-    color: #fff;
+    color: $menu-text-strong;
     sound-in: ui.select;
 }
 
 .tabs > *.active
 {
     opacity: 1;
-    color: #fff;
+    color: $menu-text-strong;
     cursor: pointer;
-    background-color: #0c202fcc;
+    background-color: $menu-panel-bg;
     pointer-events: none;
-    backdrop-filter: blur( 8px );
 }
 
 
-.container > .spawnmenuleft > .body
+.container > .spawnmenuleft > .body,
+.container > .spawnmenuright > .body
 {
     position: relative;
 }
 
 
-.container > .spawnmenuleft > .body > *
+.container > .spawnmenuleft > .body > *,
+.container > .spawnmenuright > .body > *
 {
     position: absolute;
     height: 100%;
     width: 100%;
 }
 
-.container > .spawnmenuleft > .body > .hidden
+.container > .spawnmenuleft > .body > .hidden,
+.container > .spawnmenuright > .body > .hidden
 {
     opacity: 0;
     pointer-events: none;
@@ -148,7 +151,8 @@ SpawnMenuHost.open SpawnMenu
     transform: translateY( 20px );
 }
 
-.container > .spawnmenuleft > .body > .active
+.container > .spawnmenuleft > .body > .active,
+.container > .spawnmenuright > .body > .active
 {
     opacity: 1;
     transition: all 0.1s linear;
@@ -160,8 +164,7 @@ SpawnMenuHost.open SpawnMenu
 {
     > .body
     {
-        background-color: #0c202fcc;
-        backdrop-filter: blur( 2px );
+        background-color: $menu-panel-bg;
     }
 }
 
@@ -170,6 +173,117 @@ SpawnMenuHost.open SpawnMenu
 {
     background-color: #13161a88;
     border-radius: 8px;
+
+    h1, h2
+    {
+        text-transform: uppercase;
+        font-size: 11px;
+        letter-spacing: 0.1em;
+        opacity: 0.5;
+        font-weight: 800;
+        padding: 8px 4px 2px 4px;
+    }
+}
+
+.spawnmenuright .body
+{
+    .tab
+    {
+        flex-grow: 1;
+        flex-direction: row;
+
+        > .left
+        {
+            flex-grow: 0;
+            flex-shrink: 0;
+            flex-direction: column;
+            width: 180px;
+            padding: 8px;
+
+            .list
+            {
+                flex-direction: column;
+                background-color: #2225;
+                padding: 0.5rem;
+                border-radius: 6px;
+                height: 100%;
+            }
+        }
+
+        > .body
+        {
+            flex-direction: column;
+            flex-grow: 1;
+            padding: 8px;
+            margin: 8px;
+            overflow-x: hidden;
+            overflow-y: scroll;
+        }
+
+        ControlSheet .body
+        {
+            padding: 0;
+            margin: 0;
+        }
+
+        ControlSheet .controlgroup
+        {
+            padding: 0;
+
+            > .body
+            {
+                padding: 0;
+            }
+        }
+
+        ControlSheetGroup
+        {
+            > .body
+            {
+                padding: 0;
+                margin: 0;
+                gap: 2px;
+            }
+        }
+
+        .page
+        {
+            gap: 2px;
+        }
+
+        controlsheetrow, .control-row
+        {
+            width: 100%;
+            background-color: #53698111;
+            padding: 8px;
+            border-radius: 4px;
+            max-height: auto;
+            gap: 4px;
+
+            &:hover
+            {
+                background-color: #53698122;
+
+                > .left
+                {
+                    color: #fff;
+                }
+            }
+
+            > .left
+            {
+                width: 150px;
+                overflow: hidden;
+                flex-shrink: 0;
+                gap: 4px;
+            }
+
+            > .right, > .left
+            {
+                flex-shrink: 0;
+            }
+        }
+    }
 }
 
 VirtualGrid
@@ -181,16 +295,19 @@ VirtualGrid
     .cell
     {
         background-color: #7771;
+        border-radius: $hud-radius-sm;
+        border: 1px solid transparent;
         cursor: pointer;
 
         &:hover
         {
-            background-color: #7773;
+            background-color: $menu-accent-soft;
+            border-color: rgba($color-accent, 0.4);
         }
 
         &:active
         {
-            background-color: #08f;
+            background-color: $menu-accent;
             padding: 2px;
         }
     }

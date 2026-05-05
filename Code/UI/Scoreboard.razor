@@ -1,57 +1,69 @@
-@using Sandbox;
+﻿@using Sandbox;
 @using Sandbox.UI;
 @inherits PanelComponent
 
 <root>
-    <div class="table">
+    <div class="body">
         <div class="title">
-            <label>@Networking.ServerName</label>
-            <label class="small">@(Connection.All.Count) / @Networking.MaxPlayers</label>
+            <label class="big">sandbox</label>
+
+            @if ( !string.IsNullOrEmpty( _mapTitle ) )
+            {
+                <label class="small">Playing on @(_mapTitle)</label>
+            }
         </div>
 
-        <div class="col">
-            <div class="header row">
-                <div class="name"></div>
-                <div class="stat">Kills</div>
-                <div class="stat">Deaths</div>
-                <div class="stat">Ping</div>
-            </div>
-
-            @foreach ( var entry in Scene.GetAll<PlayerData>().OrderByDescending( x => x.Kills ).ThenBy( x => x.DisplayName ) )
-            {
-                string specialClass = "";
-                if ( entry.IsMe ) specialClass = "me";
-
-                <div class="row player @specialClass">
-                    <img class="avatar" src="avatar:@entry.Connection.SteamId" />
-                    <div class="name">@entry.DisplayName</div>
-                    <div class="stat">@entry.Kills</div>
-                    <div class="stat">@entry.Deaths</div>
-                    <div class="stat">@(entry.Ping.CeilToInt())</div>
+        <div class="table">
+            <div class="col">
+                <div class="header row">
+                    <div class="avatar-spacer"></div>
+                    <div class="name"></div>
+                    <div class="stat">Kills</div>
+                    <div class="stat">Deaths</div>
+                    <div class="stat">Ping</div>
+                    <div class="mute-spacer"></div>
                 </div>
-            }
+
+                @foreach ( var entry in Scene.GetAll<PlayerData>().OrderByDescending( x => x.Kills ).ThenBy( x => x.DisplayName ) )
+                {
+                    <ScoreboardRow Entry="@entry" />
+                }
+            </div>
         </div>
     </div>
 </root>
 
 @code
 {
-    bool IsVisible => HasClass( "visible" );
+    string _mapTitle = null;
 
-	string GetTime( Connection c )
-	{
-		TimeSpan time = DateTime.UtcNow - c.ConnectionTime;
+    protected override void OnTreeFirstBuilt()
+    {
+        base.OnTreeFirstBuilt();
+        FetchMap();
+    }
 
-		if ( time.TotalMinutes < 60 )
-			return time.ToString( "mm\\m\\ s\\s" );
+    async void FetchMap()
+    {
+        var ident = Networking.MapName;
 
-		return time.ToString( "hh\\h\\ \\m\\m" );
-	}
+        var pkg = await Package.FetchAsync( ident, false );
+        if ( pkg is not null )
+        {
+            _mapTitle = pkg.Title;
+        }
+    }
 
-	protected override void OnUpdate()
-	{
-		SetClass( "visible", Input.Down( "score" ) );
-	}
+    protected override void OnUpdate()
+    {
+	    var host = Game.ActiveScene.Get<SpawnMenuHost>();
+	    if ( host?.Panel?.HasClass( "open" ) ?? false )
+	    {
+		    Input.Clear( "Score" );
+	    }
+
+	    SetClass( "visible", Input.Down( "Score" ) );
+    }
 
     /// <summary>
     /// update every second

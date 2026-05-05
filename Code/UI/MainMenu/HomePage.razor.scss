@@ -1,0 +1,164 @@
+HomePage
+{
+	font-family: Poppins;
+}
+
+HomePage .options,
+HomePage .news
+{
+	z-index: 10;
+}
+
+HomePage root
+{
+	width: 100%;
+	height: 100%;
+	position: relative;
+	font-family: Poppins;
+}
+
+HomePage .options
+{
+	position: absolute;
+	left: 0;
+	top: 0;
+	height: 100%;
+	width: 300px;
+	padding-top: 88px;
+	padding-left: 50px;
+	flex-direction: column;
+	align-items: flex-start;
+}
+
+HomePage .logo
+{
+	margin-bottom: 10px;
+	margin-left: 20px;
+	padding-left: 16px;
+}
+
+HomePage .logo img
+{
+	width: 250px;
+	height: auto;
+}
+
+HomePage .spacer
+{
+	height: 28px;
+}
+
+HomePage .item
+{
+	font-size: 23px;
+	letter-spacing: -1px;
+	color: white;
+	font-weight: bold;
+	text-shadow: 2px 2px 1px black;
+	cursor: pointer;
+	margin-bottom: 1px;
+	padding: 0 16px;
+	margin-left: 20px;
+	white-space: nowrap;
+}
+
+HomePage .item:hover
+{
+	color: rgba( 255, 255, 170, 1 );
+}
+
+HomePage .news
+{
+	position: absolute;
+	top: 75px;
+	right: 50px;
+	flex-direction: column;
+	align-items: flex-end;
+}
+
+HomePage .news-item
+{
+	width: 512px;
+	height: 256px;
+	background-size: cover;
+	background-position: center center;
+	background-color: rgba( 50, 50, 50, 1 );
+	border-radius: 8px;
+	box-shadow: 0 0 10px 1px rgba( 0, 0, 0, 0.4 );
+	position: relative;
+	overflow: hidden;
+}
+
+HomePage .news-footer
+{
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	background-color: rgba( 0, 0, 0, 0.4 );
+	border-radius: 0 0 8px 8px;
+	padding: 5px;
+	flex-direction: column;
+	align-items: flex-end;
+}
+
+HomePage .news-title
+{
+	font-size: 20px;
+	font-weight: bold;
+	color: white;
+	text-shadow: 2px 2px 1px black;
+	cursor: pointer;
+	text-align: right;
+}
+
+HomePage .news-title:hover
+{
+	color: rgba( 255, 255, 170, 1 );
+}
+
+HomePage .news-summary
+{
+	font-size: 12px;
+	color: white;
+	margin-top: 2px;
+	text-align: right;
+}
+
+HomePage .news-dots
+{
+	flex-direction: row;
+	justify-content: flex-end;
+	margin-top: 3px;
+}
+
+HomePage .dot
+{
+	width: 16px;
+	height: 16px;
+	background-color: rgba( 100, 100, 100, 1 );
+	border-radius: 3px;
+	margin-left: 3px;
+	cursor: pointer;
+	box-shadow: 0 0 10px 1px rgba( 0, 0, 0, 0.4 );
+}
+
+HomePage .dot.selected
+{
+	background-color: rgba( 238, 238, 238, 1 );
+}
+
+HomePage .close-btn
+{
+	width: 16px;
+	height: 16px;
+	background-color: rgba( 100, 100, 100, 1 );
+	background-image: url( '/ui/icon16/cross.png' );
+	background-size: 16px 16px;
+	background-position: center;
+	background-repeat: no-repeat;
+	border-radius: 3px;
+	margin-left: 3px;
+	cursor: pointer;
+	box-shadow: 0 0 10px 1px rgba( 0, 0, 0, 0.4 );
+}

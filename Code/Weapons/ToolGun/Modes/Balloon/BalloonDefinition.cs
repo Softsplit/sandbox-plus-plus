@@ -1,4 +1,4 @@
-
+﻿
 
 [AssetType( Name = "Sandbox Balloon", Extension = "bdef", Category = "Sandbox", Flags = AssetTypeFlags.NoEmbedding | AssetTypeFlags.IncludeThumbnails )]
 public class BalloonDefinition : GameResource, IDefinitionResource

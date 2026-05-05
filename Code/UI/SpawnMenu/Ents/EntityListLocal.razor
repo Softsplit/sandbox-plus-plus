@@ -1,4 +1,4 @@
-@using Sandbox;
+﻿@using Sandbox;
 @using Sandbox.UI;
 @inherits Panel
 @namespace Sandbox
@@ -8,21 +8,27 @@
     <Item Context="item">
         @if (item is ScriptedEntity entry)
         {
-            <SpawnMenuIcon Type="entity" Title=@entry.Title Path=@entry.ResourcePath></SpawnMenuIcon>
+            <SpawnMenuIcon Ident=@($"entity:{entry.ResourcePath}") Title=@entry.Title Developer=@entry.Developer></SpawnMenuIcon>
         }
     </Item>
 </VirtualGrid>
 
 @code
 {
+    public string Category { get; set; }
+
     List<ScriptedEntity> Entities = [];
 
     protected override void OnParametersSet()
     {
         base.OnParametersSet();
 
-        Entities = ResourceLibrary.GetAll<ScriptedEntity>().ToList();
+        var all = ResourceLibrary.GetAll<ScriptedEntity>()
+            .Where( e => !e.Developer || ServerSettings.ShowDeveloperEntities );
 
-
+        Entities = (Category is null
+            ? all
+            : all.Where( e => (string.IsNullOrWhiteSpace( e.Category ) ? "Other" : e.Category) == Category )
+        ).ToList();
     }
 }

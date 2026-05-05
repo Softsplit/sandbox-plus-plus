@@ -1,4 +1,4 @@
-@using Sandbox;
+﻿@using Sandbox;
 @using Sandbox.UI;
 @using Sandbox.Mounting;
 @inherits Panel
@@ -11,7 +11,7 @@
 	<div class="author">
 
 		<div class="avatar" style="background-image: url('@Item.Owner.Avatar');"></div>
-		<div class="name">By @Item.Owner.Name</div>
+		<div class="name">@Item.Owner.Name</div>
 
 	</div>
 
@@ -19,12 +19,57 @@
 
 @code
 {
-	public Storage.QueryItem Item { get; set; }
+    public Storage.QueryItem Item { get; set; }
 
-	protected override void OnParametersSet()
-	{
-		Style.SetBackgroundImage( Item.Preview );
+    public override bool WantsDrag => true;
+
+    protected override void OnParametersSet()
+    {
+        Style.SetBackgroundImage( Item.Preview );
+    }
+
+    protected override void OnMouseDown( MousePanelEvent e )
+    {
+        if ( e.MouseButton == MouseButtons.Right )
+        {
+            var menu = MenuPanel.Open( this );
+
+            SpawnlistData.PopulateContextMenu( menu, new SpawnlistItem
+            {
+                Ident = SpawnlistItem.MakeIdent( "dupe", Item.Id.ToString(), "workshop" ),
+                Title = Item.Title,
+                Icon = Item.Preview,
+            } );
+
+            return;
+        }
+
+        base.OnMouseDown( e );
+    }
+
+    protected override async void OnDragStart( DragEvent e )
+    {
+        var data = new DragData
+        {
+            Type = "dupe",
+            Icon = Item.Preview,
+            Title = Item.Title,
+            Source = this
+        };
+
+        DragHandler.StartDragging( data );
+
+		var installed = await Item.Install();
+		if ( installed is null ) return;
+
+		data.Data = installed.Files.ReadAllText( "/dupe.json" );
 	}
-	
 
+    protected override void OnDragEnd(DragEvent e)
+    {
+        if ( DragHandler.IsDragging )
+        {
+            DragHandler.StopDragging();
+        }
+    }
 }

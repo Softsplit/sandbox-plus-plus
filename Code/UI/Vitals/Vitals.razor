@@ -1,0 +1,73 @@
+@using Sandbox;
+@using Sandbox.UI;
+@inherits PanelComponent
+@namespace Sandbox
+
+@if ( !Player.IsValid() || Player.WantsHideHud ) 
+    return;
+
+<root>
+    <div class="vitals">
+        @if ( Player.Armour > 0 )
+        {
+            <div class="stat armour hud-panel">
+                <Image class="icon" Texture=@ArmourIcon />
+                <label class="value">@(DisplayArmour)</label>
+            </div>
+        }
+        <div class="stat health hud-panel">
+            <Image class="icon" Texture=@HealthIcon />
+            <label class="value">@(DisplayHealth)</label>
+        </div>
+    </div>
+
+    @if ( Weapon.IsValid() && Weapon.UsesAmmo )
+    {
+        <div class="ammo hud-panel">
+            @if ( WeaponConVars.UnlimitedAmmo )
+            {
+                <label class="value">∞</label>
+            }
+            else
+            {
+                <label class="value">@(Weapon.UsesClips ? Weapon.ClipContents.ToString() : (WeaponConVars.InfiniteReserves ? "∞" : Weapon.ReserveAmmo.ToString()))</label>
+                @if ( Weapon.UsesClips )
+                {
+                    <label class="alternate">@(WeaponConVars.InfiniteReserves ? "∞" : Weapon.ReserveAmmo.ToString())</label>
+                }
+            }
+            <Image class="icon" Texture=@AmmoIcon />
+        </div>
+    }
+</root>
+
+@code
+{
+    [Property] public Texture HealthIcon { get; set; }
+    [Property] public Texture ArmourIcon { get; set; }
+    [Property] public Texture AmmoIcon { get; set; }
+
+    Player Player => Player.FindLocalPlayer();
+    BaseWeapon Weapon => Player?.GetComponent<PlayerInventory>()?.ActiveWeapon as BaseWeapon;
+
+    int DisplayHealth => (int)Player.Health;
+    int DisplayArmour => (int)Player.Armour;
+
+    bool IsSpawnMenuOpen()
+    {
+        var host = Game.ActiveScene.Get<SpawnMenuHost>();
+        return host?.Panel?.HasClass( "open" ) ?? false;
+    }
+
+    protected override void OnUpdate()
+    {
+        Panel.SetClass( "spawnmenu-open", IsSpawnMenuOpen() );
+    }
+
+    protected override int BuildHash()
+    {
+        if ( !Player.IsValid() || Player.WantsHideHud ) return 0;
+
+        return System.HashCode.Combine( Player.Health, Player.Armour, Weapon?.ClipContents, Weapon?.ReserveAmmo );
+    }
+}

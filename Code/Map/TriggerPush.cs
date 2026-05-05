@@ -1,4 +1,4 @@
-[Category( "Gameplay" ), Icon( "compare_arrows" ), EditorHandle( Icon = "🌠" )]
+﻿[Category( "Gameplay" ), Icon( "compare_arrows" ), EditorHandle( Icon = "🌠" )]
 public sealed class TriggerPush : Component, Component.ITriggerListener
 {
 	[Property] Vector3 Direction { get; set; } = Vector3.Up;

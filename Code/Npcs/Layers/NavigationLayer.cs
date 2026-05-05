@@ -8,7 +8,14 @@ public class NavigationLayer : BaseNpcLayer
 	public NavMeshAgent Agent { get; private set; }
 
 	public Vector3? MoveTarget { get; private set; }
+
+	[Property]
 	public float StopDistance { get; private set; } = 10f;
+
+	/// <summary>
+	/// The desired movement speed for the agent. Schedules can raise this to make the NPC run.
+	/// </summary>
+	public float WishSpeed { get; set; } = 100f;
 
 	protected override void OnStart()
 	{
@@ -26,29 +33,56 @@ public class NavigationLayer : BaseNpcLayer
 		if ( Agent.IsValid() )
 		{
 			Agent.MoveTo( target );
+
+			// Use the agent's resolved navmesh position so distance checks are accurate
+			if ( Agent.TargetPosition.HasValue )
+			{
+				MoveTarget = Agent.TargetPosition.Value;
+			}
 		}
 	}
 
 	protected override void OnUpdate()
 	{
+		if ( IsProxy ) return;
+
 		if ( Agent.IsValid() )
 		{
+			Agent.MaxSpeed = WishSpeed;
 			Npc.Animation.SetMove( Agent.Velocity, Agent.WorldRotation );
 		}
 	}
 
-	/// <summary>
-	/// Check if we've reached our target
-	/// </summary>
-	public bool HasReachedTarget()
+	public override string GetDebugString()
 	{
-		if ( !MoveTarget.HasValue ) return true;
+		if ( !MoveTarget.HasValue ) return null;
 
-		var distance = Npc.WorldPosition.Distance( MoveTarget.Value );
-		return distance <= StopDistance;
+		var status = GetStatus();
+		var dist = Npc.WorldPosition.Distance( MoveTarget.Value ).CeilToInt();
+		return $"Nav: {status} ({dist}u)";
 	}
 
-	public override void Reset()
+	/// <summary>
+	/// Current navigation status — reached target, still moving, or failed.
+	/// </summary>
+	public TaskStatus GetStatus()
+	{
+		if ( !MoveTarget.HasValue ) return TaskStatus.Success;
+
+		var distance = Npc.WorldPosition.Distance( MoveTarget.Value );
+
+		// Npc.DebugOverlay.Sphere( new Sphere( MoveTarget.Value, 16 ), Color.Green, 0.1f );
+
+		if ( distance <= StopDistance )
+			return TaskStatus.Success;
+
+		if ( Agent.IsValid() && !Agent.IsNavigating )
+			return TaskStatus.Failed;
+
+		return TaskStatus.Running;
+	}
+
+	public override void ResetLayer()
 	{
 		MoveTarget = null;
 

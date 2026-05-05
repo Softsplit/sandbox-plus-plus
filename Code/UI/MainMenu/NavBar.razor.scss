@@ -1,0 +1,104 @@
+NavBar
+{
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	height: 50px;
+	background-color: rgba( 0, 0, 0, 0.5 );
+	flex-direction: row;
+	z-index: 1000;
+	pointer-events: all;
+	overflow: visible;
+}
+
+NavBar .group
+{
+	flex-direction: row;
+}
+
+NavBar .group.left
+{
+	padding-left: 5px;
+	flex-shrink: 0;
+}
+
+NavBar .group.center
+{
+	flex-grow: 1;
+	justify-content: flex-end;
+	margin-left: 10%;
+	margin-right: 10%;
+}
+
+NavBar .group.right
+{
+	padding-right: 5px;
+	flex-shrink: 0;
+}
+
+NavBar .button
+{
+	background-color: #fff;
+	border-radius: 4px;
+	height: 40px;
+	padding-left: 35px;
+	position: relative;
+	margin-right: 3px;
+	margin-top: 5px;
+	font-size: 11px;
+	font-family: Poppins;
+	text-align: left;
+	font-weight: bold;
+	cursor: pointer;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	align-items: center;
+}
+
+NavBar .bigicon
+{
+	min-width: 5px;
+}
+
+NavBar .button:hover
+{
+	box-shadow: 0 0 20px white;
+}
+
+NavBar .button img
+{
+	position: absolute;
+	left: 5px;
+	top: 5px;
+}
+
+NavBar .button span
+{
+	color: #333;
+	padding-left: 10px;
+	padding-right: 10px;
+}
+
+NavBar .bigicon img
+{
+	margin-top: -1px;
+	margin-left: -1px;
+}
+
+NavBar #BackToMenu
+{
+	padding-right: 5px;
+}
+
+NavBar #BackToMenu span
+{
+	margin-left: 2px;
+}
+
+NavBar #BackToMenu img
+{
+	margin-left: 0;
+	margin-top: -1px;
+}

@@ -1,0 +1,96 @@
+@using Sandbox;
+@using Sandbox.UI;
+@namespace Sandbox
+@inherits Panel
+
+<root>
+
+    <div class="presets-toggle" @onclick=@OnToggleClick>
+        <i>expand_less</i>
+    </div>
+
+</root>
+
+@code
+{
+    public PlayerInventory Inventory { get; set; }
+
+    void OnToggleClick()
+    {
+        var menu = MenuPanel.Open( this );
+
+        var presets = PlayerLoadout.GetLoadoutPresets();
+        foreach ( var preset in presets )
+        {
+            var name = preset.Name;
+            var json = preset.LoadoutJson;
+            menu.AddSubmenu( "bookmark", name, sub =>
+            {
+                sub.AddOption( "play_arrow", "Load", () => OnLoadPreset( json ) );
+                sub.AddOption( "save", "Overwrite with current", () => OnOverwritePreset( name ) );
+                sub.AddOption( "close", "Delete", () => OnDeletePreset( name ) );
+            } );
+        }
+
+        if ( presets.Any() )
+        {
+            menu.AddSpacer();
+        }
+
+        menu.AddOption( "refresh", "Reset to Default", ResetToDefault );
+        menu.AddOption( "add", "New Preset", OnSaveNew );
+        menu.StateHasChanged();
+    }
+
+    void OnLoadPreset( string json )
+    {
+        var loadout = GetLoadout();
+        if ( !loadout.IsValid() ) return;
+        loadout.SwitchToPreset( json );
+    }
+
+    void OnOverwritePreset( string name )
+    {
+        var json = LocalData.Get<string>( "hotbar" );
+        if ( string.IsNullOrEmpty( json ) ) return;
+
+        PlayerLoadout.SaveLoadoutPreset( name, json );
+    }
+
+    void OnDeletePreset( string name )
+    {
+        PlayerLoadout.DeleteLoadoutPreset( name );
+    }
+
+    void ResetToDefault()
+    {
+        var loadout = GetLoadout();
+        if ( !loadout.IsValid() ) return;
+        loadout.ResetToDefault();
+    }
+
+    void OnSaveNew()
+    {
+        var popup = new StringQueryPopup
+        {
+            Title = "New Inventoy Preset",
+            Placeholder = "Enter a name...",
+            ConfirmLabel = "Save",
+            OnConfirm = OnSaveConfirmed,
+            Parent = FindRootPanel()
+        };
+    }
+
+    void OnSaveConfirmed( string name )
+    {
+        var json = LocalData.Get<string>( "hotbar" );
+        if ( string.IsNullOrEmpty( json ) ) return;
+
+        PlayerLoadout.SaveLoadoutPreset( name, json );
+    }
+
+    PlayerLoadout GetLoadout()
+    {
+        return Inventory?.GetComponent<PlayerLoadout>();
+    }
+}

@@ -1,20 +1,10 @@
-public class SpawningProgress : Component
+﻿public class SpawningProgress : Component
 {
 	public BBox? SpawnBounds { get; internal set; }
 
 	protected override void OnUpdate()
 	{
 		base.OnUpdate();
-
-		/*
-		var text = TextRendering.Scope.Default;
-		text.Text = "Spawning Mate";
-		text.FontName = "Poppins";
-		text.FontWeight = 600;
-		text.FontSize = 16;
-
-		DebugOverlay.Text( WorldPosition + Vector3.Up * 30, text );
-		*/
 
 		if ( SpawnBounds.HasValue )
 		{

@@ -1,4 +1,4 @@
-public sealed class Tracer : Renderer, Component.ExecuteInEditor, Component.ITemporaryEffect
+﻿public sealed class Tracer : Renderer, Component.ExecuteInEditor, Component.ITemporaryEffect
 {
 	[Header( "Position" )]
 	[Property, Feature( "Tracer" )] public WorldPoint EndPoint { get; set; }
@@ -32,10 +32,14 @@ public sealed class Tracer : Renderer, Component.ExecuteInEditor, Component.ITem
 	[Property, Feature( "Light" ), Range( 0, 1 )]
 	public float LightPosition { get; set; } = 0;
 
+	[Property] public Material Material { get; set; }
+
 	bool ITemporaryEffect.IsActive => !_finished;
 
 	float _distance = 0.0f;
 	bool _finished = false;
+
+	private Material _defaultMaterial;
 
 	SceneLineObject _so;
 	SceneLight _light;
@@ -43,6 +47,9 @@ public sealed class Tracer : Renderer, Component.ExecuteInEditor, Component.ITem
 	{
 		_so = new SceneLineObject( Scene.SceneWorld );
 		_so.Transform = Transform.World;
+
+		// Legacy support for old texture based renderers
+		_defaultMaterial = Material.Load( "materials/default/default_line.vmat" ).CreateCopy();
 
 		_distance = StartDistance;
 	}
@@ -93,7 +100,7 @@ public sealed class Tracer : Renderer, Component.ExecuteInEditor, Component.ITem
 
 		if ( EnableLight )
 		{
-			_light ??= new SceneLight( Scene.SceneWorld );
+			_light ??= new ScenePointLight( Scene.SceneWorld );
 			_light.Transform = Transform.World;
 			_light.QuadraticAttenuation = 10;
 			_light.LightColor = LightColor.Evaluate( delta );
@@ -114,9 +121,18 @@ public sealed class Tracer : Renderer, Component.ExecuteInEditor, Component.ITem
 		_so.RenderingEnabled = true;
 		_so.Transform = WorldTransform;
 		_so.Flags.CastShadows = CastShadows;
-		_so.Attributes.Set( "BaseTexture", Texture.White );
-		_so.Attributes.SetCombo( "D_BLEND", Opaque ? 0 : 1 );
 
+		if ( Material.IsValid() )
+		{
+			_so.Material = Material;
+		}
+		else
+		{
+			_defaultMaterial.Set( "Color", Texture.White );
+			_so.Material = _defaultMaterial;
+		}
+
+		_so.Attributes.SetCombo( "D_BLEND", Opaque ? 0 : 1 );
 		_so.StartLine();
 
 		for ( float x = 0; x <= 1.0f; x += 0.1f )

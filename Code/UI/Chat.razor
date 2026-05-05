@@ -1,7 +1,8 @@
-@using Sandbox;
+﻿@using Sandbox;
 @using Sandbox.UI;
+@using Sandbox.Utility
+@namespace Sandbox
 @inherits PanelComponent
-@implements Component.INetworkListener
 
 <root>
 
@@ -61,11 +62,6 @@
         if (string.IsNullOrWhiteSpace(text))
             return;
 
-        if ( text.Contains( "birmingham", StringComparison.OrdinalIgnoreCase ) )
-        {
-            Sandbox.Services.Achievements.Unlock( "secret_phrase" );
-        }
-
         AddText( text );
     }
 
@@ -98,33 +94,28 @@
 
 		Log.Info($"{author}: {message}");
 
-        Entries.Add(new Entry(steamid, author, message, 0.0f));
+		if ( Rpc.Caller == Connection.Local && message.Contains( "colmore", StringComparison.OrdinalIgnoreCase ) )
+		{
+			Sandbox.Services.Stats.Increment( "secret_phrase", 1 );
+        }
+
+        var filteredName = Steam.FilterName(author, steamid);
+        message = Steam.FilterChat(message, steamid);
+
+        Entries.Add(new Entry(steamid, filteredName, message, 0.0f));
 		StateHasChanged();
 	}
 
-	[Rpc.Broadcast] // todo: only from host/owner
-    public void AddSystemText(string message)
+	[Rpc.Broadcast( NetFlags.HostOnly )]
+    public void AddSystemText( string message, string icon = "ℹ️" )
     {
         message = message.Truncate(300);
 
         if (string.IsNullOrWhiteSpace(message))
             return;
 
-        Entries.Add(new Entry(0, "ℹ️", message, 0.0f));
+        Entries.Add(new Entry(0, icon, message, 0.0f));
         StateHasChanged();
     }
 
-	void Component.INetworkListener.OnConnected( Connection channel )
-	{
-		if ( IsProxy ) return;
-
-		AddSystemText( $"{channel.DisplayName} has joined the game" );
-	}
-
-	void Component.INetworkListener.OnDisconnected( Connection channel )
-	{
-		if ( IsProxy ) return;
-
-		AddSystemText( $"{channel.DisplayName} has left the game" );
-	}
 }

@@ -1,6 +1,6 @@
 using Sandbox.Rendering;
 
-public partial class BaseWeapon : BaseCarryable
+public partial class BaseWeapon : BaseCarryable, IPlayerControllable
 {
 	/// <summary>
 	/// How long after deploying a weapon can you not shoot a gun?
@@ -26,7 +26,7 @@ public partial class BaseWeapon : BaseCarryable
 	/// <summary>
 	/// The dry fire sound if we have no ammo
 	/// </summary>
-	private static SoundEvent DryFireSound = new SoundEvent( "audio/sounds/dry_fire.sound" );
+	private static SoundEvent DryFireSound = new SoundEvent( "sounds/dry_fire.sound" );
 
 	/// <summary>
 	/// Play a dry fire sound. You should only call this on weapons that can't auto reload - if they can, use <see cref="TryAutoReload"/> instead.
@@ -78,17 +78,25 @@ public partial class BaseWeapon : BaseCarryable
 	{
 		base.OnAdded( player );
 
-		if ( AmmoResource is not null && StartingAmmo > 0 )
+		if ( !UsesAmmo )
+			return;
+
+		if ( AmmoType is not null )
 		{
-			// When this weapon gets added to a player's inventory, give player some ammo
-			player.GiveAmmo( AmmoResource, StartingAmmo, false );
+			// Seed the shared pool with the resource's default if the player has none yet
+			var inv = GetAmmoInventory();
+			if ( inv is not null && !inv.HasAmmo( AmmoType ) && AmmoType.DefaultStartingAmmo > 0 )
+				inv.AddAmmo( AmmoType, AmmoType.DefaultStartingAmmo );
+		}
+		else if ( StartingAmmo > 0 )
+		{
+			_reserveAmmo = Math.Min( StartingAmmo, _maxReserveAmmo );
 		}
 	}
 
 	public override void DrawHud( HudPainter painter, Vector2 crosshair )
 	{
 		DrawCrosshair( painter, crosshair );
-		DrawAmmo( painter, new Vector2( Screen.Size.x - 32f * Hud.Scale, Screen.Size.y - 32f * Hud.Scale ) );
 	}
 
 	public override void OnPlayerUpdate( Player player )
@@ -104,7 +112,7 @@ public partial class BaseWeapon : BaseCarryable
 			DestroyViewModel();
 		}
 
-		GameObject.NetworkInterpolation = false;
+		GameObject.Network.Interpolation = false;
 
 		if ( !player.IsLocalPlayer )
 			return;
@@ -165,7 +173,7 @@ public partial class BaseWeapon : BaseCarryable
 	/// </summary>
 	public virtual bool CanPrimaryAttack()
 	{
-		if ( !HasAmmo() ) return false;
+		if ( HasOwner && !HasAmmo() ) return false;
 		if ( IsReloading() ) return false;
 		if ( TimeUntilNextShotAllowed > 0 ) return false;
 
@@ -177,7 +185,7 @@ public partial class BaseWeapon : BaseCarryable
 	/// </summary>
 	public virtual bool CanSecondaryAttack()
 	{
-		if ( !HasAmmo() ) return false;
+		if ( HasOwner && !HasAmmo() ) return false;
 		if ( IsReloading() ) return false;
 		if ( TimeUntilNextShotAllowed > 0 ) return false;
 
@@ -194,27 +202,47 @@ public partial class BaseWeapon : BaseCarryable
 	/// </summary>
 	protected virtual float GetSecondaryFireRate() => 0.2f;
 
+	/// <summary>
+	/// The input that fires the primary attack when this weapon is controlled via a seat.
+	/// </summary>
+	[Property, Sync, ClientEditable, Group( "Inputs" )] public ClientInput ShootInput { get; set; }
+
+	/// <summary>
+	/// The input that fires the secondary attack when this weapon is controlled via a seat.
+	/// </summary>
+	[Property, Sync, ClientEditable, Group( "Inputs" )] public ClientInput SecondaryInput { get; set; }
+
+	public bool CanControl( Player player )
+	{
+		var inventory = player.GetComponent<PlayerInventory>();
+		return inventory is null || !inventory.ActiveWeapon.IsValid();
+	}
+
+	public void OnStartControl() { }
+
+	public void OnEndControl() { }
+
+	public virtual void OnControl()
+	{
+		if ( HasOwner ) return;
+		if ( IsProxy ) return;
+
+		if ( ShootInput.Down() && CanPrimaryAttack() )
+			PrimaryAttack();
+
+		if ( SecondaryInput.Down() && CanSecondaryAttack() )
+			SecondaryAttack();
+	}
+
 	public virtual void DrawCrosshair( HudPainter hud, Vector2 center )
 	{
-		hud.SetBlendMode( BlendMode.Normal );
-		hud.DrawCircle( center, 8, Color.Black.WithAlpha( 0.5f ) );
-		hud.DrawCircle( center, 4, Color.White );
+		var color = Color.Red;
+
+		hud.DrawLine( center + Vector2.Left * 32, center + Vector2.Left * 15, 3, color );
+		hud.DrawLine( center - Vector2.Left * 32, center - Vector2.Left * 15, 3, color );
+		hud.DrawLine( center + Vector2.Up * 32, center + Vector2.Up * 15, 3, color );
+		hud.DrawLine( center - Vector2.Up * 32, center - Vector2.Up * 15, 3, color );
 	}
-
-	Texture ammoIcon = Texture.Load( $"ui/ammo_icon.png" );
-
-	public virtual void DrawAmmo( HudPainter hud, Vector2 bottomright )
-	{
-		if ( AmmoResource is null )
-			return;
-
-		var owner = Owner;
-		if ( owner is null ) return;
-
-		var clipAmmo = ClipContents;
-		var reserveAmmo = owner.GetAmmoCount( AmmoResource );
-
-		hud.DrawAmmo( clipAmmo, reserveAmmo, bottomright, UsesClips );
-	}
-
+	protected Color CrosshairCanShoot => Color.White;
+	protected Color CrosshairNoShoot => Color.Red;
 }

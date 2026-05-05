@@ -1,4 +1,4 @@
-namespace Sandbox.Npcs;
+﻿namespace Sandbox.Npcs;
 
 /// <summary>
 /// A schedule -- can be understood as a way to execute a sequence of tasks

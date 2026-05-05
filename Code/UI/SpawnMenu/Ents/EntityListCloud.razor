@@ -1,4 +1,4 @@
-@using Sandbox;
+﻿@using Sandbox;
 @using Sandbox.UI;
 @inherits Panel
 @namespace Sandbox
@@ -12,7 +12,7 @@
 
 @if ( LastResult.Packages.Count() == 0 )
 {
-    <p>No entities found.</p>
+    <p>#spawnmenu.entity.no_results</p>
     return;
 }
 
@@ -21,7 +21,15 @@
 <SpawnMenuContent>
 
     <Header>
-        <SpawnMenuToolbar></SpawnMenuToolbar>
+        <SpawnMenuToolbar>
+            <Left>
+                <TextEntry Placeholder="#spawnmenu.common.search" class="filter menu-input" Value:bind=@Filter />
+            </Left>
+
+            <Right>
+                <DropDown Value:bind=@SortOrder />
+            </Right>
+        </SpawnMenuToolbar>
     </Header>
 
     <Body>
@@ -29,7 +37,7 @@
             <Item Context="item">
                 @if (item is Package entry)
                 {
-                    <SpawnMenuIcon Type="@entry.TypeName" Title=@entry.Title Path=@entry.FullIdent></SpawnMenuIcon>
+                    <SpawnMenuIcon Ident=@($"{entry.TypeName}:{entry.FullIdent}") Title=@entry.Title></SpawnMenuIcon>
                 }
             </Item>
         </VirtualGrid>
@@ -41,24 +49,33 @@
 {
     public string Query { get; set; } = "";
 
-    void Spawn( Package package )
+    private string Filter
     {
-        GameManager.Spawn( package.FullIdent );
+        get;
+        set { field = value; Rebuild(); }
+    }
+
+    public PackageSortMode SortOrder
+    {
+        get;
+        set { field = value; Rebuild(); }
     }
 
     protected override void OnParametersSet()
     {
-        base.OnParametersSet();
-
-        _ = Rebuild();
+        SortOrder = PackageSortMode.Popular;
+        Rebuild();
     }
-
 
     Package.FindResult LastResult;
 
-    async Task Rebuild()
+    async void Rebuild()
     {
-        LastResult = await Package.FindAsync($"type:sent {Query}");
+        var query = $"sort:{SortOrder.ToIdentifier()} type:sent";
+        if ( !string.IsNullOrEmpty( Query ) ) query += $" {Query}";
+        if ( !string.IsNullOrEmpty( Filter ) ) query += $" {Filter}";
+
+        LastResult = await Package.FindAsync( query );
         StateHasChanged();
     }
     

@@ -1,3 +1,4 @@
+@import "/UI/Theme.scss";
 
 SpawnMenuPage
 {
@@ -20,14 +21,15 @@ SpawnMenuPage > .left
 
 		h1
 		{
+			font-family: $subtitle-font;
 			padding: 0.5rem;
-			color: #08f;
+			color: $menu-accent;
 			flex-shrink: 0;
 		}
 
 		.grow
 		{
-			flex-grow:1;
+			flex-grow: 1;
 		}
 	}
 }
@@ -39,5 +41,3 @@ SpawnMenuPage > .body
 	margin: 8px;
 	margin-left: 0px;
 }
-
-

@@ -1,186 +1,164 @@
+@import "/UI/Theme.scss";
+
 InventorySlot
 {
-    flex-direction: column;
-    gap: 20px;
-    width: 100px;
+    width: 96px;
+    height: 96px;
+    background-color: #0003;
+    border-radius: $hud-radius;
+    transition: all 0.1s ease;
+    position: relative;
+
+    &.droppable
+    {
+        pointer-events: all;
+    }
 }
 
 InventorySlot .index
 {
-    position: relative;
-    background-color: rgba(0, 0, 0, 0.2);
-    height: 100px;
-    width: 100px;
-    flex-direction: column;
+    position: absolute;
+    left: 6px;
+    top: 2px;
+    width: 16px;
+    height: 16px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    opacity: 0.15;
+    margin: 0 auto;
+    font-size: 15px;
+    font-family: $subtitle-font;
+    color: white;
+    font-weight: bold;
+    pointer-events: none;
+}
+
+InventorySlot .icon
+{
+    position: absolute;
+    top: 16px;
+    left: 4px;
+    right: 4px;
+    bottom: 18px;
+    background-position: center;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-tint: rgba( $color-accent, 0.6 );
+    mix-blend-mode: lighten;
+    pointer-events: none;
+}
+
+InventorySlot .name
+{
+    position: absolute;
+    bottom: 4px;
+    left: 4px;
+    right: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    font-family: $subtitle-font;
+    color: rgba( white, 0.6 );
+    text-align: center;
+    pointer-events: none;
     justify-content: center;
-    align-items: center;
-    font-weight: 700;
-    font-family: Poppins;
-    border-radius: 8px;
-    color: rgba(255, 220, 0, 0.8);
-    font-size: 28px;
+}
 
-    .number
+InventorySlot.no-tint .icon
+{
+    background-tint: white;
+    opacity: 0.85;
+}
+
+InventorySlot.empty
+{
+    opacity: 1;
+
+    .index
     {
-        position: absolute;
-        top: 6px;
-        left: 10px;
-        z-index: 10;
-        color: rgba(255, 220, 0, 0.8);
+        opacity: 0;
     }
+}
 
-    InventoryWeapon.primary
+InventorySlot:not( .empty )
+{
+    background-color: $hud-element-bg;
+}
+
+InventorySlot.drag-hover
+{
+    background-color: rgba( $color-accent, 0.15 );
+    outline: 1px solid rgba( $color-accent, 0.5 );
+    box-shadow: 0px 0px 16px rgba( $color-accent, 0.3 );
+
+    .index
     {
-        background-color: transparent;
-        height: 100%;
-        width: 100%;
-        padding: 0;
-        padding-top: 20px;
-        justify-content: center;
-        align-items: center;
-
-        .icon
-        {
-            opacity: 0;
-            height: 0px;
-        }
-
-        label
-        {
-            height: 20px;
-            color: rgba(255, 220, 0, 0.8);
-            margin-right: 16px;
-        }
+        opacity: 1;
     }
+}
 
-    InventoryWeapon.primary.active
-    {
-        label
-        {
-            color: #ffdc00;
-            margin-right: 0;
-        }
-
-        .icon
-        {
-            opacity: 1;
-            height: 70px;
-            width: auto;
-            aspect-ratio: 2;
-            background-tint: #ffdc00;
-            margin-bottom: 8px;
-        }
-    }
+InventorySlot.active.no-tint .icon
+{
+    opacity: 1;
+    mix-blend-mode: normal;
+    background-tint: white;
 }
 
 InventorySlot.active
 {
-    width: 300px;
+    opacity: 1;
+    background-color: $hud-element-bg;
+    outline: 0.5px solid rgba( $color-accent, 0.3 );
 
-    > .index
+    .index
     {
-        background-color: rgba(0, 0, 0, 0.2);
-        color: rgba(255, 220, 0, 0.8);
-        width: 300px;
-        height: auto;
-        min-height: 40px;
-
-        .number
-        {
-            color: rgba(255, 220, 0, 0.8);
-        }
-
-        InventoryWeapon.primary
-        {
-            height: auto;
-            min-height: 32px;
-            padding: 4px 8px;
-            padding-top: 28px;
-            padding-left: 28px;
-            align-items: center;
-            justify-content: center;
-        }
-
-        InventoryWeapon.primary.active
-        {
-            height: auto;
-            padding: 10px;
-            margin-top: 0;
-            align-items: center;
-            justify-content: center;
-            gap: 4px;
-
-            .icon
-            {
-                height: 110px;
-            }
-        }
+        color: $color-accent;
     }
-
-    > .index.primary-active
-    {
-        color: #ffdc00;
-
-        .number
-        {
-            color: #ffdc00;
-        }
-    }
-}
-
-InventorySlot > .list
-{
-    flex-direction: column;
-    gap: 20px;
-}
-
-InventorySlot > .list InventoryWeapon
-{
-    height: 0px;
-    background-color: transparent;
 
     .icon
     {
-        opacity: 0;
-        height: 0px;
-    }
-
-    label
-    {
-        display: none;
+        background-tint: $color-accent;
     }
 }
 
-InventorySlot.active > .list InventoryWeapon
+InventorySlot.hovered
 {
-    height: 40px;
-    background-color: rgba(0, 0, 0, 0.2);
+    background-color: $hud-element-bg;
+    outline: 0.5px solid rgba( $color-accent, 0.2 );
 
     .icon
     {
-        opacity: 0;
-        height: 0px;
+        background-tint: $color-accent;
     }
 
-    label
+    .name
     {
-        display: flex;
-        color: rgba(255, 220, 0, 0.8);
+        color: rgba( white, 0.9 );
     }
 }
 
-InventorySlot.active > .list InventoryWeapon.active
+InventorySlot.selected
 {
-    height: auto;
-    gap: 4px;
-    padding: 10px;
+    opacity: 1;
+    background-color: rgba( $color-accent, 0.8 );
+    box-shadow: 0px 0px 12px rgba( $color-accent, 0.2 );
+
+    .index
+    {
+        color: $color-accent;
+    }
 
     .icon
     {
-        opacity: 1;
-        height: 110px;
-        width: auto;
-        aspect-ratio: 2;
-        background-tint: #ffdc00;
+        background-tint: $color-accent;
+        top: 8px;
+        left: 2px;
+        right: 2px;
+        bottom: 14px;
+    }
+
+    .name
+    {
+        color: white;
     }
 }

@@ -1,4 +1,4 @@
-namespace Sandbox.Npcs;
+﻿namespace Sandbox.Npcs;
 
 /// <summary>
 /// A task

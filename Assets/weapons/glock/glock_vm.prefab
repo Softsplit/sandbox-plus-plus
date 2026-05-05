@@ -21,16 +21,19 @@
         "__enabled": true,
         "Flags": 0,
         "AnimationSpeed": 1,
-        "BobScale": 1,
-        "EjectBrass": null,
+        "DeploySound": "weapons/common/foley/foley_deploy_weapon_03.sound",
+        "EjectBrass": {
+          "_type": "gameobject",
+          "prefab": "weapons/common/effects/eject_9mm.prefab"
+        },
         "EjectTransform": {
           "_type": "gameobject",
           "go": "dcc37bca-a959-4b1d-87ee-15eaa48af28d"
         },
         "IncrementalAnimationSpeed": 3,
+        "InertiaScale": "2,2",
         "IsIncremental": false,
         "IsThrowable": false,
-        "MaxSwayDegrees": 3,
         "MuzzleEffect": {
           "_type": "gameobject",
           "prefab": "prefabs/weapon_effects/pistol_muzzleflash.prefab"
@@ -45,16 +48,28 @@
         "OnComponentFixedUpdate": null,
         "OnComponentStart": null,
         "OnComponentUpdate": null,
+        "ReloadSoundEvents": [
+          {
+            "Time": 0,
+            "Sound": "weapons/glock/reload/pistol_mag_out.sound"
+          },
+          {
+            "Time": 0.6,
+            "Sound": "weapons/glock/reload/pistol_mag_in.sound"
+          }
+        ],
         "Renderer": {
           "_type": "component",
-          "component_id": "0d315a8a-856e-49cb-b5d6-a16482eaf1be",
+          "component_id": "d270c311-cac8-4b91-8f81-bbe7065040a2",
           "go": "2658361a-cbbf-4054-9dfc-7eafdd48f589",
           "component_type": "SkinnedModelRenderer"
         },
-        "SwayScale": 1,
-        "SwaySpeed": 10,
         "ThrowableType": "HEGrenade",
-        "TracerEffect": null
+        "TracerEffect": {
+          "_type": "gameobject",
+          "prefab": "weapons/tracer_9mm.prefab"
+        },
+        "UseFastAnimations": false
       }
     ],
     "Children": [
@@ -63,7 +78,7 @@
         "__version": 2,
         "Flags": 0,
         "Name": "Viewmodel",
-        "Position": "0,0,-0.01578379",
+        "Position": "0,0,-0.0157837905",
         "Rotation": "0,0,0,1",
         "Scale": "1,1,1",
         "Tags": "",
@@ -76,13 +91,13 @@
         "Components": [
           {
             "__type": "Sandbox.SkinnedModelRenderer",
-            "__guid": "0d315a8a-856e-49cb-b5d6-a16482eaf1be",
+            "__guid": "d270c311-cac8-4b91-8f81-bbe7065040a2",
             "__enabled": true,
             "Flags": 0,
             "AnimationGraph": null,
-            "BodyGroups": 291,
+            "BodyGroups": 147,
             "BoneMergeTarget": null,
-            "CreateAttachments": true,
+            "CreateAttachments": false,
             "CreateBoneObjects": true,
             "LodOverride": null,
             "MaterialGroup": null,
@@ -110,7 +125,7 @@
               "BloomLayer": false,
               "AfterUILayer": false
             },
-            "RenderType": "Off",
+            "RenderType": "On",
             "Sequence": {
               "Name": null,
               "Looping": true,
@@ -360,7 +375,7 @@
                     "__version": 2,
                     "Flags": 0,
                     "Name": "MuzzleTransform",
-                    "Position": "6.119591,-0.1247237,1.695858",
+                    "Position": "6.11959124,-0.124723703,1.695858",
                     "Rotation": "0,0,0,1",
                     "Scale": "1,1,1",
                     "Tags": "",
@@ -380,7 +395,7 @@
                 "__version": 2,
                 "Flags": 0,
                 "Name": "muzzle",
-                "Position": "6.013762,-0.0000003937,1.795534",
+                "Position": "6.013762,-3.93699992E-07,1.79553401",
                 "Rotation": "0,0,0,1",
                 "Scale": "1,1,1",
                 "Tags": "",
@@ -398,8 +413,8 @@
                 "__version": 2,
                 "Flags": 0,
                 "Name": "eject",
-                "Position": "2.38468,-0.1475521,1.941945",
-                "Rotation": "-0.000000000000003552713,-0.7071066,-0.000000000000003552713,0.7071068",
+                "Position": "2.38468003,-0.147552103,1.94194496",
+                "Rotation": "-3.55271304E-15,-0.70710659,-3.55271304E-15,0.707106829",
                 "Scale": "1,1,1",
                 "Tags": "",
                 "Enabled": true,
@@ -1611,9 +1626,9 @@
           {
             "__guid": "2c2fb3e4-1fb2-4724-a085-3a2981a5a1a9",
             "__version": 2,
-            "Flags": 8,
+            "Flags": 0,
             "Name": "muzzle",
-            "Position": "0,0,0",
+            "Position": "3.84841204,4.67603911E-07,4.94513321",
             "Rotation": "0,0,0,1",
             "Scale": "1,1,1",
             "Tags": "",
@@ -1629,10 +1644,10 @@
           {
             "__guid": "df8fbf6f-20cd-4d94-97e4-8e29b2fa4ba6",
             "__version": 2,
-            "Flags": 8,
+            "Flags": 0,
             "Name": "eject",
-            "Position": "0,0,0",
-            "Rotation": "0,0,0,1",
+            "Position": "-0.976591289,-0.1475517,5.0915451",
+            "Rotation": "-0.183012605,-0.183012694,-0.683012426,0.683012903",
             "Scale": "1,1,1",
             "Tags": "",
             "Enabled": true,
@@ -1671,7 +1686,7 @@
             "BodyGroups": 21,
             "BoneMergeTarget": {
               "_type": "component",
-              "component_id": "0d315a8a-856e-49cb-b5d6-a16482eaf1be",
+              "component_id": "d270c311-cac8-4b91-8f81-bbe7065040a2",
               "go": "2658361a-cbbf-4054-9dfc-7eafdd48f589",
               "component_type": "SkinnedModelRenderer"
             },
@@ -1725,15 +1740,16 @@
         "Enabled": false,
         "IncludeStaticBodies": true,
         "IncludeKeyframedBodies": true,
-        "EditorAutoUpdate": true,
+        "EditorAutoUpdate": false,
         "AgentHeight": 64,
         "AgentRadius": 16,
         "AgentStepSize": 18,
         "AgentMaxSlope": 40,
         "ExcludedBodies": "",
-        "IncludedBodies": ""
-      },
-      "GameObjectSystems": []
+        "IncludedBodies": "",
+        "DeferGeneration": false,
+        "CustomBounds": false
+      }
     },
     "__variables": []
   },
@@ -1744,8 +1760,8 @@
   "DontBreakAsTemplate": false,
   "__references": [
     "facepunch.pistol_muzzleflash#76089",
-    "facepunch.v_first_person_arms_human#122024",
-    "facepunch.v_usp#110418"
+    "facepunch.v_first_person_arms_human#205798",
+    "facepunch.v_usp#205818"
   ],
   "__version": 2
 }

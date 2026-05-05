@@ -1,0 +1,65 @@
+@using Sandbox;
+@using Sandbox.UI;
+@inherits UtilityPage
+@namespace Sandbox
+@attribute [Icon( "👥" )]
+@attribute [Title( "#spawnmenu.utility.users" )]
+@attribute [Group( "#spawnmenu.utility.group.world" )]
+@attribute [Order( 1 )]
+
+<root class="page" style="flex-direction: column;">
+
+    <div class="section-header">#spawnmenu.utility.ban_list</div>
+
+    @{
+        var bans = BanSystem.Current?.GetBannedList();
+    }
+
+    @if ( bans is null || bans.Count == 0 )
+    {
+        <div class="control-row">
+            <label class="left" style="opacity: 0.5;">#spawnmenu.utility.no_bans</label>
+        </div>
+    }
+    else
+    {
+        @foreach ( var (steamId, entry) in bans )
+        {
+            var sid = steamId;
+            var e = entry;
+            <div class="ban-entry">
+                <img class="avatar" src="avatar:@sid" />
+                <div class="ban-info">
+                    <label class="ban-name">@e.DisplayName</label>
+                    <label class="ban-reason">@e.Reason</label>
+                </div>
+                <div class="ban-options" @onclick=@(() => OpenBanOptions( sid, e ))>
+                    <i>more_vert</i>
+                </div>
+            </div>
+        }
+    }
+
+</root>
+
+@code
+{
+    public override bool IsPageVisible() => Connection.Local?.HasPermission( "admin" ) == true;
+
+    void OpenBanOptions( SteamId steamId, BanSystem.BanEntry entry )
+    {
+        var menu = MenuPanel.Open( this );
+
+        menu.AddOption( "person_add", "#spawnmenu.utility.unban", () =>
+        {
+            BanSystem.Current?.Unban( steamId );
+            StateHasChanged();
+        } );
+
+        menu.AddOption( "content_copy", "#spawnmenu.utility.copy_steam_id", () =>
+        {
+            Clipboard.SetText( steamId.ToString() );
+            Notices.AddNotice( "copy_all", Color.Cyan, Game.Language.GetPhrase( "spawnmenu.utility.copied_steam_id", new() { { "name", entry.DisplayName } } ), 5 );
+        } );
+    }
+}

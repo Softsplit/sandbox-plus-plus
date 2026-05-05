@@ -1,27 +1,39 @@
 /// <summary>
-/// A pickup that gives the player ammo.
+/// A pickup that gives the player reserve ammo for a matching weapon.
 /// </summary>
 public sealed class AmmoPickup : BasePickup
 {
 	/// <summary>
-	/// Which ammo <see cref="AmmoResource"/> we give the player
+	/// The ammo resource this pickup gives ammo for.
+	/// When set, ammo is added directly to the player's shared pool for that resource.
 	/// </summary>
-	[Property, Group( "Ammo" )] public AmmoResource AmmoResource { get; set; }
+	[Property, Group( "Ammo" )] public AmmoResource AmmoType { get; set; }
 
 	/// <summary>
-	/// The quantity of ammo
+	/// The quantity of ammo to give.
 	/// </summary>
 	[Property, Group( "Ammo" )] public int AmmoAmount { get; set; }
 
 	public override bool CanPickup( Player player, PlayerInventory inventory )
 	{
-		return player.GetAmmoCount( AmmoResource ) < AmmoResource.MaxAmount;
+		if ( AmmoType is not null )
+		{
+			var ammoInv = player.GetComponent<AmmoInventory>();
+			if ( ammoInv is null ) return false;
+			return ammoInv.GetAmmo( AmmoType ) < AmmoType.MaxReserve;
+		}
+
+		return false;
 	}
 
 	protected override bool OnPickup( Player player, PlayerInventory inventory )
 	{
-		player.GiveAmmo( AmmoResource, AmmoAmount, true );
-		player.PlayerData.AddStat( $"pickup.ammo.{AmmoResource.AmmoType}" );
+		if ( AmmoType is not null )
+		{
+			var ammoInv = player.GetComponent<AmmoInventory>();
+			if ( ammoInv is null ) return false;
+			return ammoInv.AddAmmo( AmmoType, AmmoAmount ) > 0;
+		}
 
 		return true;
 	}

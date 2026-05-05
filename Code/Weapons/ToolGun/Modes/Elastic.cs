@@ -1,7 +1,7 @@
-
-[Icon( "🌀" )]
+﻿[Icon( "🌀" )]
+[Title( "#tool.name.elastic" )]
 [ClassName( "elastic" )]
-[Group( "Constraints" )]
+[Group( "#tool.group.constraints" )]
 public class Elastic : BaseConstraintToolMode
 {
 	[Range( 0, 15 )]
@@ -14,6 +14,10 @@ public class Elastic : BaseConstraintToolMode
 
 	[Property, Sync]
 	public bool StretchOnly { get; set; } = false;
+
+	public override string Description => Stage == 1 ? "#tool.hint.elastic.stage1" : "#tool.hint.elastic.stage0";
+	public override string PrimaryAction => Stage == 1 ? "#tool.hint.elastic.finish" : "#tool.hint.elastic.source";
+	public override string ReloadAction => "#tool.hint.elastic.remove";
 
 	protected override void CreateConstraint( SelectionPoint point1, SelectionPoint point2 )
 	{
@@ -58,6 +62,8 @@ public class Elastic : BaseConstraintToolMode
 
 		go2.NetworkSpawn();
 		go1.NetworkSpawn();
+
+		Track( go1, go2 );
 
 		var undo = Player.Undo.Create();
 		undo.Name = "Elastic";

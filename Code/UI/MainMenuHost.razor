@@ -1,0 +1,222 @@
+@using Sandbox.UI;
+@using Sandbox.UI.Navigation;
+@using Sandbox;
+@namespace Sandbox
+@inherits PanelComponent
+
+<root class="mainmenu @(IsInGameMenu ? "in-game" : "front-end") @(IsMenuOpen ? "open" : "closed")">
+
+	@if ( !IsInGameMenu )
+	{
+		<div class="bg" style="@BgImage(SlotA)" @ref=BgPanelA />
+		<div class="bg" style="@BgImage(SlotB)" @ref=BgPanelB />
+	}
+
+	<div class="gradient" />
+
+	<NavigationHost DefaultUrl="/" @ref=MenuNavigator>
+		<ChildContent>
+			<div class="navigator-canvas" slot="navigator-canvas"></div>
+			<NavBar Host=@this />
+		</ChildContent>
+	</NavigationHost>
+
+</root>
+
+@code
+{
+	const string MainMenuScenePath = "/scenes/menu.scene";
+
+	public NavigationHost MenuNavigator { get; protected set; }
+	public static MainMenuHost Current { get; private set; }
+	[Property] public bool IsInGameMenu { get; set; }
+	public bool IsMainMenuScene => !IsInGameMenu;
+	public bool IsMenuOpen { get; private set; } = true;
+
+	List<string> Backgrounds { get; set; } = new();
+	int BgIndex { get; set; } = 0;
+	int SlotA { get; set; } = 0;
+	int SlotB { get; set; } = 1;
+	TimeSince BgTimer { get; set; } = 0;
+
+	Panel BgPanelA { get; set; }
+	Panel BgPanelB { get; set; }
+
+	const float SizeVel = 0.3f / 30f;
+	const float AngleVel = -5f / 30f;
+
+	float SizeA = 1f; float AngleA = 0f; float AlphaA = 255f; float AlphaVelA = 0f;
+	float SizeB = 1f; float AngleB = 0f; float AlphaB = 0f;  float AlphaVelB = 0f;
+
+	bool _bgLoaded = false;
+
+	string BgUrl( int idx ) => Backgrounds.Count > 0 ? Backgrounds[idx % Backgrounds.Count] : "/ui/bg.jpg";
+	string BgImage( int slot ) => $"background-image: url('{BgUrl( slot )}');";
+
+	protected override void OnEnabled()
+	{
+		base.OnEnabled();
+		Current = this;
+		IsMenuOpen = !IsInGameMenu;
+		ApplyHostClasses();
+	}
+
+	protected override void OnDisabled()
+	{
+		base.OnDisabled();
+		if ( Current == this )
+			Current = null!;
+	}
+
+	void LoadBackgrounds()
+	{
+		var files = FileSystem.Mounted.FindFile( "backgrounds", "*", false );
+		Backgrounds = files
+			.Where( f => f.EndsWith( ".jpg", System.StringComparison.OrdinalIgnoreCase ) ||
+			             f.EndsWith( ".png", System.StringComparison.OrdinalIgnoreCase ) )
+			.Select( f => "/backgrounds/" + f )
+			.OrderBy( _ => Guid.NewGuid() )
+			.ToList();
+		if ( Backgrounds.Count == 0 )
+			Backgrounds = new List<string> { "/ui/bg.jpg" };
+
+		BgIndex = 0; SlotA = 0; SlotB = Backgrounds.Count > 1 ? 1 : 0;
+		SizeA = 1f; AngleA = 0f; AlphaA = 255f; AlphaVelA = 0f;
+		SizeB = 1f; AngleB = 0f; AlphaB = 0f;   AlphaVelB = 0f;
+		StateHasChanged();
+	}
+
+	void ApplyPanelStyle( Panel p, float size, float angle, float alpha, bool isOutgoing )
+	{
+		if ( p is null ) return;
+		p.Style.Set( "transform", $"scale({size:F4}) rotate({angle:F4}deg)" );
+		p.Style.Set( "opacity",   $"{alpha / 255f:F4}" );
+		p.Style.Set( "z-index",   isOutgoing ? "2" : "1" );
+	}
+
+	protected override void OnUpdate()
+	{
+		if ( IsInGameMenu )
+		{
+			if ( Input.EscapePressed )
+			{
+				TogglePauseMenu();
+				Input.EscapePressed = false;
+			}
+
+			return;
+		}
+
+		Input.EscapePressed = false;
+
+		if ( !_bgLoaded && BgPanelA is not null )
+		{
+			_bgLoaded = true;
+			LoadBackgrounds();
+		}
+
+		if ( Backgrounds.Count == 0 ) return;
+
+		float dt = Time.Delta;
+
+		SizeA  += ( SizeVel / SizeA ) * dt;
+		AngleA += AngleVel * dt;
+		if ( AlphaVelA > 0f ) AlphaA = MathF.Max( 0f, AlphaA - AlphaVelA * dt );
+
+		SizeB  += ( SizeVel / SizeB ) * dt;
+		AngleB += AngleVel * dt;
+		if ( AlphaVelB > 0f ) AlphaB = MathF.Max( 0f, AlphaB - AlphaVelB * dt );
+
+		ApplyPanelStyle( BgPanelA, SizeA, AngleA, AlphaA, AlphaVelA > 0f );
+		ApplyPanelStyle( BgPanelB, SizeB, AngleB, AlphaB, AlphaVelB > 0f );
+
+		if ( BgTimer > 30f && Backgrounds.Count > 1 )
+		{
+			BgTimer = 0;
+			var nextIdx = ( BgIndex + 1 ) % Backgrounds.Count;
+
+			if ( BgIndex == SlotA )
+			{
+				AlphaVelA = 255f;
+				SlotB = nextIdx;
+				BgIndex = SlotB;
+				SizeB = 1f; AngleB = 0f; AlphaB = 255f; AlphaVelB = 0f;
+			}
+			else
+			{
+				AlphaVelB = 255f;
+				SlotA = nextIdx;
+				BgIndex = SlotA;
+				SizeA = 1f; AngleA = 0f; AlphaA = 255f; AlphaVelA = 0f;
+			}
+			StateHasChanged();
+		}
+	}
+
+	public void ResumeGame()
+	{
+		if ( !IsInGameMenu ) return;
+
+		IsMenuOpen = false;
+		ApplyHostClasses();
+		StateHasChanged();
+	}
+
+	public void TogglePauseMenu()
+	{
+		if ( !IsInGameMenu ) return;
+
+		IsMenuOpen = !IsMenuOpen;
+		if ( IsMenuOpen )
+			MenuNavigator?.Navigate( "/" );
+
+		ApplyHostClasses();
+		StateHasChanged();
+	}
+
+	public void DisconnectToMainMenu()
+	{
+		Networking.Disconnect();
+		ClearLaunchArguments();
+
+		var options = new SceneLoadOptions
+		{
+			ShowLoadingScreen = true
+		};
+
+		if ( !options.SetScene( MainMenuScenePath ) )
+			return;
+
+		var sceneFile = options.GetSceneFile();
+		Game.ActiveScene.RunEvent<ISceneStartup>( x => x.OnHostPreInitialize( sceneFile ) );
+
+		if ( !Game.ActiveScene.Load( options ) )
+			return;
+
+		Game.ActiveScene.RunEvent<ISceneStartup>( x => x.OnHostInitialize() );
+
+		if ( !Application.IsDedicatedServer )
+		{
+			Game.ActiveScene.RunEvent<ISceneStartup>( x => x.OnClientInitialize() );
+		}
+	}
+
+	void ClearLaunchArguments()
+	{
+		LaunchArguments.Map = null;
+		LaunchArguments.MaxPlayers = 0;
+		LaunchArguments.ServerName = null;
+		LaunchArguments.Privacy = Sandbox.Network.LobbyPrivacy.Public;
+		LaunchArguments.GameSettings = null;
+	}
+
+	void ApplyHostClasses()
+	{
+		if ( Panel is null ) return;
+
+		Panel.SetClass( "front-end", !IsInGameMenu );
+		Panel.SetClass( "in-game", IsInGameMenu );
+		Panel.SetClass( "open", IsMenuOpen );
+		Panel.SetClass( "closed", !IsMenuOpen );
+	}
+}

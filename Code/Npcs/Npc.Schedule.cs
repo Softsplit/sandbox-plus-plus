@@ -1,4 +1,4 @@
-namespace Sandbox.Npcs;
+﻿namespace Sandbox.Npcs;
 
 public partial class Npc : Component
 {
@@ -14,12 +14,13 @@ public partial class Npc : Component
 	/// </summary>
 	protected T GetSchedule<T>() where T : ScheduleBase, new()
 	{
-		var type = typeof( T );
+		var type = typeof(T);
 		if ( !_schedules.TryGetValue( type, out var schedule ) )
 		{
 			schedule = new T();
 			_schedules[type] = schedule;
 		}
+
 		return (T)schedule;
 	}
 
@@ -33,6 +34,9 @@ public partial class Npc : Component
 	/// </summary>
 	void TickSchedule()
 	{
+		if ( !NpcConVars.Enabled )
+			return;
+
 		// If we have a schedule, keep running it 
 		// until it's completely finished.
 		if ( ActiveSchedule is not null )
@@ -65,9 +69,10 @@ public partial class Npc : Component
 	}
 
 	/// <summary>
-	/// End the current schedule cleanly
+	/// End the current schedule cleanly. Can be called by subclasses to interrupt
+	/// the active schedule (e.g. when damaged).
 	/// </summary>
-	private void EndCurrentSchedule()
+	protected void EndCurrentSchedule()
 	{
 		ActiveSchedule?.InternalEnd();
 		ActiveSchedule = null;

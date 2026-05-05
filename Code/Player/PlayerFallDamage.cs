@@ -1,7 +1,7 @@
-/// <summary>
+﻿/// <summary>
 /// Apply fall damage to the player
 /// </summary>
-public class PlayerFallDamage : Component, IPlayerEvent
+public class PlayerFallDamage : Component, Local.IPlayerEvents
 {
 	[RequireComponent] public Player Player { get; set; }
 
@@ -25,21 +25,14 @@ public class PlayerFallDamage : Component, IPlayerEvent
 	/// </summary>
 	[Property] public SoundEvent FallSound { get; set; }
 
-	int landCount = 0;
-
 	[Rpc.Owner]
 	private void PlayFallSound()
 	{
 		GameObject.PlaySound( FallSound );
 	}
 
-	void IPlayerEvent.OnLand( float distance, Vector3 velocity )
+	void Local.IPlayerEvents.OnLand( float distance, Vector3 velocity )
 	{
-		landCount++;
-
-		if ( landCount < 1 )
-			return;
-
 		var fallSpeed = Math.Abs( velocity.z );
 
 		if ( fallSpeed <= MaxSafeFallSpeed )
@@ -47,6 +40,9 @@ public class PlayerFallDamage : Component, IPlayerEvent
 
 		var damageAmount = MathX.Remap( fallSpeed, MaxSafeFallSpeed, FatalFallSpeed, 0f, 100f ) * DamageMultiplier;
 		if ( damageAmount < 1 ) return;
+
+		if ( damageAmount >= Player.Health )
+			Player.PlayerData?.AddStat( "player.fall.death" );
 
 		TakeFallDamage( damageAmount );
 	}

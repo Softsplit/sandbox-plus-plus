@@ -2,8 +2,46 @@ public partial class BaseCarryable : Component
 {
 	[Property, Feature( "ViewModel" )] public GameObject ViewModelPrefab { get; set; }
 
+	private bool _suppressViewModel;
+
+	public void Deploy()
+	{
+		_suppressViewModel = false;
+
+		if ( !ViewModel.IsValid() )
+			CreateViewModel();
+
+		if ( ViewModel.IsValid() && ViewModel.GetComponent<ViewModel>() is { IsValid: true } viewModel )
+		{
+			viewModel.Deploy();
+			return;
+		}
+
+		WeaponModel?.Deploy();
+	}
+
+	public void Holster()
+	{
+		if ( ViewModel.IsValid() && ViewModel.GetComponent<ViewModel>() is { IsValid: true } viewModel )
+		{
+			viewModel.Holster();
+			return;
+		}
+
+		WeaponModel?.Holster();
+	}
+
+	public void HolsterForPickup()
+	{
+		Holster();
+		_suppressViewModel = true;
+	}
+
 	protected void CreateViewModel()
 	{
+		if ( _suppressViewModel )
+			return;
+
 		if ( ViewModel.IsValid() )
 			return;
 
@@ -22,8 +60,10 @@ public partial class BaseCarryable : Component
 
 		var vm = ViewModel.GetComponent<ViewModel>();
 
-		if ( vm.IsValid() )
-			vm.Deploy();
+		if ( !vm.IsValid() )
+			return;
+
+		vm.Deploy();
 	}
 
 	protected void DestroyViewModel()

@@ -1,4 +1,4 @@
-internal class ConstraintCleanup : Component
+﻿internal class ConstraintCleanup : Component
 {
 	[Property]
 	public GameObject Attachment { get; set; }
