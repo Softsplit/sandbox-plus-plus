@@ -20,7 +20,7 @@
         "__guid": "a1b2c3d4-3334-4aaa-b334-333333333334",
         "__enabled": true,
         "Flags": 0,
-        "AnimationSpeed": 1,
+        "AnimationSpeed": 1.25,
         "DeploySound": null,
         "EjectBrass": {
           "_type": "gameobject",
@@ -30,7 +30,7 @@
           "_type": "gameobject",
           "go": "f356ae8a-95fe-4a7b-9afe-dc337736eb24"
         },
-        "IncrementalAnimationSpeed": 3,
+        "IncrementalAnimationSpeed": 1.75,
         "IncrementalReloadFinishSounds": [
           {
             "Time": 0.6,
@@ -44,7 +44,7 @@
           }
         ],
         "IncrementalReloadStartSounds": [],
-        "InertiaScale": "2,2",
+        "InertiaScale": "4,4",
         "IsIncremental": true,
         "IsThrowable": false,
         "MuzzleEffect": {

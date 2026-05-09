@@ -64,7 +64,7 @@ public sealed partial class ViewModel : WeaponModel, ICameraSetup
 	/// Animation speed for incremental reload sections.
 	/// </summary>
 	[Property, Group( "Animation" )]
-	public float IncrementalAnimationSpeed { get; set; } = 3.0f;
+	public float IncrementalAnimationSpeed { get; set; } = 1.0f;
 
 	/// <summary>
 	/// Use fast anims?

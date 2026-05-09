@@ -15,7 +15,6 @@ public sealed class NoclipMoveMode : Sandbox.Movement.MoveMode
 	[Property]
 	public float WalkSpeed { get; set; } = 200;
 
-
 	protected override void OnUpdateAnimatorState( SkinnedModelRenderer renderer )
 	{
 		renderer.Set( "b_noclip", true );
@@ -50,7 +49,6 @@ public sealed class NoclipMoveMode : Sandbox.Movement.MoveMode
 		Controller.IsClimbing = false;
 		Controller.Body.Velocity = Controller.Body.Velocity.ClampLength( Controller.RunSpeed );
 		Controller.Body.Tags.Set( "noclip", false );
-		Controller.Renderer.Set( "b_noclip", false );
 	}
 
 	public override Transform CalculateEyeTransform()
