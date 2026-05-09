@@ -7,8 +7,11 @@
 
 	@if ( Current is not null )
 	{
-		var iconStyle = string.IsNullOrEmpty( Current.Icon ) ? "" : $"background-image: url({Current.Icon})";
-		<div class="dragging" style="@iconStyle" @ref="DragVisual">
+		var mouse = Mouse.Position;
+		var left = mouse.x * Panel.ScaleFromScreen - 32;
+		var top = mouse.y * Panel.ScaleFromScreen - 32;
+		var iconStyle = string.IsNullOrEmpty( Current.Icon ) ? "" : $"background-image: url({Current.Icon}); ";
+		<div class="dragging" style="@(iconStyle)left: @(left)px; top: @(top)px;" @ref="DragVisual">
 			@if ( string.IsNullOrEmpty( Current.Icon ) )
 			{
 				<div class="drag-title">@Current.Title</div>
@@ -33,6 +36,7 @@
     public static bool IsDragging => Current is not null;
 
     Panel DragVisual { get; set; }
+    private RootPanel _rootPanel;
 
     protected override void OnStart()
     {
@@ -63,21 +67,32 @@
     {
         if (!IsDragging) return;
 
-		Current = null;
-		Instance?.StateHasChanged();
-	}
+        Current = null;
+        Instance?.StateHasChanged();
+    }
 
-	protected override void OnUpdate()
-	{
-		if ( !IsDragging ) return;
+    protected override void OnUpdate()
+    {
+        if ( !IsDragging ) return;
 
-		if ( DragVisual is not null )
-		{
-			var mouse = Mouse.Position;
-			DragVisual.Style.Left = Length.Pixels( mouse.x * Panel.ScaleFromScreen - 32 );
-			DragVisual.Style.Top = Length.Pixels( mouse.y * Panel.ScaleFromScreen - 32 );
-		}
-	}
+        if ( !_rootPanel.WantsMouseInput() )
+        {
+            StopDragging();
+            return;
+        }
+
+        if ( DragVisual is not null )
+        {
+            var mouse = Mouse.Position;
+            DragVisual.Style.Left = Length.Pixels( mouse.x * Panel.ScaleFromScreen - 32 );
+            DragVisual.Style.Top = Length.Pixels( mouse.y * Panel.ScaleFromScreen - 32 );
+        }
+    }
+
+    protected override void OnTreeBuilt()
+    {
+        _rootPanel = Panel.FindRootPanel();
+    }
 
 	protected override int BuildHash() => HashCode.Combine( Current );
 }
