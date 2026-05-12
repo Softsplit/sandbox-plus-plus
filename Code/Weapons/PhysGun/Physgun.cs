@@ -62,7 +62,7 @@ public partial class Physgun
 	[Sync] public GrabState _stateHovered { get; set; } = default;
 
 	Transform _lastAimTransform;
-	Transform CurrentAimTransform => HasOwner ? AimTransform : _lastAimTransform;
+	Transform CurrentAimTransform => HasOwner ? Owner.EyeTransform : _lastAimTransform;
 
 	bool _preventReselect = false;
 
