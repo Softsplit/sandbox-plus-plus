@@ -103,14 +103,7 @@ public partial class BaseWeapon : BaseCarryable, IPlayerControllable
 	{
 		if ( player is null ) return;
 
-		if ( !player.Controller.ThirdPerson )
-		{
-			CreateViewModel();
-		}
-		else
-		{
-			DestroyViewModel();
-		}
+		CreateViewModel();
 
 		GameObject.Network.Interpolation = false;
 

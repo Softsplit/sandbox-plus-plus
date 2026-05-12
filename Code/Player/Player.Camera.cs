@@ -27,6 +27,11 @@ public sealed partial class Player
 		camera.FovAxis = CameraComponent.Axis.Vertical;
 		camera.FieldOfView = Screen.CreateVerticalFieldOfView( Preferences.FieldOfView, 9.0f / 16.0f );
 
+		if ( Controller.ThirdPerson )
+			camera.RenderExcludeTags.Add( "firstperson" );
+		else
+			camera.RenderExcludeTags.Remove( "firstperson" );
+
 		Local.IPlayerEvents.Post( x => x.OnCameraSetup( camera ) );
 
 		UpdateSeatedWeapons();
