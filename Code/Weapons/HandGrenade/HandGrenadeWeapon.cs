@@ -205,9 +205,15 @@ public sealed class HandGrenadeWeapon : BaseWeapon
 		var right = eye.Rotation.Right;
 		var forward = direction;
 
-		var target = eye.Position + forward * 18f + right * 8f;
+		var origin = eye.Position;
 
-		var tr = Scene.Trace.Box( BBox.FromPositionAndSize( Vector3.Zero, 8f ), eye.Position, target )
+		// Underthrow starts lower (waist height)
+		if ( CurrentThrowType == ThrowType.Near )
+			origin -= Vector3.Up * 20f;
+
+		var target = origin + forward * 18f + right * 8f;
+
+		var tr = Scene.Trace.Box( BBox.FromPositionAndSize( Vector3.Zero, 8f ), origin, target )
 			.WithoutTags( "trigger", "ragdoll" )
 			.IgnoreGameObjectHierarchy( player.GameObject )
 			.Run();

@@ -27,7 +27,7 @@
           "_type": "gameobject",
           "go": "33f8c517-fd02-4032-ac3c-367ab3411139"
         },
-        "IncrementalAnimationSpeed": 3,
+        "IncrementalAnimationSpeed": 1,
         "IncrementalReloadFinishSounds": [],
         "IncrementalReloadSoundEvents": [],
         "IncrementalReloadStartSounds": [],

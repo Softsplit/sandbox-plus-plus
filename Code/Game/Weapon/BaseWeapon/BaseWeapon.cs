@@ -83,15 +83,10 @@ public partial class BaseWeapon : BaseCarryable, IPlayerControllable
 
 		if ( AmmoType is not null )
 		{
+			// Seed the shared pool with the resource's default if the player has none yet
 			var inv = GetAmmoInventory();
-			if ( inv is not null )
-			{
-				// Seed the shared pool with the resource's default if the player has none yet
-				if ( !inv.HasAmmo( AmmoType ) && AmmoType.DefaultStartingAmmo > 0 )
-					inv.AddAmmo( AmmoType, AmmoType.DefaultStartingAmmo );
-				else if ( StartingAmmo > 0 )
-					inv.AddAmmo( AmmoType, StartingAmmo );
-			}
+			if ( inv is not null && !inv.HasAmmo( AmmoType ) && AmmoType.DefaultStartingAmmo > 0 )
+				inv.AddAmmo( AmmoType, AmmoType.DefaultStartingAmmo );
 		}
 		else if ( StartingAmmo > 0 )
 		{
