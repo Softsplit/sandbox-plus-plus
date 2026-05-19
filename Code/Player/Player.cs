@@ -82,14 +82,6 @@ public sealed partial class Player : Component, Component.IDamageable, PlayerCon
 		{
 			t.GameObject.Destroy();
 		}
-
-		// Apply height from dresser to match camera with visual height
-		if ( Body.IsValid() )
-		{
-			var dresser = Body.GetComponentInChildren<Dresser>( true );
-			if ( dresser.IsValid() )
-				ApplyHeightFromDresser( dresser );
-		}
 	}
 
 	protected override void OnDestroy()
@@ -501,16 +493,6 @@ public sealed partial class Player : Component, Component.IDamageable, PlayerCon
 	private async Task ReapplyClothingAfterLoad( Dresser dresser )
 	{
 		await dresser.Apply();
-		ApplyHeightFromDresser( dresser );
 		GameObject.Network.Refresh();
-	}
-
-	private void ApplyHeightFromDresser( Dresser dresser )
-	{
-		if ( !Controller.IsValid() ) return;
-		if ( !dresser.ApplyHeightScale ) return;
-
-		var heightScale = dresser.ManualHeight.Remap( 0, 1, 0.8f, 1.2f, true );
-		Controller.BodyHeight = 72f * heightScale;
 	}
 }

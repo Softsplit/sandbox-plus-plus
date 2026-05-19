@@ -91,7 +91,6 @@ public partial class ScreenWeapon : BaseCarryable
 
 		_screenTexture ??= Texture.CreateRenderTarget().WithSize( ScreenTextureSize.x, ScreenTextureSize.y ).WithInitialColor( Color.Red )
 			.Create();
-		_screenTexture.Clear( Color.Random );
 
 		_screenMaterialCopy ??= Material.Load( ScreenMaterialPath ).CreateCopy();
 		_screenMaterialCopy.Attributes.Set( "Emissive", _screenTexture );
