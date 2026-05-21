@@ -32,7 +32,9 @@ public sealed class BanSystem : GameObjectSystem<BanSystem>, Component.INetworkL
 
 		_bans[connection.SteamId] = new BanEntry( connection.DisplayName, reason );
 		Save();
-		Scene.Get<Chat>()?.AddSystemText( $"{connection.DisplayName} was banned: {reason}", "🔨" );
+
+		GameManager.Current.Notify( $"🔨 {connection.DisplayName} was banned: {reason}" );
+
 		connection.Kick( reason );
 	}
 

@@ -1,5 +1,3 @@
-using Sandbox.UI;
-
 public sealed partial class GameManager
 {
 	private readonly HashSet<Guid> _kickedPlayers = new();
@@ -21,7 +19,9 @@ public sealed partial class GameManager
 		Assert.True( Networking.IsHost, "Only the host may kick players." );
 
 		_kickedPlayers.Add( connection.Id );
-		Scene.Get<Chat>()?.AddSystemText( $"{connection.DisplayName} was kicked: {reason}", "🥾" );
+
+		GameManager.Current.Notify( $"🥾 {connection.DisplayName} was kicked: {reason}" );
+
 		connection.Kick( reason );
 	}
 
@@ -82,7 +82,6 @@ public sealed partial class GameManager
 
 		ConsoleSystem.Run( name, value ? "true" : "false" );
 
-		var chat = Game.ActiveScene?.Get<Chat>();
-		chat?.AddSystemText( $"{name} set to {(value ? "On" : "Off")}", "⚙️" );
+		GameManager.Current.Notify( $"⚙️ {name} set to {(value ? "On" : "Off")}" );
 	}
 }

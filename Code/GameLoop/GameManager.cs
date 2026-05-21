@@ -18,6 +18,18 @@ public sealed partial class GameManager : GameObjectSystem<GameManager>, Compone
 		}
 	}
 
+	public void Notify( string text )
+	{
+		Assert.True( Networking.IsHost, "Only the host can send notifications" );
+		NotifyRpc( text );
+	}
+
+	[Rpc.Broadcast( NetFlags.HostOnly )]
+	private void NotifyRpc( string text )
+	{
+		Sandbox.Platform.Chat.AddText( text );
+	}
+
 	void Component.INetworkListener.OnActive( Connection channel )
 	{
 		if ( IsMenu() ) return;
@@ -29,7 +41,7 @@ public sealed partial class GameManager : GameObjectSystem<GameManager>, Compone
 		CheckConnectionAchievement( channel );
 		CheckFriendsOnlineStat();
 
-		Scene.Get<Chat>()?.AddSystemText( $"{channel.DisplayName} has joined the game", "👋" );
+		Notify( $"👋 {channel.DisplayName} has joined the game" );
 	}
 
 	/// <summary>
@@ -48,7 +60,7 @@ public sealed partial class GameManager : GameObjectSystem<GameManager>, Compone
 		if ( _kickedPlayers.Remove( channel.Id ) ) return;
 		if ( BanSystem.Current?.IsBanned( channel.SteamId ) ?? false ) return;
 
-		Scene.Get<Chat>()?.AddSystemText( $"{channel.DisplayName} has left the game", "👋" );
+		Notify( $"👋 {channel.DisplayName} has left the game" );
 	}
 
 	private PlayerData CreatePlayerInfo( Connection channel )
@@ -143,7 +155,7 @@ public sealed partial class GameManager : GameObjectSystem<GameManager>, Compone
 	}
 
 	[Rpc.Broadcast( NetFlags.HostOnly )]
-	private static void SendMessage( string msg )
+	private static void NotifyConsole( string msg )
 	{
 		Log.Info( msg );
 	}
@@ -186,15 +198,15 @@ public sealed partial class GameManager : GameObjectSystem<GameManager>, Compone
 
 		if ( string.IsNullOrEmpty( attackerName ) )
 		{
-			SendMessage( $"{player.DisplayName} died (tags: {dmg.Tags})" );
+			NotifyConsole( $"{player.DisplayName} died (tags: {dmg.Tags})" );
 		}
 		else if ( weapon.IsValid() )
 		{
-			SendMessage( $"{attackerName} killed {(isSuicide ? "self" : player.DisplayName)} with {weapon.Name} (tags: {dmg.Tags})" );
+			NotifyConsole( $"{attackerName} killed {(isSuicide ? "self" : player.DisplayName)} with {weapon.Name} (tags: {dmg.Tags})" );
 		}
 		else
 		{
-			SendMessage( $"{attackerName} killed {(isSuicide ? "self" : player.DisplayName)} (tags: {dmg.Tags})" );
+			NotifyConsole( $"{attackerName} killed {(isSuicide ? "self" : player.DisplayName)} (tags: {dmg.Tags})" );
 		}
 	}
 
