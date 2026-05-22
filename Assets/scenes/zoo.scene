@@ -4386,7 +4386,7 @@
         "MovedObjects": []
       },
       "__PrefabIdToInstanceId": {
-        "b606034f-1731-489b-b1c4-3fcdc2dceb21": "a9d3b3fb-00cf-416b-86c2-1f8584600e9e"
+        "b049c602-d98a-48fb-a2a9-e4e2c3248948": "81d826ac-9f64-42f7-a8ee-3c8865f2ff8a"
       }
     },
     {
@@ -6585,9 +6585,6 @@
         "Storage": {
           "$blob": "00b7c556-042a-47e3-8be5-3f7cea795b48"
         }
-      },
-      "Sandbox.MovieMaker.MovieRecorderSystem": {
-        "DisableClientRecording": false
       },
       "Sandbox.SelectionSetsSystem": {
         "Data": {

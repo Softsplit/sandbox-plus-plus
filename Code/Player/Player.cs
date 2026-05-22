@@ -323,11 +323,7 @@ public sealed partial class Player : Component, Component.IDamageable, PlayerCon
 
 		if ( Input.Pressed( "noclip" ) )
 		{
-			if ( GetComponent<NoclipMoveMode>( true ) is { } noclip )
-			{
-				noclip.Enabled = !noclip.Enabled;
-				IsNoclipping = noclip.Enabled;
-			}
+			ToggleNoclip();
 		}
 
 		if ( Input.Pressed( "undo" ) )
@@ -341,6 +337,15 @@ public sealed partial class Player : Component, Component.IDamageable, PlayerCon
 		GetComponent<PlayerInventory>()?.OnControl();
 
 		Scene.Get<Inventory>()?.HandleInput();
+	}
+
+	void ToggleNoclip()
+	{
+		if ( GetComponent<NoclipMoveMode>( true ) is { } noclip )
+		{
+			noclip.Enabled = !noclip.Enabled;
+			IsNoclipping = noclip.Enabled;
+		}
 	}
 
 	[ConCmd( "sbdm.dev.sethp", ConVarFlags.Cheat )]

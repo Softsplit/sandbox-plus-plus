@@ -47,16 +47,48 @@
         "OnComponentUpdate": null,
         "ReloadSoundEvents": [
           {
-            "Time": 0,
-            "Sound": "weapons/common/foley/foley_deploy_weapon_03.sound"
+            "Time": 0.2,
+            "Sound": "weapons/rpg/sounds/rpg_reload_handle.sound"
+          },
+          {
+            "Time": 0.1,
+            "Sound": "weapons/rpg/sounds/rpg_reload_rustle_01.sound"
+          },
+          {
+            "Time": 0.88,
+            "Sound": "weapons/rpg/sounds/rpg_reload_rustle_02.sound"
+          },
+          {
+            "Time": 1.2,
+            "Sound": "weapons/rpg/sounds/rpg_reload_rustle_03.sound"
+          },
+          {
+            "Time": 1.45,
+            "Sound": "weapons/rpg/sounds/rpg_reload_missile_insert_01.sound"
+          },
+          {
+            "Time": 1.78,
+            "Sound": "weapons/rpg/sounds/rpg_reload_missile_insert_02.sound"
           },
           {
             "Time": 2.2,
-            "Sound": "weapons/rpg/sounds/rpg_reload_foley_01.sound"
+            "Sound": "weapons/rpg/sounds/rpg_reload_missile_insert_03.sound"
           },
           {
-            "Time": 2.8,
-            "Sound": "weapons/rpg/sounds/rpg_reload_close.sound"
+            "Time": 2.75,
+            "Sound": "weapons/rpg/sounds/rpg_reload_missile_lock_01.sound"
+          },
+          {
+            "Time": 2.89,
+            "Sound": "weapons/rpg/sounds/rpg_reload_missile_lock_02.sound"
+          },
+          {
+            "Time": 3.3,
+            "Sound": "weapons/rpg/sounds/rpg_reload_rustle_03.sound"
+          },
+          {
+            "Time": 3.8,
+            "Sound": "weapons/rpg/sounds/rpg_reload_rustle_04.sound"
           }
         ],
         "Renderer": {

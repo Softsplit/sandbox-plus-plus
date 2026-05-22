@@ -72,13 +72,14 @@
             "TargetColor": "1,1,1,1",
             "CacheToDisk": true
           },
-          "compiled": null
+          "compiled": "textures/generated/imagefile/280bb8c5c69aeda5.vtex"
         },
         "DisplayName": "M4A1",
         "DroppedGameObject": {
           "_type": "gameobject",
           "go": "e7dc7a22-b5a7-41c9-9aa9-ed48c0a053e8"
         },
+        "FirstShellReloadTime": 0,
         "HoldType": "Rifle",
         "IncrementalReloading": false,
         "IronSightsFireScale": 0.2,
@@ -95,6 +96,7 @@
         "OnComponentStart": null,
         "OnComponentUpdate": null,
         "ParentBone": "hold_r",
+        "ReloadStartTime": 0,
         "ReloadTime": 2,
         "ReserveAmmo": 0,
         "SecondaryInput": {
@@ -108,7 +110,7 @@
         },
         "ShootSound": "weapons/m4a1/m4a1_shoot.sound",
         "StartingAmmo": 30,
-        "TimeBetweenShots": 0.11,
+        "TimeBetweenShots": 0.1,
         "UsesAmmo": true,
         "UsesClips": true,
         "Value": 10,
@@ -190,6 +192,7 @@
         "OnComponentUpdate": null,
         "OverrideMassCenter": false,
         "RigidbodyFlags": 0,
+        "SleepThreshold": 2,
         "StartAsleep": false
       }
     ],
@@ -215,6 +218,7 @@
             "__guid": "f8ed8b33-c6b8-52da-aaba-fe59d1b164f9",
             "__enabled": true,
             "Flags": 0,
+            "DeploySound": null,
             "EjectBrass": null,
             "EjectTransform": {
               "_type": "gameobject",
