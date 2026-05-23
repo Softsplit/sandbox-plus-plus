@@ -69,7 +69,8 @@
           "_type": "gameobject",
           "prefab": "weapons/crowbar/crowbar.prefab"
         },
-        "MissSwingDelay": 0.75,
+        "MissSwingDelay": 0.4,
+        "MuzzleGameObject": null,
         "OnComponentDestroy": null,
         "OnComponentDisabled": null,
         "OnComponentEnabled": null,
@@ -78,7 +79,7 @@
         "OnComponentUpdate": null,
         "ParentBone": "hold_r",
         "Range": 128,
-        "SwingDelay": 0.5,
+        "SwingDelay": 0.4,
         "SwingForce": 1000,
         "SwingRadius": 10,
         "SwingSound": "weapons/crowbar/sounds/crowbar.swing.sound",
@@ -161,6 +162,7 @@
         "OnComponentUpdate": null,
         "OverrideMassCenter": false,
         "RigidbodyFlags": 0,
+        "SleepThreshold": 2,
         "StartAsleep": false
       }
     ],
@@ -186,6 +188,7 @@
             "__guid": "f05e6b7c-8a9f-0124-ef01-234567890125",
             "__enabled": true,
             "Flags": 0,
+            "DeploySound": null,
             "EjectBrass": null,
             "EjectTransform": null,
             "MuzzleEffect": null,
@@ -269,6 +272,7 @@
         "AgentMaxSlope": 40,
         "ExcludedBodies": "",
         "IncludedBodies": "",
+        "DeferGeneration": false,
         "CustomBounds": false
       }
     },
@@ -279,8 +283,6 @@
   "MenuPath": "Deathmatch/Items/Crowbar",
   "MenuIcon": null,
   "DontBreakAsTemplate": true,
-  "__references": [
-    "facepunch.w_crowbar#144899"
-  ],
+  "__references": [],
   "__version": 2
 }
