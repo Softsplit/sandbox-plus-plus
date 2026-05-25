@@ -124,8 +124,11 @@ public partial class BaseBulletWeapon : BaseWeapon
 
 		if ( !noEvents )
 		{
-			WeaponModel.GameObject.RunEvent<WeaponModel>( x => x.OnAttack() );
-			WeaponModel.GameObject.RunEvent<WeaponModel>( x => x.CreateRangedEffects( this, hitpoint, origin ) );
+			if ( WeaponModel.IsValid() )
+			{
+				WeaponModel.GameObject.RunEvent<WeaponModel>( x => x.OnAttack() );
+				WeaponModel.GameObject.RunEvent<WeaponModel>( x => x.CreateRangedEffects( this, hitpoint, origin ) );
+			}
 
 			if ( ShootSound.IsValid() )
 			{

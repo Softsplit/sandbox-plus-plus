@@ -63,7 +63,8 @@ public class PropSpawner : ISpawner
 		var prop = go.AddComponent<Prop>();
 		prop.Model = Model;
 
-		Ownable.Set( go, player.Network.Owner );
+		if ( player.IsValid() )
+			Ownable.Set( go, player.Network.Owner );
 
 		if ( (Model.Physics?.Parts?.Count ?? 0) == 0 )
 		{

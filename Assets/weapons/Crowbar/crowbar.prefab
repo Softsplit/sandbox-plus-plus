@@ -283,6 +283,8 @@
   "MenuPath": "Deathmatch/Items/Crowbar",
   "MenuIcon": null,
   "DontBreakAsTemplate": true,
-  "__references": [],
+  "__references": [
+    "facepunch.w_crowbar#144899"
+  ],
   "__version": 2
 }

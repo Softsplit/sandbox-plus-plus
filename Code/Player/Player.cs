@@ -172,7 +172,7 @@ public sealed partial class Player : Component, Component.IDamageable, PlayerCon
 	[Rpc.Broadcast( NetFlags.HostOnly | NetFlags.Reliable )]
 	void CreateRagdoll( Vector3 velocity, Vector3 origin )
 	{
-		if ( !Controller.Renderer.IsValid() )
+		if ( !Controller.Renderer.IsValid() || Controller.Renderer.Model is null )
 			return;
 
 		var batch = Scene.BatchGroup();
@@ -458,9 +458,7 @@ public sealed partial class Player : Component, Component.IDamageable, PlayerCon
 		Local.IPlayerEvents.PostToGameObject( GameObject, x => x.OnJump() );
 		Global.IPlayerEvents.Post( x => x.OnPlayerJumped( this ) );
 
-		var player = Components.Get<Player>();
-
-		if ( Controller.ThirdPerson || !player.IsLocalPlayer ) return;
+		if ( Controller.ThirdPerson || !IsLocalPlayer ) return;
 
 		new Punch( new Vector3( -20, 0, 0 ), 0.5f, 2.0f, 1.0f );
 	}

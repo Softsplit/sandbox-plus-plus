@@ -94,7 +94,7 @@ public sealed class PhygunViewmodel : Component, Component.ExecuteInEditor
 
 	void UpdateSparks()
 	{
-		if ( SparksEffect is null ) return;
+		if ( !SparksEffect.IsValid() ) return;
 
 		if ( BeamActive == _wasActive ) return;
 
@@ -105,6 +105,7 @@ public sealed class PhygunViewmodel : Component, Component.ExecuteInEditor
 		for ( int i = 0; i < count; i++ )
 		{
 			var p = SparksEffect.Emit( SparksEffect.WorldPosition, i / (float)count );
+			if ( p is null ) continue;
 			p.Velocity = Vector3.Random * 100.0f + SparksEffect.WorldTransform.Forward * 30.0f;
 		}
 	}

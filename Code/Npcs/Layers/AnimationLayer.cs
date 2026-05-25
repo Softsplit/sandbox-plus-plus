@@ -28,7 +28,7 @@ public sealed partial class AnimationLayer : BaseNpcLayer
 	/// </summary>
 	public GameObject LookTargetObject { get; private set; }
 
-	private SkinnedModelRenderer _renderer => Npc.Renderer;
+	private SkinnedModelRenderer _renderer => Npc.IsValid() ? Npc.Renderer : null;
 	private float _lastYaw = float.NaN;
 
 	[Sync] public Vector3 MoveVelocity { get; set; }
@@ -146,7 +146,7 @@ public sealed partial class AnimationLayer : BaseNpcLayer
 
 	private void ApplyLookToRenderer( Vector3 lookWorldPos )
 	{
-		if ( _renderer is null ) return;
+		if ( !_renderer.IsValid() || !Npc.IsValid() ) return;
 
 		var fullDirection = (lookWorldPos - Npc.WorldPosition).Normal;
 

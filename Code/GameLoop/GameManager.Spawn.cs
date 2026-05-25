@@ -75,6 +75,9 @@ public sealed partial class GameManager
 		if ( spawnData.Cancelled )
 			return;
 
+		if ( !player.IsValid() )
+			return;
+
 		// If the prefab is a weapon, pick it up directly instead of spawning into the world
 		if ( !forceWorld )
 		{

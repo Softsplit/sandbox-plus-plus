@@ -100,6 +100,10 @@ public class EmitterTool : ToolMode
 			emitter.Emitter = effect;
 		}
 
+		ApplyPhysicsProperties( go );
+
+		go.NetworkSpawn( true, null );
+
 		if ( !noWeld )
 		{
 			var joint = go.AddComponent<FixedJoint>();
@@ -111,10 +115,6 @@ public class EmitterTool : ToolMode
 			joint.Body = point.GameObject;
 			joint.EnableCollision = false;
 		}
-
-		ApplyPhysicsProperties( go );
-
-		go.NetworkSpawn( true, null );
 
 		Track( go );
 

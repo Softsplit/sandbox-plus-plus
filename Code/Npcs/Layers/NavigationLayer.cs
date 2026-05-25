@@ -19,6 +19,8 @@ public class NavigationLayer : BaseNpcLayer
 
 	protected override void OnStart()
 	{
+		if ( !Npc.IsValid() ) return;
+
 		Agent = Npc.GetComponent<NavMeshAgent>();
 	}
 
