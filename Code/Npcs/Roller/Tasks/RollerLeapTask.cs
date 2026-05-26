@@ -1,12 +1,12 @@
-using Sandbox.Npcs.Rollermine;
+using Sandbox.Npcs.Roller;
 
-namespace Sandbox.Npcs.Rollermine.Tasks;
+namespace Sandbox.Npcs.Roller.Tasks;
 
 /// <summary>
 /// Leaps at the current target with a clean impulse (velocity zeroed first),
 /// then waits for cooldown before handing back to the roll task.
 /// </summary>
-public class RollermineLeapTask : TaskBase
+public sealed class RollerLeapTask : TaskBase
 {
 	private const float LeapCooldown = 1.2f;
 
@@ -14,7 +14,7 @@ public class RollermineLeapTask : TaskBase
 
 	protected override void OnStart()
 	{
-		var rollermine = Npc as RollermineNpc;
+		var rollermine = Npc as RollerNpc;
 		if ( rollermine is null ) return;
 
 		var rb = rollermine.Rigidbody;

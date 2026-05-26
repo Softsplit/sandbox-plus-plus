@@ -5,7 +5,7 @@ using Sandbox.UI;
 /// Maintains a per-player tracked object list populated from post-events.
 /// Limit checks iterate only the player's objects, not the entire scene.
 /// </summary>
-public sealed class LimitsSystem : GameObjectSystem<LimitsSystem>, Global.ISpawnEvents, IToolActionEvents
+internal sealed class LimitsSystem : GameObjectSystem<LimitsSystem>, Global.ISpawnEvents, IToolActionEvents
 {
 	[Range( -1, 1024 )]
 	[Title( "Max Props Per Player" ), Group( "Limits" )]
@@ -204,14 +204,14 @@ public sealed class LimitsSystem : GameObjectSystem<LimitsSystem>, Global.ISpawn
 		if ( e.Player is null ) return;
 
 		// TODO: this could be better, register something with the tool instead?
-		if ( CheckToolLimit<Balloon, BalloonEntity>( e, MaxBalloons ) ) return;
+		if ( CheckToolLimit<BalloonTool, BalloonEntity>( e, MaxBalloons ) ) return;
 		if ( CheckToolLimit<ThrusterTool, ThrusterEntity>( e, MaxThrusters ) ) return;
 		if ( CheckToolLimit<EmitterTool, EmitterEntity>( e, MaxEmitters, ToolInput.Primary ) ) return;
 		if ( CheckToolLimit<HoverballTool, HoverballEntity>( e, MaxHoverballs, ToolInput.Primary ) ) return;
 		if ( CheckToolLimit<WheelTool, WheelEntity>( e, MaxWheels, ToolInput.Primary ) ) return;
 
 		// TODO: same here :S
-		if ( MaxConstraints >= 0 && ( e.Tool is BaseConstraintToolMode || e.Tool is KeepUpright ) )
+		if ( MaxConstraints >= 0 && ( e.Tool is BaseConstraintToolMode || e.Tool is KeepUprightTool ) )
 		{
 			var count = Count( e.Player.SteamId, go => go.Tags.Contains( "constraint" ) );
 			if ( IsExceeded( MaxConstraints, count ) )

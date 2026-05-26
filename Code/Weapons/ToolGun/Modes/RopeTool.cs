@@ -3,7 +3,7 @@
 [Title( "#tool.name.rope" )]
 [ClassName( "rope" )]
 [Group( "#tool.group.constraints" )]
-public class Rope : BaseConstraintToolMode
+public sealed class RopeTool : BaseConstraintToolMode
 {
 	[Range( -500, 500 )]
 	[Property, Sync]

@@ -1,4 +1,3 @@
-using Sandbox;
 using System.Text.Json.Serialization;
 
 /// <summary>
@@ -17,9 +16,15 @@ public sealed class Ownable : Component, IPhysgunEvent, IToolgunEvent
 	public Connection Owner
 	{
 		get => Connection.All.FirstOrDefault( c => c.Id == _ownerId );
-		set => _ownerId = value?.Id ?? Guid.Empty;
+		internal set => _ownerId = value?.Id ?? Guid.Empty;
 	}
 
+	/// <summary>
+	/// Sets a gameObject as owned by a connection. If the gameObject already has an Ownable component, it'll just update the owner.
+	/// </summary>
+	/// <param name="go"></param>
+	/// <param name="owner"></param>
+	/// <returns></returns>
 	public static Ownable Set( GameObject go, Connection owner )
 	{
 		var ownable = go.GetOrAddComponent<Ownable>();
@@ -33,7 +38,7 @@ public sealed class Ownable : Component, IPhysgunEvent, IToolgunEvent
 	/// </summary>
 	[Title( "Prop Protection" )]
 	[ConVar( "sb.ownership_checks", ConVarFlags.Replicated | ConVarFlags.Server, Help = "Enforce ownership, players can only interact with their own props." )]
-	public static bool OwnershipChecks { get; set; } = false;
+	public static bool OwnershipChecks { get; private set; } = false;
 
 	internal bool CallerHasAccess( Connection caller ) => HasAccess( caller, Owner );
 
@@ -58,7 +63,6 @@ public sealed class Ownable : Component, IPhysgunEvent, IToolgunEvent
 			e.Cancelled = true;
 	}
 }
-
 
 public static class OwnableExtensions
 {

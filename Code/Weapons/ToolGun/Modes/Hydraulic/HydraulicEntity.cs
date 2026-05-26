@@ -1,7 +1,7 @@
 ﻿
 using Sandbox.Utility;
 
-public class HydraulicEntity : Component, IPlayerControllable
+public sealed class HydraulicEntity : Component, IPlayerControllable
 {
 	[Property, Range( 0, 1 )]
 	public GameObject OnEffect { get; set; }

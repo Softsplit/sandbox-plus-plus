@@ -1,12 +1,12 @@
 using Sandbox.Npcs.Layers;
-using Sandbox.Npcs.Rollermine.Schedules;
+using Sandbox.Npcs.Roller.Schedules;
 
-namespace Sandbox.Npcs.Rollermine;
+namespace Sandbox.Npcs.Roller;
 
 /// <summary>
 /// A physics-driven NPC that chases players, leaps at them, and bounces off dealing damage on contact.
 /// </summary>
-public class RollermineNpc : Npc, Component.IDamageable, Component.ICollisionListener
+public sealed class RollerNpc : Npc, Component.IDamageable, Component.ICollisionListener
 {
 	[Property, ClientEditable, Range( 1f, 500f ), Sync]
 	public float Health { get; set; } = 35f;
@@ -188,9 +188,9 @@ public class RollermineNpc : Npc, Component.IDamageable, Component.ICollisionLis
 	{
 		var target = Senses.GetNearestVisible();
 		if ( target.IsValid() )
-			return GetSchedule<RollermineChaseSchedule>();
+			return GetSchedule<RollerChaseSchedule>();
 
-		return GetSchedule<RollermineIdleSchedule>();
+		return GetSchedule<RollerIdleSchedule>();
 	}
 
 	void IDamageable.OnDamage( in DamageInfo damage )

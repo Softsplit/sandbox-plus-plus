@@ -1,7 +1,7 @@
 ﻿using Sandbox.Rendering;
 using Sandbox.Utility;
 
-public class RpgWeapon : BaseWeapon
+public sealed class RpgWeapon : BaseWeapon
 {
 	[Property] public float TimeBetweenShots { get; set; } = 2f;
 	[Property] public GameObject ProjectilePrefab { get; set; }

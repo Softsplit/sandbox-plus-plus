@@ -1,7 +1,7 @@
 /// <summary>
 /// Dead players become these. They try to observe their last corpse. 
 /// </summary>
-public sealed class PlayerObserver : Component
+internal sealed class PlayerObserver : Component
 {
 	Angles EyeAngles;
 	TimeSince timeSinceStarted;

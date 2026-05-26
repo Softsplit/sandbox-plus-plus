@@ -6,7 +6,7 @@ namespace Sandbox.Npcs.Schedules;
 /// <summary>
 /// Wander to a random nearby point, avoiding player directions.
 /// </summary>
-public class ScientistWanderSchedule : ScheduleBase
+public sealed class ScientistWanderSchedule : ScheduleBase
 {
 	private static readonly string[] WanderLines =
 	[

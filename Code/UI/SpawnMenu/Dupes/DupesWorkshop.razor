@@ -24,7 +24,7 @@
 
 				@if (context is Storage.QueryItem item)
                 {
-					<WorkshopIcon Item="@item" @onclick=@( () => _ = Duplicator.FromWorkshop( item ) )></WorkshopIcon>
+					<WorkshopIcon Item="@item" @onclick=@( () => _ = DuplicatorTool.FromWorkshop( item ) )></WorkshopIcon>
                 }
 
             </Item>

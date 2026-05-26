@@ -6,7 +6,7 @@ namespace Sandbox.Npcs.Schedules;
 /// <summary>
 /// Panic flee — scream while sprinting away from the source.
 /// </summary>
-public class ScientistFleeSchedule : ScheduleBase
+public sealed class ScientistFleeSchedule : ScheduleBase
 {
 	private static readonly string[] PanicLines =
 	[

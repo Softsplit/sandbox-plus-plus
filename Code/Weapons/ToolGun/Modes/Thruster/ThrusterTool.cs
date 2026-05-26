@@ -5,7 +5,7 @@
 [Icon( "🚀" )]
 [ClassName( "thrustertool" )]
 [Group( "#tool.group.building" )]
-public class ThrusterTool : ToolMode
+public sealed class ThrusterTool : ToolMode
 {
 	public override bool UseSnapGrid => true;
 	public override IEnumerable<string> TraceIgnoreTags => ["constraint", "collision"];

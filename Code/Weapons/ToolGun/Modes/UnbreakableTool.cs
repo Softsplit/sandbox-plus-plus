@@ -3,7 +3,7 @@
 [Title( "#tool.name.unbreakable" )]
 [ClassName( "unbreakable" )]
 [Group( "#tool.group.tools" )]
-public class Unbreakable : ToolMode
+public sealed class UnbreakableTool : ToolMode
 {
 	public override string Description => "#tool.hint.unbreakable.description";
 

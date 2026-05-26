@@ -1,5 +1,5 @@
 ﻿[Alias( "dynamite" )]
-public class DynamiteEntity : Component, IPlayerControllable, Component.IDamageable
+public sealed class DynamiteEntity : Component, IPlayerControllable, Component.IDamageable
 {
 	[Property, Range( 1, 500 ), Step( 1 ), ClientEditable]
 	public float Damage { get; set; } = 128;

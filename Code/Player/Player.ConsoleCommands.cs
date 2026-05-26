@@ -1,24 +1,6 @@
 public sealed partial class Player
 {
 	/// <summary>
-	/// Find a player for this connection
-	/// </summary>
-	public static Player FindForConnection( Connection c )
-	{
-		return Game.ActiveScene.GetAll<Player>().FirstOrDefault( x => x.Network.Owner == c );
-	}
-
-	/// <summary>
-	/// Get player from a connecction id
-	/// </summary>
-	/// <param name="playerId"></param>
-	/// <returns></returns>
-	public static Player For( Guid playerId )
-	{
-		return Game.ActiveScene.GetAll<Player>().FirstOrDefault( x => x.PlayerId.Equals( playerId ) );
-	}
-
-	/// <summary>
 	/// Kill yourself
 	/// </summary>
 	[ConCmd( "kill" )]
@@ -60,7 +42,7 @@ public sealed partial class Player
 	}
 
 	/// <summary>
-	/// Switch to another map
+	/// Undo the last action for the calling player
 	/// </summary>
 	[ConCmd( "undo", ConVarFlags.Server )]
 	public static void RunUndo( Connection source )

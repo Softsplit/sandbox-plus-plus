@@ -3,7 +3,7 @@ using Sandbox.MovieMaker;
 
 namespace Sandbox;
 
-public static class DemoRecording
+internal static class DemoRecording
 {
 	[DefaultMovieRecorderOptions]
 	public static MovieRecorderOptions BuildMovieRecorderOptions( MovieRecorderOptions options )

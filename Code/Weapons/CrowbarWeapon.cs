@@ -1,3 +1,3 @@
-public class CrowbarWeapon : MeleeWeapon
+public sealed class CrowbarWeapon : MeleeWeapon
 {
 }

@@ -5,7 +5,7 @@ using Sandbox.UI;
 [Icon( "🖌️" )]
 [ClassName( "decaltool" )]
 [Group( "#tool.group.render" )]
-public class DecalTool : ToolMode
+public sealed class DecalTool : ToolMode
 {
 	[Property, ResourceSelect( Extension = "decal", AllowPackages = true ), Title( "Decal" )]
 	public string Decal { get; set; }

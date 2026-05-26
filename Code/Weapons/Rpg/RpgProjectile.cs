@@ -2,7 +2,7 @@
 /// <summary>
 /// An RPG projectile. It supports either being fired in a set direction, or continuously updated with an end target.
 /// </summary>
-public partial class RpgProjectile : Projectile
+public sealed partial class RpgProjectile : ProjectileEntity
 {
 	[Property] public SoundEvent LoopingSound { get; set; }
 	[Property] public float ExplosionRadius { get; set; } = 256f;

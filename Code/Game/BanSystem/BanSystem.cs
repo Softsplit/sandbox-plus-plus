@@ -77,7 +77,7 @@ public sealed class BanSystem : GameObjectSystem<BanSystem>, Component.INetworkL
 	/// RPC to ban a connected player. Caller must be host or have admin permission.
 	/// </summary>
 	[Rpc.Host]
-	public static void RpcBanPlayer( Connection target, string reason = "Banned" )
+	internal static void RpcBanPlayer( Connection target, string reason = "Banned" )
 	{
 		if ( !Rpc.Caller.HasPermission( "admin" ) ) return;
 
@@ -89,7 +89,7 @@ public sealed class BanSystem : GameObjectSystem<BanSystem>, Component.INetworkL
 	/// Usage: ban [name|steamid] [reason]
 	/// </summary>
 	[ConCmd( "ban" )]
-	public static void BanCommand( string target, string reason = "Banned" )
+	internal static void BanCommand( string target, string reason = "Banned" )
 	{
 		if ( !Networking.IsHost ) return;
 

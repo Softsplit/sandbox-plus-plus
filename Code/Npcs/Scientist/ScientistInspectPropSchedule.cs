@@ -7,7 +7,7 @@ namespace Sandbox.Npcs.Schedules;
 /// Walk to a nearby prop, look at it, and maybe comment on it.
 /// If the prop is small enough, pick it up, carry it around, then drop it.
 /// </summary>
-public class ScientistInspectPropSchedule : ScheduleBase
+public sealed class ScientistInspectPropSchedule : ScheduleBase
 {
 	private static readonly string[] InspectLines =
 	[

@@ -4,7 +4,7 @@ using Sandbox.UI;
 [Title( "#tool.name.trail" )]
 [ClassName( "trail" )]
 [Group( "#tool.group.render" )]
-public class Trail : ToolMode
+public sealed class TrailTool : ToolMode
 {
 	[Property, ResourceSelect( Extension = "ldef", AllowPackages = true ), Title( "Line" )]
 	public string Definition { get; set; } = "entities/trails/basic.ldef";

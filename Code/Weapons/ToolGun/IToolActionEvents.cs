@@ -12,7 +12,7 @@ public interface IToolActionEvents : ISceneEvent<IToolActionEvents>
 	{
 		/// <summary>
 		/// The tool mode that is about to execute.
-		/// Check <c>e.Tool is Balloon</c>, <c>e.Tool is Weld</c>, etc. for tool-specific logic.
+		/// Check <c>e.Tool is BalloonTool</c>, <c>e.Tool is WeldTool</c>, etc. for tool-specific logic.
 		/// </summary>
 		public ToolMode Tool { get; init; }
 

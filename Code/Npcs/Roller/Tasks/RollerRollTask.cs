@@ -1,13 +1,13 @@
-using Sandbox.Npcs.Rollermine;
+using Sandbox.Npcs.Roller;
 
-namespace Sandbox.Npcs.Rollermine.Tasks;
+namespace Sandbox.Npcs.Roller.Tasks;
 
 /// <summary>
 /// Rolls toward the current target by applying force and torque.
 /// Succeeds when within LeapRange.  Fails if target is lost.
-/// Force/torque values are configured on RollermineNpc.
+/// Force/torque values are configured on RollerNpc.
 /// </summary>
-public class RollermineRollTask : TaskBase
+public sealed class RollerRollTask : TaskBase
 {
 	/// <summary>If lateral speed stays below this for StuckTime, jump to un-stick.</summary>
 	private const float StuckSpeedThreshold = 40f;
@@ -18,7 +18,7 @@ public class RollermineRollTask : TaskBase
 
 	protected override TaskStatus OnUpdate()
 	{
-		var rollermine = Npc as RollermineNpc;
+		var rollermine = Npc as RollerNpc;
 		if ( rollermine is null ) return TaskStatus.Failed;
 
 		var rb = rollermine.Rigidbody;

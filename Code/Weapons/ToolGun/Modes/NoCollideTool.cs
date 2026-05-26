@@ -3,7 +3,7 @@
 [Title( "#tool.name.nocollide" )]
 [ClassName( "nocollide" )]
 [Group( "#tool.group.tools" )]
-public class NoCollide : BaseConstraintToolMode
+public sealed class NoCollideTool : BaseConstraintToolMode
 {
 	public override string Description => Stage == 1 ? "#tool.hint.nocollide.stage1" : "#tool.hint.nocollide.stage0";
 	public override string PrimaryAction => Stage == 1 ? "#tool.hint.nocollide.finish" : "#tool.hint.nocollide.source";

@@ -1,14 +1,14 @@
 using Sandbox.Utility;
 
-namespace Sandbox.Npcs.Rollermine;
+namespace Sandbox.Npcs.Roller;
 
 /// <summary>
 /// Drives morph targets and material glow on the rollermine mesh based on hunting state.
 /// Same mesh as hoverball — uses Coils_Deployed and Pins_Deployed morphs.
 /// </summary>
-public sealed class RollermineMorphs : Component
+public sealed class RollerMorphs : Component
 {
-	private RollermineNpc _rollermine;
+	private RollerNpc _rollermine;
 	private SkinnedModelRenderer _renderer;
 	private Material _glowMaterialCopy;
 
@@ -34,7 +34,7 @@ public sealed class RollermineMorphs : Component
 
 	protected override void OnStart()
 	{
-		_rollermine = GetComponent<RollermineNpc>();
+		_rollermine = GetComponent<RollerNpc>();
 		_renderer = GetComponentInChildren<SkinnedModelRenderer>();
 
 		if ( GlowMaterial is not null && _renderer.IsValid() )

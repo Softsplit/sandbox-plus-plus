@@ -1,11 +1,11 @@
 using Sandbox.Npcs.Tasks;
 
-namespace Sandbox.Npcs.Rollermine.Schedules;
+namespace Sandbox.Npcs.Roller.Schedules;
 
 /// <summary>
-/// Rollermine idles when no target is visible — waits briefly then re-evaluates.
+/// Roller idles when no target is visible — waits briefly then re-evaluates.
 /// </summary>
-public class RollermineIdleSchedule : ScheduleBase
+public sealed class RollerIdleSchedule : ScheduleBase
 {
 	protected override void OnStart()
 	{

@@ -1,6 +1,6 @@
 ﻿using Sandbox.Rendering;
 
-public class GlockWeapon : IronSightsWeapon
+public sealed class GlockWeapon : IronSightsWeapon
 {
 	[Property] public float PrimaryFireRate { get; set; } = 0.15f;
 

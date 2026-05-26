@@ -16,7 +16,7 @@
     "OwnerTransfer": 1,
     "Components": [
       {
-        "__type": "Sandbox.Npcs.Rollermine.RollermineNpc",
+        "__type": "Sandbox.Npcs.Roller.RollerNpc",
         "__guid": "d4a29b17-3f65-4c80-b752-1e8a5c7d9e02",
         "__enabled": true,
         "Flags": 0,
@@ -177,7 +177,7 @@
         "StartAsleep": false
       },
       {
-        "__type": "Sandbox.Npcs.Rollermine.RollermineMorphs",
+        "__type": "Sandbox.Npcs.Roller.RollerMorphs",
         "__guid": "08db7bd7-6381-412e-bd62-050e342a56ed",
         "__enabled": true,
         "Flags": 0,

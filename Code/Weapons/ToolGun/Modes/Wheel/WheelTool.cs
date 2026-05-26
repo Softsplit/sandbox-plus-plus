@@ -5,7 +5,7 @@
 [Icon( "🛞" )]
 [ClassName( "wheeltool" )]
 [Group( "#tool.group.building" )]
-public class WheelTool : ToolMode
+public sealed class WheelTool : ToolMode
 {
 	public override bool UseSnapGrid => true;
 	public override IEnumerable<string> TraceIgnoreTags => ["constraint", "collision"];

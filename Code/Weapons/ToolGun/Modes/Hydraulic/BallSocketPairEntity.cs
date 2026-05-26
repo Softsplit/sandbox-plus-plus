@@ -2,7 +2,7 @@
 /// <summary>
 /// A pair of ball sockets, we try to align the balls towards eachother.
 /// </summary>
-public class BallSocketPair : Component
+public sealed class BallSocketPairEntity : Component
 {
 	[Property]
 	public SkinnedModelRenderer BallModelA { get; set; }

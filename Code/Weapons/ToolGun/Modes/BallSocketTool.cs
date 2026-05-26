@@ -3,7 +3,7 @@
 [Title( "#tool.name.ballsocket" )]
 [ClassName( "ballsocket" )]
 [Group( "#tool.group.constraints" )]
-public class BallSocket : BaseConstraintToolMode
+public sealed class BallSocketTool : BaseConstraintToolMode
 {
 	[Property, Sync]
 	public bool EnableCollision { get; set; } = false;

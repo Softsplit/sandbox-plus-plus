@@ -1,4 +1,4 @@
-public class BalloonEntity : Component, Component.IDamageable
+public sealed class BalloonEntity : Component, Component.IDamageable
 {
 	[Property] public PrefabFile PopEffect { get; set; }
 	[Property] public SoundEvent PopSound { get; set; }

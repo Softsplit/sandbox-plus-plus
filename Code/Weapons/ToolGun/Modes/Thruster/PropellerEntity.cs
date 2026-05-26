@@ -2,7 +2,7 @@
 /// Attach to a thruster GameObject to spin a target model based on thrust output.
 /// The model spins around its local up axis proportional to ThrustAmount.
 /// </summary>
-public class Propeller : Component
+public sealed class PropellerEntity : Component
 {
 	/// <summary>
 	/// The model renderer to spin.

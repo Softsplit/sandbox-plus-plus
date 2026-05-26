@@ -1,5 +1,5 @@
 ﻿[Alias( "hoverball" )]
-public class HoverballEntity : Component, IPlayerControllable
+public sealed class HoverballEntity : Component, IPlayerControllable
 {
 	/// <summary>
 	/// Is the hoverball on?

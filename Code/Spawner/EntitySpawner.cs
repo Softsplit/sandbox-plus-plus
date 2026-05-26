@@ -1,7 +1,7 @@
 /// <summary>
 /// Payload for spawning a scripted entity prefab.
 /// </summary>
-public class EntitySpawner : ISpawner
+public sealed class EntitySpawner : ISpawner
 {
 	public string DisplayName { get; private set; }
 	public string FullIdent => Path is not null && !Path.EndsWith( ".sent" ) ? Path : null;

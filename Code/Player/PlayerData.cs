@@ -6,14 +6,14 @@ public sealed partial class PlayerData : Component, Global.ISaveEvents
 	/// <summary>
 	/// Unique Id per each player and bot, equal to owning Player connection Id if it's a real player.
 	/// </summary>
-	[Property] public Guid PlayerId { get; set; }
-	[Property] public long SteamId { get; set; } = -1L;
-	[Property] public string DisplayName { get; set; }
+	[Property] public Guid PlayerId { get; internal set; }
+	[Property] public long SteamId { get; internal set; } = -1L;
+	[Property] public string DisplayName { get; internal set; }
 
-	[Sync] public int Kills { get; set; }
-	[Sync] public int Deaths { get; set; }
+	[Sync] public int Kills { get; internal set; }
+	[Sync] public int Deaths { get; internal set; }
 
-	[Sync] public bool IsGodMode { get; set; }
+	[Sync] public bool IsGodMode { get; internal set; }
 
 	public Connection Connection => Connection.Find( PlayerId );
 
@@ -56,7 +56,7 @@ public sealed partial class PlayerData : Component, Global.ISaveEvents
 	/// PlayerData can trigger a respawn if the PlayerObserver is destroyed (e.g. by cleanup)
 	/// before it fires.
 	/// </summary>
-	public void MarkForRespawn()
+	internal void MarkForRespawn()
 	{
 		_needsRespawn = true;
 		_timeSinceDied = 0;
@@ -67,7 +67,7 @@ public sealed partial class PlayerData : Component, Global.ISaveEvents
 	/// or by OnUpdate after the timeout. Single entry point for all respawn logic.
 	/// </summary>
 	[Rpc.Host( NetFlags.OwnerOnly | NetFlags.Reliable )]
-	public void RequestRespawn()
+	internal void RequestRespawn()
 	{
 		_needsRespawn = false;
 
@@ -100,7 +100,7 @@ public sealed partial class PlayerData : Component, Global.ISaveEvents
 	/// </summary>
 	/// <param name="identifier"></param>
 	/// <param name="amount"></param>
-	public void AddStat( string identifier, int amount = 1 )
+	internal void AddStat( string identifier, int amount = 1 )
 	{
 		if ( Application.CheatsEnabled ) return;
 

@@ -2,7 +2,7 @@ using Sandbox.Npcs.Tasks;
 
 namespace Sandbox.Npcs.Schedules;
 
-public class ScientistSearchSchedule : ScheduleBase
+public sealed class ScientistSearchSchedule : ScheduleBase
 {
 	public Vector3 Target { get; set; }
 

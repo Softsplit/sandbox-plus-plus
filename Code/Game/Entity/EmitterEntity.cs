@@ -18,7 +18,7 @@ public enum EmitMode
 /// The emitter prefab is defined by a <see cref="ScriptedEmitter"/> resource.
 /// </summary>
 [Alias( "emitter" )]
-public class EmitterEntity : Component, IPlayerControllable
+public sealed class EmitterEntity : Component, IPlayerControllable
 {
 	/// <summary>
 	/// The emitter definition points to a prefab containing a particle system.

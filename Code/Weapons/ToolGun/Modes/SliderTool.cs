@@ -3,7 +3,7 @@
 [Title( "#tool.name.slider" )]
 [ClassName( "slider" )]
 [Group( "#tool.group.constraints" )]
-public class Slider : BaseConstraintToolMode
+public sealed class SliderTool : BaseConstraintToolMode
 {
 	public override string Description => Stage == 1 ? "#tool.hint.slider.stage1" : "#tool.hint.slider.stage0";
 	public override string PrimaryAction => Stage == 1 ? "#tool.hint.slider.finish" : "#tool.hint.slider.source";

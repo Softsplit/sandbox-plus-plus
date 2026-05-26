@@ -1,7 +1,7 @@
 using Sandbox.Utility;
 using static Sandbox.Component;
 
-public sealed class FreeCamGameObjectSystem : GameObjectSystem<FreeCamGameObjectSystem>, ISceneStage
+internal sealed class FreeCamGameObjectSystem : GameObjectSystem<FreeCamGameObjectSystem>, ISceneStage
 {
 	public bool IsActive { get; set; }
 
@@ -18,7 +18,6 @@ public sealed class FreeCamGameObjectSystem : GameObjectSystem<FreeCamGameObject
 
 	public FreeCamGameObjectSystem( Scene scene ) : base( scene )
 	{
-
 	}
 
 	void ISceneStage.Start()
@@ -27,8 +26,6 @@ public sealed class FreeCamGameObjectSystem : GameObjectSystem<FreeCamGameObject
 			return;
 
 		Input.Suppressed = true;
-
-
 	}
 
 	void StartFreeCamMode()
@@ -100,7 +97,6 @@ public sealed class FreeCamGameObjectSystem : GameObjectSystem<FreeCamGameObject
 		}
 	}
 
-
 	void UpdateCameraPosition( FreeCamOverlay overlay )
 	{
 		var speed = 50;
@@ -111,7 +107,6 @@ public sealed class FreeCamGameObjectSystem : GameObjectSystem<FreeCamGameObject
 		{
 			fov += Input.MouseDelta.y * 0.1f;
 			fov = fov.Clamp( 1, 120 );
-
 		}
 		else
 		{
@@ -119,7 +114,6 @@ public sealed class FreeCamGameObjectSystem : GameObjectSystem<FreeCamGameObject
 		}
 
 		var velocity = angles.ToRotation() * Input.AnalogMove * speed;
-
 		position += velocity * RealTime.SmoothDelta;
 
 		smoothPosition = smoothPosition.LerpTo( position, MathF.Pow( RealTime.SmoothDelta * 16.0f, overlay.CameraSmoothing * 2.0f ) );

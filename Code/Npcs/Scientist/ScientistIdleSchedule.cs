@@ -5,7 +5,7 @@ namespace Sandbox.Npcs.Schedules;
 /// <summary>
 /// Idle in place — glance around in a natural forward arc and occasionally mutter.
 /// </summary>
-public class ScientistIdleSchedule : ScheduleBase
+public sealed class ScientistIdleSchedule : ScheduleBase
 {
 	private static readonly string[] IdleLines =
 	[

@@ -1,7 +1,7 @@
 /// <summary>
 /// Record stats for the local player
 /// </summary>
-public sealed class PlayerStats : Component, Local.IPlayerEvents
+internal sealed class PlayerStats : Component, Local.IPlayerEvents
 {
 	[RequireComponent] public Player Player { get; set; }
 

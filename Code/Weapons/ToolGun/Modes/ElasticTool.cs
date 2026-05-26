@@ -2,7 +2,7 @@
 [Title( "#tool.name.elastic" )]
 [ClassName( "elastic" )]
 [Group( "#tool.group.constraints" )]
-public class Elastic : BaseConstraintToolMode
+public sealed class ElasticTool : BaseConstraintToolMode
 {
 	[Range( 0, 15 )]
 	[Property, Sync]

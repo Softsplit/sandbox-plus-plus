@@ -6,7 +6,7 @@ using System.Text.Json.Nodes;
 [Title( "#tool.name.duplicator" )]
 [ClassName( "duplicator" )]
 [Group( "#tool.group.building" )]
-public partial class Duplicator : ToolMode
+public sealed partial class DuplicatorTool : ToolMode
 {
 	/// <summary>
 	/// When we right click, to "copy" something, we create a Duplication object
@@ -265,9 +265,9 @@ public partial class Duplicator : ToolMode
 		var inventory = localPlayer.GetComponent<PlayerInventory>();
 		if ( !inventory.IsValid() ) return;
 
-		inventory.SetToolMode( "Duplicator" );
+		inventory.SetToolMode( "DuplicatorTool" );
 
-		var toolmode = localPlayer.GetComponentInChildren<Duplicator>( true );
+		var toolmode = localPlayer.GetComponentInChildren<DuplicatorTool>( true );
 
 		// we don't have a duplicator tool!
 		if ( toolmode is null ) return;

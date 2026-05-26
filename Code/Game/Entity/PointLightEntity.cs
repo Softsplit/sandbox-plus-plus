@@ -1,6 +1,6 @@
 ﻿
 
-public class PointLightEntity : Component, IPlayerControllable
+public sealed class PointLightEntity : Component, IPlayerControllable
 {
 	[Property, ClientEditable, Group( "Light" )]
 	public bool On { get; set { field = value; UpdateLight(); } } = true;

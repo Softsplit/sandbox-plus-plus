@@ -2,7 +2,7 @@
 /// <summary>
 /// Quick data folder file storage, good for saving local data
 /// </summary>
-public static class LocalData
+internal static class LocalData
 {
 	/// <summary>
 	/// Serialize <paramref name="value"/> and write it to <c>{key}.json</c> under <see cref="FileSystem.Data"/>.

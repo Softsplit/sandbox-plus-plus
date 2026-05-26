@@ -3,7 +3,7 @@ using Sandbox.Npcs.Schedules;
 
 namespace Sandbox.Npcs.Scientist;
 
-public class ScientistNpc : Npc, Component.IDamageable
+public sealed class ScientistNpc : Npc, Component.IDamageable
 {
 	[Property, ClientEditable, Range( 1, 100 ), Sync]
 	public float Health { get; set; } = 100f;

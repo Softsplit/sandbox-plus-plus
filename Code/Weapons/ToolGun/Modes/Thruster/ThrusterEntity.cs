@@ -1,5 +1,5 @@
 ﻿[Alias( "thruster" )]
-public class ThrusterEntity : Component, IPlayerControllable
+public sealed class ThrusterEntity : Component, IPlayerControllable
 {
 	[Property, Range( 0, 1 )]
 	public GameObject OnEffect { get; set; }

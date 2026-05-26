@@ -3,7 +3,7 @@
 [Title( "#tool.name.weld" )]
 [ClassName( "weld" )]
 [Group( "#tool.group.constraints" )]
-public class Weld : BaseConstraintToolMode
+public sealed class WeldTool : BaseConstraintToolMode
 {
 	[Property, Sync]
 	public bool EasyMode { get; set; } = true;

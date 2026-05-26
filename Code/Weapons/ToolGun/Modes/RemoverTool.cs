@@ -2,7 +2,7 @@
 [Title( "#tool.name.remover" )]
 [ClassName( "remover" )]
 [Group( "#tool.group.tools" )]
-public class Remover : ToolMode
+public sealed class RemoverTool : ToolMode
 {
 	public override bool TraceHitboxes => true;
 	public override string Description => "#tool.hint.remover.description";

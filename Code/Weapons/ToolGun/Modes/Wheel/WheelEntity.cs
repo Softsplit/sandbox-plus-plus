@@ -1,4 +1,4 @@
-﻿public class WheelEntity : Component, IPlayerControllable
+﻿public sealed class WheelEntity : Component, IPlayerControllable
 {
 	[Property, Range( 0, 1 ), ClientEditable]
 	public bool Reversed { get; set; } = false;

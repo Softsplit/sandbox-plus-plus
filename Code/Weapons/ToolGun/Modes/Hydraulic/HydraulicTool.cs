@@ -3,7 +3,7 @@
 [Icon( "⚙️" )]
 [ClassName( "HydraulicTool" )]
 [Group( "#tool.group.building" )]
-public class HydraulicTool : BaseConstraintToolMode
+public sealed class HydraulicTool : BaseConstraintToolMode
 {
 	public override string Description => Stage == 1 ? "#tool.hint.hydraulictool.stage1" : "#tool.hint.hydraulictool.stage0";
 	public override string PrimaryAction => Stage == 1 ? "#tool.hint.hydraulictool.finish" : "#tool.hint.hydraulictool.source";
@@ -178,7 +178,7 @@ public class HydraulicTool : BaseConstraintToolMode
 		lineRenderer.Width = 1.5f;
 		lineRenderer.Color = Color.White;
 
-		var aligner = goA.AddComponent<BallSocketPair>();
+		var aligner = goA.AddComponent<BallSocketPairEntity>();
 		aligner.BallModelA = skinA;
 		aligner.BallModelB = skinB;
 		aligner.ShaftRenderer = lineRenderer;

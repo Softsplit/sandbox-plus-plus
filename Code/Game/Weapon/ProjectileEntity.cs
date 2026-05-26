@@ -1,7 +1,7 @@
 /// <summary>
 /// A projectile. It explodes when it hits something.
 /// </summary>
-public class Projectile : Component, Component.ICollisionListener
+public class ProjectileEntity : Component, Component.ICollisionListener
 {
 	[RequireComponent] public Rigidbody Rigidbody { get; set; }
 

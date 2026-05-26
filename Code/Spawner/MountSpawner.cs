@@ -2,7 +2,7 @@
 /// Like <see cref="PropSpawner"/>, but attaches <see cref="MountMetadata"/> to the spawned object
 /// so clients without the mount installed can show a fallback cube and install prompt.
 /// </summary>
-public class MountSpawner : ISpawner
+public sealed class MountSpawner : ISpawner
 {
 	record Metadata( string GameTitle );
 

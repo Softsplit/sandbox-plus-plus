@@ -1,7 +1,7 @@
 /// <summary>
 /// Server-controlled settings replicated to all clients.
 /// </summary>
-public static class ServerSettings
+internal static class ServerSettings
 {
 	/// <summary>
 	/// When enabled, developer entities are visible in the spawn menu for all players.

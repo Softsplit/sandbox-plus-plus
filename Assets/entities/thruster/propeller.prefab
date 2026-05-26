@@ -73,7 +73,7 @@
         }
       },
       {
-        "__type": "Propeller",
+        "__type": "PropellerEntity",
         "__guid": "d9b8e80d-f444-4277-bd21-81961c643da3",
         "__enabled": true,
         "Flags": 0,

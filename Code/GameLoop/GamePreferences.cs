@@ -1,7 +1,7 @@
 /// <summary>
 /// The local user's preferences in Deathmatch
 /// </summary>
-public static class GamePreferences
+internal static class GamePreferences
 {
 	/// <summary>
 	/// Enables automatic switching to better weapons on item pickup

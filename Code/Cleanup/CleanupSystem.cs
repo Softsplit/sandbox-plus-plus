@@ -11,7 +11,7 @@ public interface ICleanupEvents
 /// A system that tracks the baseline scene state and allows resetting the map to its original state.
 /// Removes all spawned props and restores destroyed map objects while leaving players untouched.
 /// </summary>
-public sealed class CleanupSystem : GameObjectSystem<CleanupSystem>, ISceneLoadingEvents
+internal sealed class CleanupSystem : GameObjectSystem<CleanupSystem>, ISceneLoadingEvents
 {
 	/// <summary>
 	/// Set of GameObjects that existed in the original scene baseline.

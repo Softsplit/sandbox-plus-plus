@@ -5,7 +5,7 @@ using Sandbox.UI;
 [Icon( "💨" )]
 [ClassName( "emittertool" )]
 [Group( "#tool.group.building" )]
-public class EmitterTool : ToolMode
+public sealed class EmitterTool : ToolMode
 {
 	public override bool UseSnapGrid => true;
 	public override IEnumerable<string> TraceIgnoreTags => ["constraint", "collision"];

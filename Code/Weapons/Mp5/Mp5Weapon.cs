@@ -1,6 +1,6 @@
 ﻿using Sandbox.Rendering;
 
-public class Mp5Weapon : IronSightsWeapon
+public sealed class Mp5Weapon : IronSightsWeapon
 {
 	[Property] public float TimeBetweenShots { get; set; } = 0.1f;
 

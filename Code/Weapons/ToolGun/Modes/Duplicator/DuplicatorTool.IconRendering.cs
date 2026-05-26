@@ -1,7 +1,7 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Nodes;
 
-public partial class Duplicator
+public partial class DuplicatorTool
 {
 	/// <summary>
 	/// Render duplicator Json to a bitmap

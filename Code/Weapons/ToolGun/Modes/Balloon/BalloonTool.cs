@@ -4,7 +4,7 @@
 [Title( "#tool.name.balloon" )]
 [ClassName( "balloon" )]
 [Group( "#tool.group.building" )]
-public class Balloon : ToolMode
+public sealed class BalloonTool : ToolMode
 {
 	public override bool UseSnapGrid => true;
 	[Property, ResourceSelect( Extension = "bdef", AllowPackages = true ), Title( "Balloon" )]

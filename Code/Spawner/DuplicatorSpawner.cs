@@ -4,7 +4,7 @@ using System.Text.Json.Nodes;
 /// <summary>
 /// Payload for spawning a duplicator contraption.
 /// </summary>
-public class DuplicatorSpawner : ISpawner
+public sealed class DuplicatorSpawner : ISpawner
 {
 	public string DisplayName { get; private set; } = "Duplication";
 	public string Icon { get; init; }

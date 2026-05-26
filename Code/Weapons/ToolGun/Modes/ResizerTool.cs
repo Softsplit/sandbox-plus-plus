@@ -3,7 +3,7 @@
 [Title( "#tool.name.resizer" )]
 [ClassName( "resizer" )]
 [Group( "#tool.group.tools" )]
-public class Resizer : ToolMode
+public sealed class ResizerTool : ToolMode
 {
 	public override IEnumerable<string> TraceIgnoreTags => [];
 

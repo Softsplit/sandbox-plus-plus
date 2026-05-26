@@ -5,7 +5,7 @@
 [Icon( "🎱" )]
 [ClassName( "hoverballtool" )]
 [Group( "#tool.group.building" )]
-public class HoverballTool : ToolMode
+public sealed class HoverballTool : ToolMode
 {
 	public override IEnumerable<string> TraceIgnoreTags => ["constraint", "collision"];
 

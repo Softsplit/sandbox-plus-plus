@@ -4,7 +4,7 @@
 [Icon( "👆🏻" )]
 [ClassName( "upright" )]
 [Group( "#tool.group.constraints" )]
-public class KeepUpright : ToolMode
+public sealed class KeepUprightTool : ToolMode
 {
 	[Range( 0, 20 )]
 	[Property, Sync]

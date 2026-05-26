@@ -7,7 +7,7 @@ namespace Sandbox;
 /// <summary>
 /// A saving/loading system that captures the differences between the current scene state and the original scene.
 /// </summary>
-public sealed class SaveSystem : GameObjectSystem<SaveSystem>, ISceneLoadingEvents
+internal sealed class SaveSystem : GameObjectSystem<SaveSystem>, ISceneLoadingEvents
 {
 	private const int CurrentSaveVersion = 2;
 

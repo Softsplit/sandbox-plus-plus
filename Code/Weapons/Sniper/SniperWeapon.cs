@@ -1,6 +1,6 @@
 using Sandbox.Rendering;
 
-public class SniperWeapon : BaseBulletWeapon
+public sealed class SniperWeapon : BaseBulletWeapon
 {
 	[Property] public float PrimaryFireRate { get; set; } = 1.2f;
 	[Property] public float ScopedFov { get; set; } = 20f;

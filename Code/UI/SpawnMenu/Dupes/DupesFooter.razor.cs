@@ -7,7 +7,7 @@ public partial class DupesFooter : Panel
 
 	bool CanSaveDupe()
 	{
-		var mode = Player.FindLocalToolMode<Duplicator>();
+		var mode = Player.FindLocalToolMode<DuplicatorTool>();
 		if ( mode is null ) return false;
 
 		// toolgun isn't out, not in duplicator mode
@@ -20,7 +20,7 @@ public partial class DupesFooter : Panel
 
 	void MakeSave()
 	{
-		var mode = Player.FindLocalToolMode<Duplicator>();
+		var mode = Player.FindLocalToolMode<DuplicatorTool>();
 		if ( mode is null ) return;
 
 		mode.Save();
