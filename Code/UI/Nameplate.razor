@@ -13,10 +13,10 @@
 				{
 					<div class="speaking-glow" style="opacity: @GetGlowOpacity(); transform: scale( @GetGlowScale() )"></div>
 				}
-				<div class="avatar" style="background-image: url( avatar:@Player.SteamId )"></div>
+				<div class="avatar" style="background-image: url( avatar:@Player.Network.Owner?.SteamId )"></div>
 			</div>
 
-			<label class="name">@Player.DisplayName</label>
+			<label class="name">@Player.Network.Owner?.DisplayName</label>
 		</div>
 
 	</root>

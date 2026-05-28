@@ -108,7 +108,7 @@ public abstract partial class ToolMode : Component, IToolInfo
 		{
 			Tool = this,
 			Input = input,
-			Player = Player?.PlayerData
+			Player = Player?.Network.Owner
 		};
 
 		Scene.RunEvent<IToolActionEvents>( x => x.OnToolAction( data ) );
@@ -128,7 +128,7 @@ public abstract partial class ToolMode : Component, IToolInfo
 		{
 			Tool = this,
 			Input = input,
-			Player = Player?.PlayerData,
+			Player = Player?.Network.Owner,
 			CreatedObjects = objects
 		} ) );
 	}

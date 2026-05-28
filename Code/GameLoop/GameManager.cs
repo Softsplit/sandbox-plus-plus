@@ -56,11 +56,6 @@ public sealed partial class GameManager : GameObjectSystem<GameManager>, Compone
 		}
 
 		UndoSystem.Current?.RemovePlayer( channel.SteamId );
-
-		if ( _kickedPlayers.Remove( channel.Id ) ) return;
-		if ( BanSystem.Current?.IsBanned( channel.SteamId ) ?? false ) return;
-
-		Notify( $"👋 {channel.DisplayName} has left the game" );
 	}
 
 	private PlayerData CreatePlayerInfo( Connection channel )
@@ -71,11 +66,8 @@ public sealed partial class GameManager : GameObjectSystem<GameManager>, Compone
 
 		var go = new GameObject( true, $"PlayerInfo - {channel.DisplayName}" );
 		var data = go.AddComponent<PlayerData>();
-		data.SteamId = (long)channel.SteamId;
-		data.PlayerId = channel.Id;
-		data.DisplayName = channel.DisplayName;
 
-		go.NetworkSpawn( null );
+		go.NetworkSpawn( channel );
 		go.Network.SetOwnerTransfer( OwnerTransfer.Fixed );
 
 		return data;
@@ -86,10 +78,10 @@ public sealed partial class GameManager : GameObjectSystem<GameManager>, Compone
 	internal void SpawnPlayer( PlayerData playerData )
 	{
 		Assert.NotNull( playerData, "PlayerData is null" );
-		Assert.True( Networking.IsHost, $"Client tried to SpawnPlayer: {playerData.DisplayName}" );
+		Assert.True( Networking.IsHost, $"Client tried to SpawnPlayer: {playerData.Network.Owner?.DisplayName}" );
 
 		// does this connection already have a player?
-		if ( Scene.GetAll<Player>().Any( x => x.Network.Owner?.Id == playerData.PlayerId ) )
+		if ( Scene.GetAll<Player>().Any( x => x.Network.Owner == playerData.Network.Owner ) )
 			return;
 
 		// Find a spawn location for this player
@@ -101,12 +93,12 @@ public sealed partial class GameManager : GameObjectSystem<GameManager>, Compone
 		startLocation = respawnEvent.SpawnLocation;
 
 		// Spawn this object and make the client the owner
-		var playerGo = GameObject.Clone( "/prefabs/engine/player.prefab", new CloneConfig { Name = playerData.DisplayName, StartEnabled = false, Transform = startLocation } );
+		var playerGo = GameObject.Clone( "/prefabs/engine/player.prefab", new CloneConfig { Name = playerData.Network.Owner?.DisplayName, StartEnabled = false, Transform = startLocation } );
 
 		var player = playerGo.Components.Get<Player>( true );
 		player.PlayerData = playerData;
 
-		var owner = Connection.Find( playerData.PlayerId );
+		var owner = playerData.Network.Owner;
 		playerGo.NetworkSpawn( owner );
 
 		Local.IPlayerEvents.PostToGameObject( player.GameObject, x => x.OnSpawned() );
@@ -125,15 +117,21 @@ public sealed partial class GameManager : GameObjectSystem<GameManager>, Compone
 		}
 	}
 
-	internal void SpawnPlayerDelayed( PlayerData playerData )
+	/// <summary>
+	/// Called by the client (via PlayerObserver) when they want to respawn.
+	/// </summary>
+	[Rpc.Host]
+	internal void RequestRespawn()
 	{
-		GameTask.RunInThreadAsync( async () =>
+		var connection = Rpc.Caller;
+
+		// Clean up any lingering observers for this connection.
+		foreach ( var observer in Scene.GetAllComponents<PlayerObserver>().Where( x => x.Network.Owner == connection ).ToArray() )
 		{
-			await Task.Delay( 4000 );
-			await GameTask.MainThread();
-			if ( Current is not null )
-				Current.SpawnPlayer( playerData );
-		} );
+			observer.GameObject.Destroy();
+		}
+
+		SpawnPlayer( connection );
 	}
 
 	/// <summary>
@@ -194,19 +192,20 @@ public sealed partial class GameManager : GameObjectSystem<GameManager>, Compone
 		var attackerTags = isSuicide ? "" : source.Tags;
 		var attackerName = isSuicide ? null : source.DisplayName;
 		var attackerSteamId = isSuicide ? 0L : source.SteamId;
-		Scene.RunEvent<Feed>( x => x.NotifyKill( player.DisplayName, attackerName, attackerSteamId, damageTags, attackerTags, "", w?.DisplayIcon ) );
+		var playerName = player.Network.Owner?.DisplayName ?? "Unknown";
+		Scene.RunEvent<Feed>( x => x.NotifyKill( playerName, attackerName, attackerSteamId, damageTags, attackerTags, "", w?.DisplayIcon ) );
 
 		if ( string.IsNullOrEmpty( attackerName ) )
 		{
-			NotifyConsole( $"{player.DisplayName} died (tags: {dmg.Tags})" );
+			NotifyConsole( $"{playerName} died (tags: {dmg.Tags})" );
 		}
 		else if ( weapon.IsValid() )
 		{
-			NotifyConsole( $"{attackerName} killed {(isSuicide ? "self" : player.DisplayName)} with {weapon.Name} (tags: {dmg.Tags})" );
+			NotifyConsole( $"{attackerName} killed {(isSuicide ? "self" : playerName)} with {weapon.Name} (tags: {dmg.Tags})" );
 		}
 		else
 		{
-			NotifyConsole( $"{attackerName} killed {(isSuicide ? "self" : player.DisplayName)} (tags: {dmg.Tags})" );
+			NotifyConsole( $"{attackerName} killed {(isSuicide ? "self" : playerName)} (tags: {dmg.Tags})" );
 		}
 	}
 

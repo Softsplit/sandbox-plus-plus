@@ -79,6 +79,7 @@
           "_type": "gameobject",
           "go": "51cd1382-f0cf-4c2c-b0d4-1f70dd48e24f"
         },
+        "FirstShellReloadTime": 0,
         "HoldType": "Pistol",
         "IncrementalReloading": false,
         "IronSightsFireScale": 0.2,
@@ -95,7 +96,8 @@
         "OnComponentStart": null,
         "OnComponentUpdate": null,
         "ParentBone": "hold_r",
-        "PrimaryFireRate": 0.15,
+        "PrimaryFireRate": 0.1,
+        "ReloadStartTime": 0,
         "ReloadTime": 1.5,
         "ReserveAmmo": 0,
         "SecondaryInput": {
@@ -190,6 +192,7 @@
         "OnComponentUpdate": null,
         "OverrideMassCenter": false,
         "RigidbodyFlags": 0,
+        "SleepThreshold": 2,
         "StartAsleep": false
       }
     ],
@@ -215,6 +218,7 @@
             "__guid": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
             "__enabled": true,
             "Flags": 0,
+            "DeploySound": null,
             "EjectBrass": null,
             "EjectTransform": {
               "_type": "gameobject",

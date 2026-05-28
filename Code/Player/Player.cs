@@ -43,12 +43,9 @@ public sealed partial class Player : Component, Component.IDamageable, PlayerCon
 	}
 
 	public bool IsLocalPlayer => !IsProxy;
-	public Guid PlayerId => PlayerData.IsValid() ? PlayerData.PlayerId : Guid.Empty;
-	public long SteamId => PlayerData.IsValid() ? PlayerData.SteamId : 0;
-	public string DisplayName => PlayerData.IsValid() ? PlayerData.DisplayName : "Unknown";
 
-	string IKillSource.DisplayName => DisplayName;
-	long IKillSource.SteamId => SteamId;
+	string IKillSource.DisplayName => Network.Owner?.DisplayName ?? "Unknown";
+	long IKillSource.SteamId => (long)(Network.Owner?.SteamId ?? 0);
 	void IKillSource.OnKill( GameObject victim )
 	{
 		PlayerData.Kills++;
@@ -295,7 +292,6 @@ public sealed partial class Player : Component, Component.IDamageable, PlayerCon
 		//
 		// Ghost and say goodbye to the player
 		//
-		PlayerData?.MarkForRespawn();
 		Ghost();
 		GameObject.Destroy();
 	}

@@ -22,9 +22,9 @@ public interface IToolActionEvents : ISceneEvent<IToolActionEvents>
 		public ToolInput Input { get; init; }
 
 		/// <summary>
-		/// The player performing the action.
+		/// The connection of the player performing the action.
 		/// </summary>
-		public PlayerData Player { get; init; }
+		public Connection Player { get; init; }
 
 		/// <summary>
 		/// Set to true to cancel the action.
@@ -48,9 +48,9 @@ public interface IToolActionEvents : ISceneEvent<IToolActionEvents>
 		public ToolInput Input { get; init; }
 
 		/// <summary>
-		/// The player who performed the action.
+		/// The connection of the player who performed the action.
 		/// </summary>
-		public PlayerData Player { get; init; }
+		public Connection Player { get; init; }
 
 		/// <summary>
 		/// GameObjects created by this action, if any.

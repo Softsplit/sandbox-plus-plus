@@ -18,6 +18,6 @@ public sealed partial class Player : Component, Component.IDamageable, PlayerCon
 	/// </summary>
 	public static Player For( Guid playerId )
 	{
-		return Game.ActiveScene.GetAll<Player>().FirstOrDefault( x => x.PlayerId.Equals( playerId ) );
+		return Game.ActiveScene.GetAll<Player>().FirstOrDefault( x => x.Network.Owner?.Id == playerId );
 	}
 }

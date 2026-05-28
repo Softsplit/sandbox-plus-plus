@@ -225,7 +225,7 @@ public sealed partial class DuplicatorTool : ToolMode
 		{
 			Spawner = spawner,
 			Transform = dest,
-			Player = player.PlayerData
+			Player = player.Network.Owner
 		};
 
 		Scene.RunEvent<Global.ISpawnEvents>( x => x.OnSpawn( spawnData ) );
@@ -249,7 +249,7 @@ public sealed partial class DuplicatorTool : ToolMode
 			{
 				Spawner = spawner,
 				Transform = dest,
-				Player = player.PlayerData,
+				Player = player.Network.Owner,
 				Objects = objects
 			} ) );
 

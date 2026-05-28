@@ -31,7 +31,7 @@ internal sealed class PlayerObserver : Component
 		// If pressed a button, or has been too long
 		if ( Input.Pressed( "attack1" ) || Input.Pressed( "jump" ) || timeSinceStarted > 4f )
 		{
-			PlayerData.For( Network.Owner )?.RequestRespawn();
+			GameManager.Current?.RequestRespawn();
 			GameObject.Destroy();
 		}
 	}

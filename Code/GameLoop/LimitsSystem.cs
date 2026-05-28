@@ -122,7 +122,7 @@ internal sealed class LimitsSystem : GameObjectSystem<LimitsSystem>, Global.ISpa
 	{
 		if ( e.Player is null ) return;
 
-		var steamId = e.Player.SteamId;
+		var steamId = (long)e.Player.SteamId;
 
 		// Duplicator: batch pre-check — reject entire dupe if it would exceed limits
 		if ( e.Spawner is DuplicatorSpawner dupeSpawner )
@@ -195,7 +195,7 @@ internal sealed class LimitsSystem : GameObjectSystem<LimitsSystem>, Global.ISpa
 	{
 		if ( e.Player is null || e.Objects is null ) return;
 
-		Track( e.Player.SteamId, e.Objects );
+		Track( (long)e.Player.SteamId, e.Objects );
 	}
 
 	void IToolActionEvents.OnToolAction( IToolActionEvents.ActionData e )
@@ -213,7 +213,7 @@ internal sealed class LimitsSystem : GameObjectSystem<LimitsSystem>, Global.ISpa
 		// TODO: same here :S
 		if ( MaxConstraints >= 0 && ( e.Tool is BaseConstraintToolMode || e.Tool is KeepUprightTool ) )
 		{
-			var count = Count( e.Player.SteamId, go => go.Tags.Contains( "constraint" ) );
+			var count = Count( (long)e.Player.SteamId, go => go.Tags.Contains( "constraint" ) );
 			if ( IsExceeded( MaxConstraints, count ) )
 			{
 				e.Cancelled = true;
@@ -224,9 +224,9 @@ internal sealed class LimitsSystem : GameObjectSystem<LimitsSystem>, Global.ISpa
 
 	void IToolActionEvents.OnPostToolAction( IToolActionEvents.PostActionData e )
 	{
-		if ( !e.Player.IsValid() || e.CreatedObjects is not { Count: > 0 } ) return;
+		if ( e.Player is null || e.CreatedObjects is not { Count: > 0 } ) return;
 
-		Track( e.Player.SteamId, e.CreatedObjects );
+		Track( (long)e.Player.SteamId, e.CreatedObjects );
 	}
 
 	/// <summary>
@@ -240,7 +240,7 @@ internal sealed class LimitsSystem : GameObjectSystem<LimitsSystem>, Global.ISpa
 		if ( limit < 0 ) return true;
 		if ( creationInput.HasValue && e.Input != creationInput.Value ) return true;
 
-		var count = Count( e.Player.SteamId, go => go.GetComponent<TEntity>().IsValid() );
+		var count = Count( (long)e.Player.SteamId, go => go.GetComponent<TEntity>().IsValid() );
 		if ( IsExceeded( limit, count ) )
 		{
 			e.Cancelled = true;
@@ -269,11 +269,10 @@ internal sealed class LimitsSystem : GameObjectSystem<LimitsSystem>, Global.ISpa
 
 	private static string GetToolName( ToolMode tool ) => tool?.TypeDescription?.Title ?? tool?.GetType().Name ?? "Unknown";
 
-	private static void NotifyLimit( PlayerData player, string category, int limit )
+	private static void NotifyLimit( Connection player, string category, int limit )
 	{
-		var target = player?.Connection;
-		if ( target is null ) return;
+		if ( player is null ) return;
 
-		Notices.SendNotice( target, "block", Color.Red, $"Limit reached: {category} ({limit})", 3 );
+		Notices.SendNotice( player, "block", Color.Red, $"Limit reached: {category} ({limit})", 3 );
 	}
 }

@@ -288,7 +288,7 @@ public partial class SpawnerWeapon : ScreenWeapon, IToolInfo
 		{
 			Spawner = Spawner,
 			Transform = transform,
-			Player = player?.PlayerData
+			Player = player?.Network.Owner
 		};
 
 		Scene.RunEvent<Global.ISpawnEvents>( x => x.OnSpawn( spawnData ) );
@@ -312,7 +312,7 @@ public partial class SpawnerWeapon : ScreenWeapon, IToolInfo
 			{
 				Spawner = Spawner,
 				Transform = transform,
-				Player = player?.PlayerData,
+				Player = player?.Network.Owner,
 				Objects = objects
 			} ) );
 		}

@@ -9,7 +9,7 @@ using Sandbox.Rendering;
 /// <param name="Position"></param>
 /// <param name="Origin"></param>
 /// <param name="Hitbox"></param>
-public record struct TraceAttackInfo( GameObject Target, float Damage, TagSet Tags = null, Vector3 Position = default, Vector3 Origin = default, Hitbox Hitbox = null )
+public record struct TraceAttackInfo( GameObject Target, float Damage, TagSet Tags = null, Vector3 Position = default, Vector3 Origin = default )
 {
 	/// <summary>
 	/// Constructs a <see cref="TraceAttackInfo"/> from a trace and input damage.
@@ -23,7 +23,7 @@ public record struct TraceAttackInfo( GameObject Target, float Damage, TagSet Ta
 			tags.Add( tr.Hitbox?.Tags );
 		}
 
-		return new TraceAttackInfo( tr.GameObject, damage, tags, tr.HitPosition, tr.StartPosition, tr.Hitbox );
+		return new TraceAttackInfo( tr.GameObject, damage, tags, tr.HitPosition, tr.StartPosition );
 	}
 }
 
@@ -323,15 +323,17 @@ public partial class BaseCarryable : Component, IKillIcon
 		// contraption seat, or fall back to the weapon itself (standalone/world weapon)
 		var attacker = EffectiveAttacker;
 
-		var damagable = attack.Target.GetComponentInParent<IDamageable>();
-		if ( damagable is not null )
+		var dmg = attack.Target.GetComponentInParent<IDamageable>();
+		if ( dmg is not null )
 		{
-			var info = new DamageInfo( attack.Damage, attacker, GameObject, attack.Hitbox );
-			info.Position = attack.Position;
-			info.Origin = attack.Origin;
-			info.Tags = attack.Tags;
+			var info = new DamageInfo( attack.Damage, attacker, GameObject )
+			{
+				Position = attack.Position,
+				Origin = attack.Origin,
+				Tags = attack.Tags
+			};
 
-			damagable.OnDamage( info );
+			dmg.OnDamage( info );
 		}
 
 		if ( attack.Target.GetComponentInChildren<Rigidbody>() is var rb && rb.IsValid() )

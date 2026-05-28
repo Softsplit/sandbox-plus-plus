@@ -24,9 +24,9 @@
                     <div class="mute-spacer"></div>
                 </div>
 
-                @foreach ( var entry in Scene.GetAll<PlayerData>().OrderByDescending( x => x.Kills ).ThenBy( x => x.DisplayName ) )
+                @foreach ( var connection in Connection.All.OrderByDescending( x => PlayerData.For( x )?.Kills ?? 0 ).ThenBy( x => x.DisplayName ) )
                 {
-                    <ScoreboardRow Entry="@entry" />
+                    <ScoreboardRow Connection="@connection" />
                 }
             </div>
         </div>

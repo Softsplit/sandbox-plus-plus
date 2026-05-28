@@ -22,9 +22,9 @@ public static partial class Global
 			public Transform Transform { get; init; }
 
 			/// <summary>
-			/// The player requesting the spawn.
+			/// The connection of the player requesting the spawn.
 			/// </summary>
-			public PlayerData Player { get; init; }
+			public Connection Player { get; init; }
 
 			/// <summary>
 			/// Set to true to cancel the spawn.
