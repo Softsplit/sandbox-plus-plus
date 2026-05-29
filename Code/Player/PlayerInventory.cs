@@ -274,25 +274,44 @@ public sealed class PlayerInventory : Component, Local.IPlayerEvents
 		return true;
 	}
 
+	/// <summary>
+	/// If we already own a weapon of the same type as this live item, try to transfer its ammo.
+	/// Returns true if handled (caller should stop). False means no existing weapon found.
+	/// </summary>
+	private bool TryGiveAmmoFromItem( BaseCarryable item, bool notice )
+	{
+		var existing = Weapons.FirstOrDefault( x => x.GetType() == item.GetType() );
+		if ( !existing.IsValid() )
+			return false;
+
+		if ( existing is BaseWeapon existingWeapon && item is BaseWeapon pickupWeapon && existingWeapon.UsesAmmo )
+		{
+			if ( existingWeapon.ReserveAmmo >= existingWeapon.MaxReserveAmmo )
+			{
+				item.DestroyGameObject();
+				return true;
+			}
+
+			var ammoToGive = pickupWeapon.UsesClips ? pickupWeapon.ClipContents : pickupWeapon.StartingAmmo;
+			existingWeapon.AddReserveAmmo( ammoToGive );
+
+			if ( notice )
+				OnClientPickup( existing, true );
+
+			item.DestroyGameObject();
+			return true;
+		}
+
+		return true;
+	}
+
 	public bool Take( BaseCarryable item, bool includeNotices )
 	{
 		if ( !CanTake( item ) )
 			return false;
 
-		var existing = Weapons.FirstOrDefault( x => x.GetType() == item.GetType() );
-		if ( existing.IsValid() )
-		{
-			if ( existing is BaseWeapon existingWeapon && item is BaseWeapon pickupWeapon && existingWeapon.UsesAmmo )
-			{
-				var ammoToGive = pickupWeapon.UsesClips ? pickupWeapon.ClipContents : pickupWeapon.StartingAmmo;
-				existingWeapon.AddReserveAmmo( ammoToGive );
-				OnClientPickup( existing, true );
-				item.DestroyGameObject();
-				return true;
-			}
-
-			return false;
-		}
+		if ( TryGiveAmmoFromItem( item, includeNotices ) )
+			return true;
 
 		var slot = FindEmptySlot();
 		item.GameObject.SetParent( GameObject, false );
@@ -322,6 +341,28 @@ public sealed class PlayerInventory : Component, Local.IPlayerEvents
 
 		OnClientPickup( item );
 		return true;
+	}
+
+	/// <summary>
+	/// Spawns a dropped item into the world from a prefab, assigns ownership, and applies velocity.
+	/// </summary>
+	private void SpawnDroppedItem( GameObject prefab, Vector3 position, Vector3 velocity )
+	{
+		var pickup = prefab.Clone( new CloneConfig
+		{
+			Transform = new Transform( position ),
+			StartEnabled = true
+		} );
+
+		Ownable.Set( pickup, Player.Network.Owner );
+		pickup.Tags.Add( "removable" );
+		pickup.NetworkSpawn();
+
+		if ( pickup.GetComponent<Rigidbody>() is { } rb )
+		{
+			rb.Velocity = Player.Controller.Velocity + velocity;
+			rb.AngularVelocity = Vector3.Random * 8.0f;
+		}
 	}
 
 	/// <summary>
@@ -368,21 +409,7 @@ public sealed class PlayerInventory : Component, Local.IPlayerEvents
 				var prefab = GameObject.GetPrefab( prefabSource );
 				if ( prefab.IsValid() )
 				{
-					var pickup = prefab.Clone( new CloneConfig
-					{
-						Transform = new Transform( dropPosition ),
-						StartEnabled = true
-					} );
-
-					Ownable.Set( pickup, Player.Network.Owner );
-					pickup.Tags.Add( "removable" );
-					pickup.NetworkSpawn();
-
-					if ( pickup.GetComponent<Rigidbody>() is { } rb )
-					{
-						rb.Velocity = Player.Controller.Velocity + dropVelocity;
-						rb.AngularVelocity = Vector3.Random * 8.0f;
-					}
+					SpawnDroppedItem( prefab, dropPosition, dropVelocity );
 				}
 			}
 
@@ -397,22 +424,7 @@ public sealed class PlayerInventory : Component, Local.IPlayerEvents
 				return true;
 			}
 
-			var pickup = weapon.ItemPrefab.Clone( new CloneConfig
-			{
-				Transform = new Transform( dropPosition ),
-				StartEnabled = true
-			} );
-
-			Ownable.Set( pickup, Player.Network.Owner );
-			pickup.Tags.Add( "removable" );
-			pickup.NetworkSpawn();
-
-			if ( pickup.GetComponent<Rigidbody>() is { } rb )
-			{
-				rb.Velocity = Player.Controller.Velocity + dropVelocity;
-				rb.AngularVelocity = Vector3.Random * 8.0f;
-			}
-
+			SpawnDroppedItem( weapon.ItemPrefab, dropPosition, dropVelocity );
 			weapon.DestroyGameObject();
 		}
 

@@ -40,8 +40,6 @@ public sealed partial class GameManager : GameObjectSystem<GameManager>, Compone
 		SpawnPlayer( playerData );
 		CheckConnectionAchievement( channel );
 		CheckFriendsOnlineStat();
-
-		Notify( $"👋 {channel.DisplayName} has joined the game" );
 	}
 
 	/// <summary>

@@ -198,20 +198,28 @@ public sealed class PlayerLoadout : Component, Local.IPlayerEvents, Global.IPlay
 			HostRestoreLoadoutFromClient( json );
 	}
 
-	[Rpc.Host]
-	private async void HostRestoreLoadoutFromClient( string loadoutJson )
+	/// <summary>
+	/// Clears the current inventory, waits a frame, then gives the loadout from JSON and equips the best weapon.
+	/// </summary>
+	private async Task ReplaceLoadoutAsync( string json )
 	{
 		foreach ( var weapon in Inventory.Weapons.ToList() )
 			weapon.DestroyGameObject();
 
 		await Task.Yield();
 
-		await EnsureMountedAsync( loadoutJson );
-		GiveLoadoutWeapons( loadoutJson );
+		await EnsureMountedAsync( json );
+		GiveLoadoutWeapons( json );
 
 		var best = Inventory.GetBestWeapon();
 		if ( best.IsValid() )
 			Inventory.SwitchWeapon( best );
+	}
+
+	[Rpc.Host]
+	private async void HostRestoreLoadoutFromClient( string loadoutJson )
+	{
+		await ReplaceLoadoutAsync( loadoutJson );
 	}
 
 	void Global.IPlayerEvents.OnPlayerSpawned( Player player )
@@ -229,11 +237,7 @@ public sealed class PlayerLoadout : Component, Local.IPlayerEvents, Global.IPlay
 			var json = LocalData.Get<string>( "hotbar" );
 			if ( !string.IsNullOrEmpty( json ) )
 			{
-				await EnsureMountedAsync( json );
-				GiveLoadoutWeapons( json );
-				var best = Inventory.GetBestWeapon();
-				if ( best.IsValid() )
-					Inventory.SwitchWeapon( best );
+				await ReplaceLoadoutAsync( json );
 				return;
 			}
 		}
@@ -317,16 +321,6 @@ public sealed class PlayerLoadout : Component, Local.IPlayerEvents, Global.IPlay
 
 	private async Task RestoreLoadoutFromSaveAsync( string json )
 	{
-		foreach ( var weapon in Inventory.Weapons.ToList() )
-			weapon.DestroyGameObject();
-
-		await Task.Yield();
-
-		await EnsureMountedAsync( json );
-		GiveLoadoutWeapons( json );
-
-		var best = Inventory.GetBestWeapon();
-		if ( best.IsValid() )
-			Inventory.SwitchWeapon( best );
+		await ReplaceLoadoutAsync( json );
 	}
 }
