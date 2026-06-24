@@ -3,10 +3,33 @@
 MenuOption
 {
 	flex-direction: row;
-	cursor: pointer;
 	padding: 2px 6px;
 	border-radius: 5px;
 	color: #8ad;
+
+	&:not(.disabled)
+	{
+		cursor: pointer;
+
+		:hover
+		{
+			color: white;
+			sound-in: ui.hover;
+		}
+
+		:active
+		{
+			color: $menu-text-strong;
+			background-color: $menu-accent-soft;
+			sound-in: ui.select;
+		}
+
+		&.active
+		{
+			color: white;
+			background-color: $menu-accent;
+		}
+	}
 }
 
 .iconpanel
@@ -19,21 +42,8 @@ Label
 	text-overflow: ellipsis;
 }
 
-MenuOption:hover
+MenuOption.disabled
 {
-	color: white;
-	sound-in: ui.hover;
-}
-
-MenuOption:active
-{
-	color: $menu-text-strong;
-	background-color: $menu-accent-soft;
-	sound-in: ui.select;
-}
-
-MenuOption.active
-{
-	color: white;
-	background-color: $menu-accent;
+	color: rgba( white, 0.3 );
+	pointer-events: none;
 }

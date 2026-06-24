@@ -4,10 +4,10 @@
 @namespace Sandbox
 @inherits Panel
 
-@if ( mount is null )
+@if ( mount is null || !mount.IsMounted )
 {
     <root>
-        #spawnmenu.mounts.error
+		<label>#spawnmenu.mounts.error</label>
     </root>
     return;
 }
@@ -75,9 +75,9 @@
 
 	protected override int BuildHash() => HashCode.Combine(Ident, ItemSize, Filter);
 
-    protected override async Task OnParametersSetAsync()
+    protected override void OnParametersSet()
     {
-        mount = await Sandbox.Mounting.Directory.Mount( Ident );
+        mount = Sandbox.Mounting.Directory.Get( Ident );
     }
 
 	void GoHome()
@@ -100,8 +100,7 @@
 
     IEnumerable<object> GetData()
     {
-		var q = mount.Resources
-						.Where( x => x.Type == ResourceType.Model )
+		var q = mount.GetAll( ResourceType.Model )
 						.Where( x => !x.Flags.Contains( Sandbox.Mounting.ResourceFlags.DeveloperOnly ) ); // Hide dev-only junk models
 
 		if ( !string.IsNullOrWhiteSpace( Filter ) )

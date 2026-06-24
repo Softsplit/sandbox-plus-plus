@@ -76,7 +76,7 @@ public partial class BaseSpawnMenu : Panel
 		options.Add( o );
 	}
 
-	public void AddOption( string name, Func<Panel> createPanelFunction )
+	public SpawnMenuOption AddOption( string name, Func<Panel> createPanelFunction )
 	{
 		var o = new SpawnMenuOption
 		{
@@ -85,9 +85,10 @@ public partial class BaseSpawnMenu : Panel
 		};
 
 		options.Add( o );
+		return o;
 	}
 
-	public void AddOption( string icon, string name, Func<Panel> createPanelFunction )
+	public SpawnMenuOption AddOption( string icon, string name, Func<Panel> createPanelFunction )
 	{
 		var o = new SpawnMenuOption
 		{
@@ -97,9 +98,10 @@ public partial class BaseSpawnMenu : Panel
 		};
 
 		options.Add( o );
+		return o;
 	}
 
-	public void AddOption( string icon, string name, Func<Panel> createPanelFunction, Action onRightClick )
+	public SpawnMenuOption AddOption( string icon, string name, Func<Panel> createPanelFunction, Action onRightClick )
 	{
 		var o = new SpawnMenuOption
 		{
@@ -110,6 +112,7 @@ public partial class BaseSpawnMenu : Panel
 		};
 
 		options.Add( o );
+		return o;
 	}
 
 	void OnOptionClick( SpawnMenuOption o )
@@ -189,11 +192,12 @@ public partial class BaseSpawnMenu : Panel
 		StateHasChanged();
 	}
 
-	class SpawnMenuOption
+	public class SpawnMenuOption
 	{
 		public string Type { get; set; } = "option";
 		public string Name { get; set; }
 		public string Icon { get; set; }
+		public bool Enabled { get; set; } = true;
 		public Func<Panel> PanelCreator { get; set; }
 		public Panel Panel { get; set; }
 		public Action OnClick { get; set; }
