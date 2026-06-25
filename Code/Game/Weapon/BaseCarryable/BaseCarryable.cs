@@ -30,7 +30,7 @@ public record struct TraceAttackInfo( GameObject Target, float Damage, TagSet Ta
 public partial class BaseCarryable : Component, IKillIcon
 {
 	[Property, Feature( "Inventory" )] public string DisplayName { get; set; } = "My Weapon";
-	[Property, Feature( "Inventory" ), TextArea] public Texture DisplayIcon { get; set; }
+	[Property, Feature( "Inventory" )] public Texture DisplayIcon { get; set; }
 
 	/// <summary>
 	/// The prefab to spawn in the world when this item is dropped from the inventory.
