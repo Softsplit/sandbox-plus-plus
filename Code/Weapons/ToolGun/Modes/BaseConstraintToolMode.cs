@@ -24,11 +24,8 @@
 		if ( Input.Pressed( "attack2" ) )
 		{
 			// Some constraint tools can one-shot with secondary, like sliders.
-			if ( Stage == 0 && GetSecondaryPoint( select ) is SelectionPoint point2 )
+			if ( Stage == 0 && select.IsValid() && GetSecondaryPoint( select ) is SelectionPoint point2 )
 			{
-				if ( !select.IsValid() )
-					return;
-
 				if ( !UpdateValidity( select, point2 ) )
 					return;
 

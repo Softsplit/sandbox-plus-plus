@@ -73,6 +73,8 @@ public sealed partial class Player : Component, Component.IDamageable, PlayerCon
 
 	protected override void OnStart()
 	{
+		_timeSinceSpawned = 0;
+
 		if ( IsLocalPlayer )
 			LocalPlayer = this;
 
@@ -97,6 +99,25 @@ public sealed partial class Player : Component, Component.IDamageable, PlayerCon
 	/// </summary>
 	[Sync]
 	public bool IsNoclipping { get; internal set; }
+
+	/// <summary>
+	/// How many seconds a player is invulnerable for after spawning. This stops players
+	/// being spawn-killed before they can react (e.g. by a turret or NPC sat on a spawn
+	/// point). Set to 0 to disable spawn protection entirely.
+	/// </summary>
+	[ConVar( "sb.spawnprotection", ConVarFlags.Replicated | ConVarFlags.Saved, Help = "Seconds of invulnerability after spawning. 0 disables spawn protection." )]
+	public static float SpawnProtection { get; set; } = 5.0f;
+
+	/// <summary>
+	/// Time since this player last spawned. Drives <see cref="IsSpawnProtected"/>.
+	/// </summary>
+	private RealTimeSince _timeSinceSpawned;
+
+	/// <summary>
+	/// True while the player is briefly invulnerable just after spawning, per the
+	/// <c>sb.spawnprotection</c> convar.
+	/// </summary>
+	public bool IsSpawnProtected => _timeSinceSpawned < SpawnProtection;
 
 	protected override void OnUpdate()
 	{
@@ -376,6 +397,7 @@ public sealed partial class Player : Component, Component.IDamageable, PlayerCon
 		if ( Health < 1 ) return;
 		if ( !PlayerData.IsValid() ) return;
 		if ( PlayerData.IsGodMode ) return;
+		if ( IsSpawnProtected ) return;
 
 		//
 		// Ignore impact damage from the world, for now

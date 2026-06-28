@@ -19,6 +19,17 @@ public sealed class ElasticTool : BaseConstraintToolMode
 	public override string PrimaryAction => Stage == 1 ? "#tool.hint.elastic.finish" : "#tool.hint.elastic.source";
 	public override string ReloadAction => "#tool.hint.elastic.remove";
 
+	protected override IEnumerable<GameObject> FindConstraints( GameObject linked, GameObject target )
+	{
+		foreach ( var cleanup in linked.GetComponentsInChildren<ConstraintCleanup>( true ) )
+		{
+			if ( linked != target && cleanup.Attachment?.Root != target ) continue;
+			var go = cleanup.GameObject;
+			if ( go.GetComponent<SpringJoint>() is not null || go.GetComponent<VerletRope>() is not null )
+				yield return go;
+		}
+	}
+
 	protected override void CreateConstraint( SelectionPoint point1, SelectionPoint point2 )
 	{
 		var go1 = new GameObject( false, "elastic" );

@@ -616,20 +616,21 @@ public partial class Physgun
 		body.MotionEnabled = true;
 	}
 
-	[Rpc.Host]
+	[Rpc.Broadcast]
 	void UnfreezeAll( Rigidbody body )
 	{
 		if ( !body.IsValid() ) return;
-		if ( body.IsProxy ) return;
-
-		var bodies = new HashSet<Rigidbody>();
-		GetConnectedBodies( body.GameObject, bodies );
 
 		var effect = UnFreezeEffectPrefab.Clone( body.WorldTransform );
 		foreach ( var emitter in effect.GetComponentsInChildren<ParticleModelEmitter>() )
 		{
 			emitter.Target = body.GameObject;
 		}
+
+		if ( body.IsProxy ) return;
+
+		var bodies = new HashSet<Rigidbody>();
+		GetConnectedBodies( body.GameObject, bodies );
 
 		foreach ( var rb in bodies )
 		{
